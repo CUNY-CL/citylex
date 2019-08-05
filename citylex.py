@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 """Creates textproto CityLex lexicon."""
 
-## TODO(kbg): Add CELEX morphology to the best of your ability.
-
-## TODO: Adds downloading support.
-## TODO: Adds licensing support.
+## TODO: Add CELEX morphology.
+## TODO: Add downloading support.
+## TODO: Add support for all TSV fields.
+## TODO: Add licensing support.
 
 import argparse
 import csv
@@ -40,7 +40,6 @@ UDLEXICONS_APERTIUM = (
 UNIMORPH = ("data/eng", "CC_BY_SA")
 
 ## Fieldnames.
-# TODO(kbg): Add support for all fields.
 FIELDNAMES = [
     "wordform",
     "celex_freq",
@@ -218,7 +217,6 @@ def main(args: argparse.Namespace) -> None:
         text_format.PrintMessage(lexicon, sink, as_utf8=True)
         logging.debug("Wrote %d entries", len(lexicon.entry))
     # Writes it out as a TSV file.
-    # TODO(kbg): Not all fields yet supported.
     with open(args.output_tsv_path, "w") as sink:
         tsv_writer = csv.DictWriter(
             sink,
