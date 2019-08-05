@@ -22,6 +22,14 @@ message Entry {
     title = {CELEX2},
     year = {1996}
 }
+
+@book{COBUILD,
+    address = {London},
+    editor = {Sinclair, John McH.},
+    publisher = {Collins},
+    title = {The {Colins} {COBUILD} {English} language dictionary},
+    year = {1987}
+}
 */
   optional int64 celex_freq = 1;
   optional string celex_morph_status = 2;
