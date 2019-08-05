@@ -70,6 +70,7 @@ def main(args: argparse.Namespace) -> None:
 
     # CELEX frequency.
     (path, license) = CELEX_FREQ
+    counter = 0
     with open(path, "r") as source:
         for line in source:
             row = _parse_celex_row(line)
@@ -78,7 +79,11 @@ def main(args: argparse.Namespace) -> None:
             if " " in wordform:
                 continue
             freq = int(row[3])
-            lexicon.entry[wordform].celex_freq = freq
+            ptr = lexicon.entry[wordform]
+            # Add to the sum if it's already defined.
+            ptr.celex_freq += freq
+            counter += 1
+    logging.info(f"Collected {counter:,} CELEX frequencies")
 
     """
     # CELEX wordform morphology.
@@ -91,6 +96,7 @@ def main(args: argparse.Namespace) -> None:
 
     # CELEX pronunciation.
     (path, license) = CELEX_PRON
+    counter = 0
     with open(path, "r") as source:
         for line in source:
             row = _parse_celex_row(line)
@@ -102,9 +108,12 @@ def main(args: argparse.Namespace) -> None:
             pron = row[6].replace("-", "")  # Eliminates syllable boundaries.
             ptr = lexicon.entry[wordform]
             ptr.celex_pron.append(pron)
+            counter += 1
+    logging.info(f"Collected {counter:,} CELEX pronunciations")
 
     # CMU pronunciation dictionary.
     (path, license) = CMU_PRON
+    counter = 0
     # There is exactly one misencoded line, which we "ignore".
     with open(path, "r", errors="ignore") as source:
         for line in source:
@@ -116,9 +125,12 @@ def main(args: argparse.Namespace) -> None:
             wordform = re.sub(r"\(\d+\)$", "", wordform)
             ptr = lexicon.entry[wordform]
             ptr.cmu_pron.append(pron)
+            counter += 1
+    logging.info(f"Collected {counter:,} CMU pronunciations")
 
     # ELP morphological analyses.
     (path, license) = ELP_MORPH
+    counter = 0
     with open(path, "r") as source:
         for drow in csv.DictReader(source):
             wordform = drow["Word"].casefold()
@@ -129,18 +141,12 @@ def main(args: argparse.Namespace) -> None:
                 continue
             ptr.elp_morph_sp = morph_sp
             ptr.elp_nmorph = int(drow["NMorph"])
-
-    # SUBTLEX-US.
-    (path, license) = SUBTLEX_US
-    with open(path, "r") as source:
-        for drow in csv.DictReader(source, delimiter="\t"):
-            wordform = drow["Word"].casefold()
-            ptr = lexicon.entry[wordform]
-            ptr.subtlex_us_freq = int(drow["FREQcount"])
-            ptr.subtlex_us_cd = int(drow["CDcount"])
+            counter += 1
+    logging.info(f"Collected {counter:,} ELP analyses")
 
     # SUBTLEX-UK.
     (path, license) = SUBTLEX_UK
+    counter = 0
     with pandas.ExcelFile(path) as source:
         sheet = source.sheet_names[0]
         # Disables parsing "nan" as, well, `nan`.
@@ -151,9 +157,24 @@ def main(args: argparse.Namespace) -> None:
             ptr = lexicon.entry[wordform]
             ptr.subtlex_uk_freq = freq
             ptr.subtlex_uk_cd = cd
+            counter += 1
+    logging.info(f"Collected {counter:,} SUBTLEX-UK frequencies")
+
+    # SUBTLEX-US.
+    (path, license) = SUBTLEX_US
+    counter = 0
+    with open(path, "r") as source:
+        for drow in csv.DictReader(source, delimiter="\t"):
+            wordform = drow["Word"].casefold()
+            ptr = lexicon.entry[wordform]
+            ptr.subtlex_us_freq = int(drow["FREQcount"])
+            ptr.subtlex_us_cd = int(drow["CDcount"])
+            counter += 1
+    logging.info(f"Collected {counter:,} SUBTLEX-US frequencies")
 
     # UDLexicon from Apertium.
     (path, license) = UDLEXICONS_APERTIUM
+    counter = 0
     with open(path, "r") as source:
         for line in source:
             line = line.rstrip()
@@ -173,9 +194,12 @@ def main(args: argparse.Namespace) -> None:
             # Ignores unspecified feature bundles.
             if features != "_":
                 entry.features = features
+            counter += 1
+    logging.info(f"Collected {counter:,} UDLexicon analyses")
 
     # Unimorph.
     (path, license) = UNIMORPH
+    counter = 0
     with open(path, "r") as source:
         for line in source:
             (lemma, wordform, features) = line.rstrip().split("\t", 2)
@@ -185,12 +209,14 @@ def main(args: argparse.Namespace) -> None:
             entry = ptr.unimorph.add()
             entry.lemma = lemma
             entry.features = features
+            counter += 1
+    logging.info(f"Collected {counter:,} UniMorph analyses")
 
+    logging.info("Writing out tables...")
     # Writes it out as a textproto.
     with open(args.output_textproto_path, "w") as sink:
         text_format.PrintMessage(lexicon, sink, as_utf8=True)
         logging.debug("Wrote %d entries", len(lexicon.entry))
-
     # Writes it out as a TSV file.
     # TODO(kbg): Not all fields yet supported.
     with open(args.output_tsv_path, "w") as sink:
@@ -212,6 +238,7 @@ def main(args: argparse.Namespace) -> None:
                 elif entry.HasField(field):
                     row[field] = getattr(entry, field)
             tsv_writer.writerow(row)
+    logging.info("...done")
 
 
 if __name__ == "__main__":
