@@ -5,7 +5,9 @@
 ## TODO(kbg): Add ELP.
 ## TODO(kbg): Add psycholinguistic attributes:
 ##            AoA, VAD, concreteness, imageability, etc.
-## TODO(kbg): Add TSV conversion script.
+
+## TODO: Adds downloading support.
+## TODO: Adds licensing support.
 
 import argparse
 import csv
@@ -22,6 +24,7 @@ import pandas
 import citylex_pb2
 
 ## Paths to data resource and the associated licenses.
+
 CELEX_FREQ = ("data/celex2/english/efw/efw.cd", "PROPRIETARY")
 CELEX_MORPH_LEMMA = ("data/celex2/english/eml/eml.cd", "PROPRIETARY")
 # CELEX_MORPH = ("data/celex2/english/emw/emw.cd", "PROPRIETARY")
@@ -38,6 +41,17 @@ UDLEXICONS_APERTIUM = (
 )
 UNIMORPH = ("data/eng", "CC_BY_SA")
 
+## Fieldnames.
+# TODO(kbg): Add support for non-frequency fields.
+# TODO(kbg): this just supports frequencies.
+FIELDNAMES = [
+    "wordform",
+    "celex_freq",
+    "subtlex_uk_freq",
+    "subtlex_uk_cd",
+    "subtlex_us_freq",
+    "subtlex_us_cd",
+]
 
 # def _parse_license(license: str) -> citylex_pb2.Source.License:
 #    return citylex_pb2.Source.License.Value(license)
@@ -149,14 +163,32 @@ def main(args: argparse.Namespace) -> None:
             entry.lemma = lemma
             entry.features = features
 
-    # Writes it out.
+    # Writes it out as a textproto.
     with open(args.output_textproto_path, "w") as sink:
         text_format.PrintMessage(lexicon, sink, as_utf8=True)
         logging.debug("Wrote %d entries", len(lexicon.entry))
+
+    # Writes it out as a TSV file.
+    with open(args.output_tsv_path, "w") as sink:
+        tsv_writer = csv.DictWriter(
+            sink,
+            delimiter="\t",
+            fieldnames=FIELDNAMES,
+            restval="NA",
+            lineterminator="\n",
+        )
+        tsv_writer.writeheader()
+        for (wordform, entry) in lexicon.entry.items():
+            row = {"wordform": wordform}
+            for field in FIELDNAMES[1:]:
+                if entry.HasField(field):
+                    row[field] = getattr(entry, field)
+            tsv_writer.writerow(row)
 
 
 if __name__ == "__main__":
     logging.basicConfig(format="%(levelname)s: %(message)s", level="INFO")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("output_textproto_path")
+    parser.add_argument("--output_textproto_path", default="citylex.textproto")
+    parser.add_argument("--output_tsv_path", default="citylex.tsv")
     main(parser.parse_args())
