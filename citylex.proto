@@ -1,0 +1,96 @@
+// PB definitions for CityLex.
+
+syntax = "proto2";
+
+package citylex;
+
+// A series of values paired with a lemma or wordform.
+message Entry {
+
+  // Stuff used repeatedly.
+
+  message MorphEntry {
+    required string lemma = 1;
+    optional string pos = 2;
+    optional string features = 3;
+  }
+
+/*
+@unpublished{CELEX2,
+    author = {Baayen, R. Harald and Piepenbrock, Richard and Gulikers, Léon},
+    note = {LDC96L14},
+    title = {CELEX2},
+    year = {1996}
+}
+*/
+  optional int64 celex_freq = 1;
+  optional string celex_morph_status = 2;
+  optional string celex_morph_language_code = 3;
+  repeated string celex_pron = 4;
+
+  repeated string cmu_pron = 5;
+
+/*
+@article{SUBTLEX-UK,
+     author = {van Heuven, Walter J. B. and Mandera, Pawel and Keuleers, Emmanuel and Brysbaert, Marc},
+     journal = {The Quarterly Journal of Experimental Psychology},
+     number = {6},
+     pages = {1176-1190},
+     title = {SUBTLEX-UK: A new and improved word frequency database for British English},
+     volume = {67},
+     year = {2014}
+}
+*/
+  optional int64 subtlex_uk_freq = 6;
+  optional int64 subtlex_uk_cd = 7;
+
+/*
+@article{SUBTLEX-US,
+    author = {Brysbaert, Marc and New, Boris},
+    journal = {Behavior Research Methods},
+    number = {4},
+    pages = {977-990},
+    title = {Moving beyond Kučera and Francis: A critical evaluation of current word frequency norms and the introduction of a new and improved word frequency measure for {American English}},
+    volume = {41},
+    year = {2009},
+}
+*/
+  optional int64 subtlex_us_freq = 8;
+  optional int64 subtlex_us_cd = 9;
+
+// FIXME
+/*
+@incollection{UDLexicons,
+    author = {Sagot, Benoit},
+    booktitle = {LREC},
+    pages = {?-?},
+    title = {},
+    year = {2018}
+}
+...
+*/
+  repeated MorphEntry udlexicons_apertium = 10;
+
+/*
+@unpublished{UniMorphSpec,
+    author = {Sylak-Glassman, John},
+    note = {Ms., Johns Hopkins University},
+    title = {The composition and use of the universal morphological feature schema (UniMorph schema)},
+    year = {2016}
+}
+
+@incollection{UniMorph,
+    author = {Kirov, Christo and Cotterell, Ryan and Sylak-Glassman, John and Walther, Géraldine and Vylomova, Ekaterina and Xia, Patrick and Faruqui, Manaal and McCarthy, Arya D. and Kübler, Sandra and Yarowsky, David and Eisner, Jason and Hulden, Mans},
+    booktitle = {LREC},
+    pages = {1868-1873},
+    title = {UniMorph 2.0: Universal morphology},
+    year = {2018}
+}
+*/
+  repeated MorphEntry unimorph = 11;
+}
+
+// A collection of entries.
+message Lexicon {
+  map<string, Entry> entry = 1;
+}
