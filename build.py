@@ -7,18 +7,19 @@
 ##            AoA, VAD, concreteness, imageability, etc.
 ## TODO(kbg): Add TSV conversion script.
 
+import argparse
 import csv
 import logging
 import re
 import string
-import sys
 
 from typing import List
+
+from google.protobuf import text_format
 
 import pandas
 
 import citylex_pb2
-import textproto
 
 ## Paths to data resource and the associated licenses.
 CELEX_FREQ = ("data/celex2/english/efw/efw.cd", "PROPRIETARY")
@@ -75,6 +76,7 @@ def main(args: argparse.Namespace) -> None:
             wordform = row[1]
             if " " in wordform:  # Ignores multiword expressions.
                 continue
+            # FIXME
             pron = row[6].replace("-", "")  # Eliminates syllable boundaries.
             wordform = wordform.casefold()
             ptr = lexicon.entry[wordform]
@@ -148,9 +150,13 @@ def main(args: argparse.Namespace) -> None:
             entry.features = features
 
     # Writes it out.
-    textproto.write_lexicon(lexicon, sys.stdout)
+    with open(args.output_textproto_path, "w") as sink:
+        text_format.PrintMessage(lexicon, sink, as_utf8=True)
+        logging.debug("Wrote %d entries", len(lexicon.entry))
 
 
 if __name__ == "__main__":
     logging.basicConfig(format="%(levelname)s: %(message)s", level="INFO")
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("output_textproto_path")
+    main(parser.parse_args())
