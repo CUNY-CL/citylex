@@ -1,5 +1,5 @@
-CityLex: a multisource lexical database for English
-===================================================
+🗽 CityLex: a free multisource English lexical database
+=======================================================
 
 This directory contains code and data used to (re)generate CityLex. There are
 two user endpoints:
