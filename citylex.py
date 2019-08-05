@@ -2,7 +2,6 @@
 """Creates textproto CityLex lexicon."""
 
 ## TODO(kbg): Add CELEX morphology to the best of your ability.
-## TODO(kbg): Add ELP.
 ## TODO(kbg): Add psycholinguistic attributes:
 ##            AoA, VAD, concreteness, imageability, etc.
 
@@ -30,6 +29,7 @@ CELEX_MORPH_LEMMA = ("data/celex2/english/eml/eml.cd", "PROPRIETARY")
 # CELEX_MORPH = ("data/celex2/english/emw/emw.cd", "PROPRIETARY")
 CELEX_PRON = ("data/celex2/english/epw/epw.cd", "PROPRIETARY")
 CMU_PRON = ("data/cmudict-0.7b", "BSD-2-CLAUSE")
+ELP_MORPH = ("data/ELP.csv", "NONCOMMERCIAL")
 SUBTLEX_UK = ("data/SUBTLEX-UK.xlsx", "CC-BY-NC-ND")
 SUBTLEX_US = (
     "data/SUBTLEX-US frequency list with PoS information text version.txt",
@@ -42,16 +42,22 @@ UDLEXICONS_APERTIUM = (
 UNIMORPH = ("data/eng", "CC_BY_SA")
 
 ## Fieldnames.
-# TODO(kbg): Add support for non-frequency fields.
-# TODO(kbg): this just supports frequencies.
+# TODO(kbg): Add support for all fields.
 FIELDNAMES = [
     "wordform",
     "celex_freq",
+    "celex_pron",
+    "cmu_pron",
+    "elp_morph_sp",
+    "elp_nmorph",
     "subtlex_uk_freq",
     "subtlex_uk_cd",
     "subtlex_us_freq",
     "subtlex_us_cd",
 ]
+
+# Fieldnames which require simple deduplication and joining.
+REPEATED_STRING_FIELDNAMES = frozenset(["celex_pron", "cmu_pron"])
 
 # def _parse_license(license: str) -> citylex_pb2.Source.License:
 #    return citylex_pb2.Source.License.Value(license)
@@ -70,6 +76,9 @@ def main(args: argparse.Namespace) -> None:
         for line in source:
             row = _parse_celex_row(line)
             wordform = row[1].casefold()
+            # Throws out multiword entries.
+            if " " in wordform:
+                continue
             freq = int(row[3])
             lexicon.entry[wordform].celex_freq = freq
 
@@ -87,12 +96,12 @@ def main(args: argparse.Namespace) -> None:
     with open(path, "r") as source:
         for line in source:
             row = _parse_celex_row(line)
-            wordform = row[1]
-            if " " in wordform:  # Ignores multiword expressions.
+            wordform = row[1].casefold()
+            # Throws out multiword entries.
+            if " " in wordform:
                 continue
-            # FIXME
+            # FIXME(kbg): what ought to be done here?
             pron = row[6].replace("-", "")  # Eliminates syllable boundaries.
-            wordform = wordform.casefold()
             ptr = lexicon.entry[wordform]
             ptr.celex_pron.append(pron)
 
@@ -105,10 +114,23 @@ def main(args: argparse.Namespace) -> None:
                 continue
             (wordform, pron) = line.rstrip().split("  ", 1)
             wordform = wordform.casefold()
-            # Remove "numbering" on wordforms like `BASS(1)`.
+            # Removes "numbering" on wordforms like `BASS(1)`.
             wordform = re.sub(r"\(\d+\)$", "", wordform)
             ptr = lexicon.entry[wordform]
             ptr.cmu_pron.append(pron)
+
+    # ELP morphological analyses.
+    (path, license) = ELP_MORPH
+    with open(path, "r") as source:
+        for drow in csv.DictReader(source):
+            wordform = drow["Word"].casefold()
+            ptr = lexicon.entry[wordform]
+            morph_sp = drow["MorphSp"]
+            # Skips lines without a morphological analysis.
+            if morph_sp == "NULL":
+                continue
+            ptr.elp_morph_sp = morph_sp
+            ptr.elp_nmorph = int(drow["NMorph"])
 
     # SUBTLEX-US.
     (path, license) = SUBTLEX_US
@@ -169,6 +191,7 @@ def main(args: argparse.Namespace) -> None:
         logging.debug("Wrote %d entries", len(lexicon.entry))
 
     # Writes it out as a TSV file.
+    # TODO(kbg): Not all fields yet supported.
     with open(args.output_tsv_path, "w") as sink:
         tsv_writer = csv.DictWriter(
             sink,
@@ -178,10 +201,14 @@ def main(args: argparse.Namespace) -> None:
             lineterminator="\n",
         )
         tsv_writer.writeheader()
-        for (wordform, entry) in lexicon.entry.items():
+        # Sorting for stability.
+        for (wordform, entry) in sorted(lexicon.entry.items()):
             row = {"wordform": wordform}
             for field in FIELDNAMES[1:]:
-                if entry.HasField(field):
+                if field in REPEATED_STRING_FIELDNAMES:
+                    # Deduplicate and join on '^'.
+                    row[field] = "^".join(frozenset(getattr(entry, field)))
+                elif entry.HasField(field):
                     row[field] = getattr(entry, field)
             tsv_writer.writerow(row)
 

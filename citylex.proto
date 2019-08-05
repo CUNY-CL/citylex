@@ -32,11 +32,26 @@ message Entry {
 }
 */
   optional int64 celex_freq = 1;
+// TODO(kbg): Implement the morphological features.
   optional string celex_morph_status = 2;
   optional string celex_morph_language_code = 3;
   repeated string celex_pron = 4;
 
   repeated string cmu_pron = 5;
+
+/*
+@article{ELP,
+    author = {Balota, David A. and Yap, Melvin J. and Cortese, Michael J. and Hutchison, Keith A. and Kessler, Brett and Loftis, Bjorn and Neely, James H. and Nelson, Douglas L. and Simpson, Greg B. and Treiman, Rebecca},
+    title = {The English Lexicon Project}
+    volume = {39},
+    number = {3},
+    journal = {Behavior Research Methods},
+    pages = {445-459},
+    year = {2007}
+}
+*/
+  optional string elp_morph_sp = 6;  // Morphological analysis.
+  optional int32 elp_nmorph = 7;     // Number of morphs in that analysis.
 
 /*
 @article{SUBTLEX-UK,
@@ -49,8 +64,8 @@ message Entry {
      year = {2014}
 }
 */
-  optional int64 subtlex_uk_freq = 6;
-  optional int64 subtlex_uk_cd = 7;
+  optional int64 subtlex_uk_freq = 8;
+  optional int64 subtlex_uk_cd = 9;
 
 /*
 @article{SUBTLEX-US,
@@ -63,8 +78,8 @@ message Entry {
     year = {2009},
 }
 */
-  optional int64 subtlex_us_freq = 8;
-  optional int64 subtlex_us_cd = 9;
+  optional int64 subtlex_us_freq = 10;
+  optional int64 subtlex_us_cd = 11;
 
 /*
 @incollection{UDLexicons,
@@ -75,7 +90,7 @@ message Entry {
     year = {2018}
 }
 */
-  repeated MorphEntry udlexicons_apertium = 10;
+  repeated MorphEntry udlexicons_apertium = 12;
 
 /*
 @unpublished{UniMorphSpec,
@@ -93,7 +108,7 @@ message Entry {
     year = {2018}
 }
 */
-  repeated MorphEntry unimorph = 11;
+  repeated MorphEntry unimorph = 13;
 }
 
 // A collection of entries.
