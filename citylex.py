@@ -2,8 +2,6 @@
 """Creates textproto CityLex lexicon."""
 
 ## TODO(kbg): Add CELEX morphology to the best of your ability.
-## TODO(kbg): Add psycholinguistic attributes:
-##            AoA, VAD, concreteness, imageability, etc.
 
 ## TODO: Adds downloading support.
 ## TODO: Adds licensing support.
@@ -164,12 +162,15 @@ def main(args: argparse.Namespace) -> None:
             if pieces[0].startswith("0-"):
                 continue
             wordform = pieces[2].casefold()
-            lemma = pieces[3].casefold()
             ptr = lexicon.entry[wordform]
             entry = ptr.udlexicons_apertium.add()
-            entry.lemma = lemma
+            lemma = pieces[3].casefold()
+            # Ignores unspecified lemmata.
+            if lemma != "_":
+                entry.lemma = lemma
             entry.pos = pieces[4]
             features = pieces[6]
+            # Ignores unspecified feature bundles.
             if features != "_":
                 entry.features = features
 
