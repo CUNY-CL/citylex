@@ -58,16 +58,14 @@ message Entry {
   optional int64 subtlex_us_freq = 8;
   optional int64 subtlex_us_cd = 9;
 
-// FIXME
 /*
 @incollection{UDLexicons,
-    author = {Sagot, Benoit},
+    author = {Sagot, Benoît},
     booktitle = {LREC},
-    pages = {?-?},
-    title = {},
+    title = {A multilingual collection of {CoNLL}-{U}-compatible morphological lexicons},
+    pages = {1861-1867}
     year = {2018}
 }
-...
 */
   repeated MorphEntry udlexicons_apertium = 10;
 
