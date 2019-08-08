@@ -7,14 +7,6 @@ package citylex;
 // A series of values paired with a lemma or wordform.
 message Entry {
 
-  // Stuff used repeatedly.
-
-  message MorphEntry {
-    required string lemma = 1;
-    optional string pos = 2;
-    optional string features = 3;
-  }
-
   // Frequencies.
 
   optional int64 celex_freq = 1;
@@ -27,6 +19,12 @@ message Entry {
 
   // Morphological analyses.
 
+  message MorphEntry {
+    required string lemma = 1;
+    optional string pos = 2;
+    optional string features = 3;
+  }
+
   // TODO(kbg): Implement the morphological features.
   optional string celex_morph_status = 6;
   optional string celex_morph_language_code = 7;
@@ -34,7 +32,7 @@ message Entry {
   optional string elp_morph_sp = 8;  // Morphological analysis.
   optional int32 elp_nmorph = 9;     // Number of morphs in that analysis.
 
-  repeated MorphEntry udlexicons_apertium = 10;
+  repeated MorphEntry udlexicons = 10;
 
   repeated MorphEntry unimorph = 11;
 
