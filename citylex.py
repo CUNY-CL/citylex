@@ -5,6 +5,7 @@ import argparse
 import csv
 import io
 import logging
+import os
 import re
 import zipfile
 
@@ -17,15 +18,11 @@ import requests
 
 import citylex_pb2
 
-## Paths to data resources that have to be local.
-# TODO(kbg): Make these into flags.
+# Relative path to CELEX resources.
+CELEX_FREQ_PATH = "english/efw/efw.cd"
+CELEX_PRON_PATH = "english/epw/epw.cd"
 
-CELEX_FREQ_PATH = "data/celex2/english/efw/efw.cd"
-CELEX_MORPH_LEMMA_PATH = "data/celex2/english/eml/eml.cd"
-CELEX_PRON_PATH = "data/celex2/english/epw/epw.cd"
-ELP_PATH = "data/ELP.csv"
-
-## URLs to automatically downloadable data.
+## URLs and paths to automatically downloadable data.
 CMU_PRON_URL = (
     "http://svn.code.sf.net/p/cmusphinx/code/trunk/cmudict/cmudict-0.7b"
 )
@@ -68,7 +65,7 @@ def _request_url_zip_resource(url: str, path: str) -> Iterator[str]:
     response.raise_for_status()
     # Pretends to be a local zip file.
     mock_zip_file = io.BytesIO(response.content)
-    # Opens the ZIP file, and then the specific enclosed file.
+    # Opens the zip file, and then the specific enclosed file.
     with zipfile.ZipFile(mock_zip_file, "r").open(path, "r") as source:
         for line in source:
             yield line.decode("utf8")
@@ -104,9 +101,14 @@ def main(args: argparse.Namespace) -> None:
     lexicon = citylex_pb2.Lexicon()
 
     if args.enable_celex:
+        if not args.celex_path:
+            logging.error("CELEX requested but --celex_path was not specified")
+            exit(1)
+
         # CELEX/COBUILD frequencies.
         counter = 0
-        with open(CELEX_FREQ_PATH, "r") as source:
+        path = os.path.join(args.celex_path, CELEX_FREQ_PATH)
+        with open(path, "r") as source:
             for line in source:
                 row = _parse_celex_row(line)
                 wordform = row[1].casefold()
@@ -124,7 +126,8 @@ def main(args: argparse.Namespace) -> None:
 
         # CELEX pronunciations.
         counter = 0
-        with open(CELEX_PRON_PATH, "r") as source:
+        path = os.path.join(args.celex_path, CELEX_PRON_PATH)
+        with open(path, "r") as source:
             for line in source:
                 row = _parse_celex_row(line)
                 wordform = row[1].casefold()
@@ -156,9 +159,12 @@ def main(args: argparse.Namespace) -> None:
         logging.info(f"Collected {counter:,} CMU pronunciations")
 
     if args.enable_elp:
+        if not args.elp_path:
+            logging.error("ELP requested but --elp_path was not specified")
+            exit(1)
         # ELP morphology.
         counter = 0
-        with open(ELP_PATH, "r") as source:
+        with open(args.elp_path, "r") as source:
             for drow in csv.DictReader(source):
                 wordform = drow["Word"].casefold()
                 ptr = lexicon.entry[wordform]
@@ -294,6 +300,10 @@ if __name__ == "__main__":
         "https://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf",
     )
     parser.add_argument(
+        "--celex_path",
+        help="Path to CELEX directory (usually ends in `celex2`)",
+    )
+    parser.add_argument(
         "--enable_cmu",
         action="store_true",
         help="Extracts CMU data, under BSD 2-clause license: "
@@ -303,6 +313,10 @@ if __name__ == "__main__":
         "--enable_elp",
         action="store_true",
         help="Extracts ELP data, under noncommercial use agreement",
+    )
+    parser.add_argument(
+        "--elp_path",
+        help="Path to ELP file (see README.md for desired format)",
     )
     parser.add_argument(
         "--enable_subtlex",
