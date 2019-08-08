@@ -48,6 +48,7 @@ MORPHENTRY_FIELDNAMES = frozenset(["udlexicons", "unimorph"])
 
 
 def _parse_celex_row(line: str) -> List[str]:
+    """Parses a single line of CELEX."""
     return line.rstrip().split("\\")
 
 
