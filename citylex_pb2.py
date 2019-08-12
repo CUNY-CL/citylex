@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='citylex',
   syntax='proto2',
   serialized_options=None,
-  serialized_pb=_b('\n\rcitylex.proto\x12\x07\x63itylex\"\xb9\x03\n\x05\x45ntry\x12\x12\n\ncelex_freq\x18\x01 \x01(\x03\x12\x17\n\x0fsubtlex_uk_freq\x18\x02 \x01(\x03\x12\x15\n\rsubtlex_uk_cd\x18\x03 \x01(\x03\x12\x17\n\x0fsubtlex_us_freq\x18\x04 \x01(\x03\x12\x15\n\rsubtlex_us_cd\x18\x05 \x01(\x03\x12\x1a\n\x12\x63\x65lex_morph_status\x18\x06 \x01(\t\x12!\n\x19\x63\x65lex_morph_language_code\x18\x07 \x01(\t\x12\x14\n\x0c\x65lp_morph_sp\x18\x08 \x01(\t\x12\x12\n\nelp_nmorph\x18\t \x01(\x05\x12-\n\nudlexicons\x18\n \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12+\n\x08unimorph\x18\x0b \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x12\n\ncelex_pron\x18\x0c \x03(\t\x12\x10\n\x08\x63mu_pron\x18\r \x03(\t\x12\x15\n\rwikipron_pron\x18\x0e \x03(\t\x1a:\n\nMorphEntry\x12\r\n\x05lemma\x18\x01 \x02(\t\x12\x0b\n\x03pos\x18\x02 \x01(\t\x12\x10\n\x08\x66\x65\x61tures\x18\x03 \x01(\t\"s\n\x07Lexicon\x12*\n\x05\x65ntry\x18\x01 \x03(\x0b\x32\x1b.citylex.Lexicon.EntryEntry\x1a<\n\nEntryEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1d\n\x05value\x18\x02 \x01(\x0b\x32\x0e.citylex.Entry:\x02\x38\x01')
+  serialized_pb=_b('\n\rcitylex.proto\x12\x07\x63itylex\"\xc5\x03\n\x05\x45ntry\x12\x12\n\ncelex_freq\x18\x01 \x01(\x03\x12\x17\n\x0fsubtlex_uk_freq\x18\x02 \x01(\x03\x12\x15\n\rsubtlex_uk_cd\x18\x03 \x01(\x03\x12\x17\n\x0fsubtlex_us_freq\x18\x04 \x01(\x03\x12\x15\n\rsubtlex_us_cd\x18\x05 \x01(\x03\x12\x1a\n\x12\x63\x65lex_morph_status\x18\x06 \x01(\t\x12!\n\x19\x63\x65lex_morph_language_code\x18\x07 \x01(\t\x12\x14\n\x0c\x65lp_morph_sp\x18\x08 \x01(\t\x12\x12\n\nelp_nmorph\x18\t \x01(\x05\x12\x33\n\x10udlexicons_morph\x18\n \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x31\n\x0eunimorph_morph\x18\x0b \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x12\n\ncelex_pron\x18\x0c \x03(\t\x12\x10\n\x08\x63mu_pron\x18\r \x03(\t\x12\x15\n\rwikipron_pron\x18\x0e \x03(\t\x1a:\n\nMorphEntry\x12\r\n\x05lemma\x18\x01 \x02(\t\x12\x0b\n\x03pos\x18\x02 \x01(\t\x12\x10\n\x08\x66\x65\x61tures\x18\x03 \x01(\t\"s\n\x07Lexicon\x12*\n\x05\x65ntry\x18\x01 \x03(\x0b\x32\x1b.citylex.Lexicon.EntryEntry\x1a<\n\nEntryEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1d\n\x05value\x18\x02 \x01(\x0b\x32\x0e.citylex.Entry:\x02\x38\x01')
 )
 
 
@@ -66,8 +66,8 @@ _ENTRY_MORPHENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=410,
-  serialized_end=468,
+  serialized_start=422,
+  serialized_end=480,
 )
 
 _ENTRY = _descriptor.Descriptor(
@@ -141,14 +141,14 @@ _ENTRY = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='udlexicons', full_name='citylex.Entry.udlexicons', index=9,
+      name='udlexicons_morph', full_name='citylex.Entry.udlexicons_morph', index=9,
       number=10, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='unimorph', full_name='citylex.Entry.unimorph', index=10,
+      name='unimorph_morph', full_name='citylex.Entry.unimorph_morph', index=10,
       number=11, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -188,7 +188,7 @@ _ENTRY = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=27,
-  serialized_end=468,
+  serialized_end=480,
 )
 
 
@@ -225,8 +225,8 @@ _LEXICON_ENTRYENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=525,
-  serialized_end=585,
+  serialized_start=537,
+  serialized_end=597,
 )
 
 _LEXICON = _descriptor.Descriptor(
@@ -255,13 +255,13 @@ _LEXICON = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=470,
-  serialized_end=585,
+  serialized_start=482,
+  serialized_end=597,
 )
 
 _ENTRY_MORPHENTRY.containing_type = _ENTRY
-_ENTRY.fields_by_name['udlexicons'].message_type = _ENTRY_MORPHENTRY
-_ENTRY.fields_by_name['unimorph'].message_type = _ENTRY_MORPHENTRY
+_ENTRY.fields_by_name['udlexicons_morph'].message_type = _ENTRY_MORPHENTRY
+_ENTRY.fields_by_name['unimorph_morph'].message_type = _ENTRY_MORPHENTRY
 _LEXICON_ENTRYENTRY.fields_by_name['value'].message_type = _ENTRY
 _LEXICON_ENTRYENTRY.containing_type = _LEXICON
 _LEXICON.fields_by_name['entry'].message_type = _LEXICON_ENTRYENTRY

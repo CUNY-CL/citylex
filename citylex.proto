@@ -32,9 +32,9 @@ message Entry {
   optional string elp_morph_sp = 8;  // Morphological analysis.
   optional int32 elp_nmorph = 9;     // Number of morphs in that analysis.
 
-  repeated MorphEntry udlexicons = 10;
+  repeated MorphEntry udlexicons_morph = 10;
 
-  repeated MorphEntry unimorph = 11;
+  repeated MorphEntry unimorph_morph = 11;
 
   // Pronunciations.
 

@@ -22,10 +22,8 @@ import citylex_pb2
 CELEX_FREQ_PATH = "english/efw/efw.cd"
 CELEX_PRON_PATH = "english/epw/epw.cd"
 
-## URLs and paths to automatically downloadable data.
-CMU_PRON_URL = (
-    "http://svn.code.sf.net/p/cmusphinx/code/trunk/cmudict/cmudict-0.7b"
-)
+# URLs and paths to automatically downloadable data.
+CMU_URL = "http://svn.code.sf.net/p/cmusphinx/code/trunk/cmudict/cmudict-0.7b"
 SUBTLEX_UK_URL = "http://crr.ugent.be/papers/SUBTLEX-UK.xlsx"
 SUBTLEX_US_URL = "http://crr.ugent.be/papers/SUBTLEX-US_frequency_list_with_PoS_information_final_text_version.zip"
 SUBTLEX_US_PATH = (
@@ -34,14 +32,7 @@ SUBTLEX_US_PATH = (
 UNIMORPH_URL = "http://github.com/unimorph/eng/raw/master/eng"
 UDLEXICONS_URL = "http://atoll.inria.fr/~sagot/UDLexicons.0.2.zip"
 UDLEXICONS_PATH = "UDLexicons.0.2/UDLex_English-Apertium.conllul"
-
-## Fieldnames.
-
-# Fieldnames which require simple deduplication and joining.
-REPEATED_STRING_FIELDNAMES = frozenset(["celex_pron", "cmu_pron"])
-
-# Fieldnames which require complex deduplication and joining.
-MORPHENTRY_FIELDNAMES = frozenset(["udlexicons", "unimorph"])
+WIKIPRON_URL = "https://raw.githubusercontent.com/kylebgorman/wikipron/master/languages/wikipron/en.tsv"
 
 
 def _parse_celex_row(line: str) -> List[str]:
@@ -68,18 +59,89 @@ def _request_url_zip_resource(url: str, path: str) -> Iterator[str]:
     # Opens the zip file, and then the specific enclosed file.
     with zipfile.ZipFile(mock_zip_file, "r").open(path, "r") as source:
         for line in source:
-            yield line.decode("utf8")
+            yield line.decode("utf8", "ignore")
 
 
-def main(args: argparse.Namespace) -> None:
+def main() -> None:
+    logging.basicConfig(format="%(levelname)s: %(message)s", level="INFO")
+    parser = argparse.ArgumentParser(description=__doc__)
+    # Output paths.
+    parser.add_argument(
+        "--output_textproto_path",
+        default="citylex.textproto",
+        help="Output textproto path (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--output_tsv_path",
+        default="citylex.tsv",
+        help="Output TSV path (default: %(default)s)",
+    )
+    # Enable particular data sources.
+    parser.add_argument(
+        "--enable_celex",
+        action="store_true",
+        help="Extracts CELEX data (proprietary use agreement): "
+        "http://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf",
+    )
+    parser.add_argument(
+        "--celex_path",
+        help="Path to CELEX directory (usually ends in `celex2`)",
+    )
+    parser.add_argument(
+        "--enable_cmu",
+        action="store_true",
+        help="Extracts CMU data (BSD 2-clause): "
+        "http://opensource.org/licenses/BSD-2-Clause",
+    )
+    parser.add_argument(
+        "--enable_elp",
+        action="store_true",
+        help="Extracts ELP data (noncommercial use agreement): "
+        "http://elexicon.wustl.edu/WordStart.asp",
+    )
+    parser.add_argument(
+        "--elp_path",
+        help="Path to ELP file (see README.md for desired format)",
+    )
+    parser.add_argument(
+        "--enable_subtlex",
+        action="store_true",
+        help="Extracts SUBTLEX data (CC BY-NC-ND 2.0): "
+        "http://creativecommons.org/licenses/by-nc-nd/2.0/",
+    )
+    parser.add_argument(
+        "--enable_udlexicons",
+        action="store_true",
+        help="Extracts Apertium UDLexicons data (GPL 3.0): "
+        "https://opensource.org/licenses/GPL-3.0",
+    )
+    parser.add_argument(
+        "--enable_unimorph",
+        action="store_true",
+        help="Extracts UniMorph data (C BY-SA 2.0): "
+        "http://creativecommons.org/licenses/by-sa/2.0/",
+    )
+    parser.add_argument(
+        "--enable_wikipron",
+        action="store_true",
+        help="Extracts WikiPron data (CC BY-SA 3.0 Unported): "
+        "http://creativecommons.org/licenses/by-sa/3.0/",
+    )
+    args = parser.parse_args()
 
     # Builds TSV fieldnames.
     fieldnames = []
     if args.enable_celex:
+        if not args.celex_path:
+            logging.error("CELEX requested but --celex_path was not specified")
+            exit(1)
         fieldnames.extend(["celex_freq", "celex_pron"])
     if args.enable_cmu:
         fieldnames.append("cmu_pron")
     if args.enable_elp:
+        if not args.elp_path:
+            logging.error("ELP requested but --elp_path was not specified")
+            exit(1)
         fieldnames.extend(["elp_morph_sp", "elp_nmorph"])
     if args.enable_subtlex:
         fieldnames.extend(
@@ -91,21 +153,23 @@ def main(args: argparse.Namespace) -> None:
             ]
         )
     if args.enable_udlexicons:
-        fieldnames.append("udlexicons")
+        fieldnames.append("udlexicons_morph")
     if args.enable_unimorph:
-        fieldnames.append("unimorph")
+        fieldnames.append("unimorph_morph")
+    if args.enable_wikipron:
+        fieldnames.append("wikipron_pron")
+
     if not fieldnames:
-        logging.error("No data sources selected: use --enable_* flags")
+        logging.error(
+            "No data sources selected: use --enable_* flags; "
+            "run `citylex --help` for more information"
+        )
         exit(1)
 
     lexicon = citylex_pb2.Lexicon()
 
     if args.enable_celex:
-        if not args.celex_path:
-            logging.error("CELEX requested but --celex_path was not specified")
-            exit(1)
-
-        # CELEX/COBUILD frequencies.
+        # Frequencies.
         counter = 0
         path = os.path.join(args.celex_path, CELEX_FREQ_PATH)
         with open(path, "r") as source:
@@ -120,11 +184,12 @@ def main(args: argparse.Namespace) -> None:
                 # Add to the sum if it's already defined.
                 ptr.celex_freq += freq
                 counter += 1
+        assert counter, "No data read"
         logging.info(f"Collected {counter:,} CELEX frequencies")
 
-        # TODO: Add CELEX morphology.
+        # TODO: Add morphology.
 
-        # CELEX pronunciations.
+        # Pronunciations.
         counter = 0
         path = os.path.join(args.celex_path, CELEX_PRON_PATH)
         with open(path, "r") as source:
@@ -134,19 +199,18 @@ def main(args: argparse.Namespace) -> None:
                 # Throws out multiword entries.
                 if " " in wordform:
                     continue
-                # FIXME(kbg): what ought to be done here?
-                pron = row[6].replace(
-                    "-", ""
-                )  # Eliminates syllable boundaries.
+                # TODO: what ought to be done here?
+                # Eliminates inconsistent syllable boundaries.
+                pron = row[6].replace("-", "")
                 ptr = lexicon.entry[wordform]
                 ptr.celex_pron.append(pron)
                 counter += 1
+        assert counter, "No data read"
         logging.info(f"Collected {counter:,} CELEX pronunciations")
 
     if args.enable_cmu:
-        # CMU pronunciations.
         counter = 0
-        for line in _request_url_resource(CMU_PRON_URL):
+        for line in _request_url_resource(CMU_URL):
             if line.startswith(";"):
                 continue
             (wordform, pron) = line.rstrip().split("  ", 1)
@@ -156,13 +220,10 @@ def main(args: argparse.Namespace) -> None:
             ptr = lexicon.entry[wordform]
             ptr.cmu_pron.append(pron)
             counter += 1
+        assert counter, "No data read"
         logging.info(f"Collected {counter:,} CMU pronunciations")
 
     if args.enable_elp:
-        if not args.elp_path:
-            logging.error("ELP requested but --elp_path was not specified")
-            exit(1)
-        # ELP morphology.
         counter = 0
         with open(args.elp_path, "r") as source:
             for drow in csv.DictReader(source):
@@ -175,6 +236,7 @@ def main(args: argparse.Namespace) -> None:
                 ptr.elp_morph_sp = morph_sp
                 ptr.elp_nmorph = int(drow["NMorph"])
                 counter += 1
+        assert counter, "No data read"
         logging.info(f"Collected {counter:,} ELP analyses")
 
     if args.enable_subtlex:
@@ -193,6 +255,7 @@ def main(args: argparse.Namespace) -> None:
                 ptr.subtlex_uk_freq = freq
                 ptr.subtlex_uk_cd = cd
                 counter += 1
+        assert counter, "No data read"
         logging.info(f"Collected {counter:,} SUBTLEX-UK frequencies")
 
         # SUBTLEX-US frequencies.
@@ -204,24 +267,24 @@ def main(args: argparse.Namespace) -> None:
             ptr.subtlex_us_freq = int(drow["FREQcount"])
             ptr.subtlex_us_cd = int(drow["CDcount"])
             counter += 1
+        assert counter, "No data read"
         logging.info(f"Collected {counter:,} SUBTLEX-US frequencies")
 
     if args.enable_udlexicons:
-        # UDLexicon morphology.
-        # TODO(kbg): We chose not to use the EnLex data here, which looks quite
+        # TODO: We chose not to use the EnLex data here, which looks quite
         # messy by comparison; maybe revisit this decision someday.
         counter = 0
         source = _request_url_zip_resource(UDLEXICONS_URL, UDLEXICONS_PATH)
         for line in source:
             pieces = line.rstrip().split("\t")
-            # Skips complex expressions.
-            # TODO(kbg): Is there a more elegant way to do this?
+            # Skips multiword expressions.
+            # TODO: Is there a more elegant way to do this?
             if pieces[0].startswith("0-"):
                 continue
             wordform = pieces[2].casefold()
             ptr = lexicon.entry[wordform]
             lemma = pieces[3].casefold()
-            entry = ptr.udlexicons.add()
+            entry = ptr.udlexicons_morph.add()
             # Ignores unspecified lemmata.
             if lemma != "_":
                 entry.lemma = lemma
@@ -231,10 +294,10 @@ def main(args: argparse.Namespace) -> None:
             if features != "_":
                 entry.features = features
             counter += 1
+        assert counter, "No data read"
         logging.info(f"Collected {counter:,} UDLexicon analyses")
 
     if args.enable_unimorph:
-        # Unimorph.
         counter = 0
         for line in _request_url_resource(UNIMORPH_URL):
             line = line.rstrip()
@@ -244,11 +307,23 @@ def main(args: argparse.Namespace) -> None:
             wordform = wordform.casefold()
             lemma = lemma.casefold()
             ptr = lexicon.entry[wordform]
-            entry = ptr.unimorph.add()
+            entry = ptr.unimorph_morph.add()
             entry.lemma = lemma
             entry.features = features
             counter += 1
+        assert counter, "No data read"
         logging.info(f"Collected {counter:,} UniMorph analyses")
+
+    if args.enable_wikipron:
+        counter = 0
+        for line in _request_url_resource(WIKIPRON_URL):
+            (wordform, pron) = line.rstrip().split("\t", 1)
+            wordform = wordform.casefold()
+            ptr = lexicon.entry[wordform]
+            ptr.wikipron_pron.append(pron)
+            counter += 1
+        assert counter, "No data read"
+        logging.info(f"Collected {counter:,} WikiPron pronunciations")
 
     logging.info("Writing out textproto")
     with open(args.output_textproto_path, "w") as sink:
@@ -269,10 +344,10 @@ def main(args: argparse.Namespace) -> None:
         for (wordform, entry) in sorted(lexicon.entry.items()):
             drow = {"wordform": wordform}
             for field in fieldnames:
-                if field in REPEATED_STRING_FIELDNAMES:
+                if field.endswith("_pron"):
                     # Deduplicate and join on '^'.
                     drow[field] = "^".join(frozenset(getattr(entry, field)))
-                elif field in MORPHENTRY_FIELDNAMES:
+                elif field.endswith("_morph"):
                     # Make triples and join on '^'.
                     triples = [
                         f"{triple.lemma}_{triple.pos}_{triple.features}"
@@ -284,56 +359,3 @@ def main(args: argparse.Namespace) -> None:
             tsv_writer.writerow(drow)
 
     logging.info("Success!")
-
-
-if __name__ == "__main__":
-    logging.basicConfig(format="%(levelname)s: %(message)s", level="INFO")
-    parser = argparse.ArgumentParser(description=__doc__)
-    # Output paths.
-    parser.add_argument("--output_textproto_path", default="citylex.textproto")
-    parser.add_argument("--output_tsv_path", default="citylex.tsv")
-    # Enable particular data sources.
-    parser.add_argument(
-        "--enable_celex",
-        action="store_true",
-        help="Extracts CELEX data, under a proprietary use agreement: "
-        "https://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf",
-    )
-    parser.add_argument(
-        "--celex_path",
-        help="Path to CELEX directory (usually ends in `celex2`)",
-    )
-    parser.add_argument(
-        "--enable_cmu",
-        action="store_true",
-        help="Extracts CMU data, under BSD 2-clause license: "
-        "https://opensource.org/licenses/BSD-2-Clause",
-    )
-    parser.add_argument(
-        "--enable_elp",
-        action="store_true",
-        help="Extracts ELP data, under noncommercial use agreement",
-    )
-    parser.add_argument(
-        "--elp_path",
-        help="Path to ELP file (see README.md for desired format)",
-    )
-    parser.add_argument(
-        "--enable_subtlex",
-        action="store_true",
-        help="Extracts SUBTLEX data, under CC BY-NC-ND 2.0 license: "
-        "https://creativecommons.org/licenses/by-nc-nd/2.0/",
-    )
-    parser.add_argument(
-        "--enable_udlexicons",
-        action="store_true",
-        help="Extracts Apertium UDLexicons data, under GPL 3.0 license: "
-        "https://www.gnu.org/licenses/gpl-3.0.en.html",
-    )
-    parser.add_argument(
-        "--enable_unimorph",
-        action="store_true",
-        help="Extracts UniMorph data, under CC BY-SA 2.0 license: "
-        "https://creativecommons.org/licenses/by-sa/2.0/",
-    )
-    main(parser.parse_args())
