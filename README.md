@@ -42,7 +42,6 @@ by default `citylex.textproto`, a
 provides a better representation of the repeated fields. To parse this
 file in Python, use the following snippet:
 
-::: {#cb1 .sourceCode}
 ``` {.sourceCode .python}
 from google.protobuf import text_format
 
@@ -52,7 +51,6 @@ lexicon = citylex_pb2.Lexicon()
 with open("citylex.textproto, "r") as source: 
    text_format.ParseLines(source, lexicon)
 ```
-:::
 
 This will parse the text-format data and populate `lexicon`. One can
 then iterate over `lexicon.entry` like a Python dictionary.
@@ -67,12 +65,11 @@ If you wish to enable CELEX or ELP data, follow the instructions below.
     [LDC](https://catalog.ldc.upenn.edu/LDC96L14) as `LDC96L14.tgz`. The
     file must be decompressed using
 
-    tar -xzf LDC96L14.tgz
+        tar -xzf LDC96L14.tgz
 
 This will produce a directory named `celex2`.
-
-To enable CELEX2 features, use `--enable_celex` and pass the local path
-of this directory as an argument to `--celex_path`.
+To enable CELEX2 features, use `--enable_celex` and
+pass the local path of this directory as an argument to `--celex_path`.
 
 -   ELP \[noncommercial\]: This resource must be obtained from the
     authors' website. Visit:
@@ -80,21 +77,15 @@ of this directory as an argument to `--celex_path`.
     http://elexicon.wustl.edu/WordStart.asp
 
 noting that the underlying website is unfortunately rather unreliable.
-
-Once there, you will be presented with a series of checkboxes. Make sure
-to enable the fields labeled "MorphSp (Morpheme Parse - Letters)" and
+Once there, you will be presented with a series of checkboxes.
+Enable the fields labeled "MorphSp (Morpheme Parse - Letters)" and
 "NMorph (Number of Morphemes)" under "Morphological Characteristics".
-
 Then, below, select the radio button labeled "The complete ELP Lexicon"
 on the left, and "Email" on the right.
-
 Then click "Execute Query".
-
 You will be prompted for an email address: enter one.
-
 You will then receive a TSV file via email containing these fields.
 Download it and do not modify it further.
-
 To enable ELP features, use `--enable_elp` and pass the local path of
 the downloaded TSV file as an argument to `--elp_path`.
 
