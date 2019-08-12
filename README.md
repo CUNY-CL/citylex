@@ -13,21 +13,23 @@ redistribution), we do not provide the database as is. Rather the user
 must generate a personal copy by executing a Python script, enabling
 whatever sources they wish to use.
 
-Building your CityLex
----------------------
+Building your own CityLex
+-------------------------
 
-To install CityLex run: `pip install .` in the current directory.
+To install CityLex execute
 
-To see the available data sources and options, run `citylex --help`.
+    pip install git+https://github.com/kylebgorman/citylex.git
 
-To generate the lexicon, run `citylex` without the help options and
-at least one data source enabled via the `--enable_X` flags. As most of
-the data is downloaded from outline sources, an internet connection is
-normally required. The process takes roughly five minutes with all
+To see the available data sources and options, execute `citylex --help`.
+
+To generate the lexicon, execute `citylex` with at least one source
+enabled using the `--enable_X` flags. As most of the data is
+downloaded from outline sources, an internet connection is
+normally required. The process takes roughly four minutes with all
 sources enabled; much of the time is spent downloading large files.
 
 To generate a lexicon with all the sources that don't require manual
-downloads, run
+downloads, execute
 
     citylex --enable_cmu --enable_subtlex --enable_udlexicons \
         --enable_unimorph --enable_wikipron
