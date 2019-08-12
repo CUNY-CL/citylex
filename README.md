@@ -26,6 +26,12 @@ the data is downloaded from outline sources, an internet connection is
 normally required. The process takes roughly five minutes with all
 sources enabled; much of the time is spent downloading large files.
 
+To generate a lexicon with all the sources that don't require manual
+downloads, run
+
+    citylex --enable_cmu --enable_subtlex --enable_udlexicons \
+        --enable_unimorph --enable_wikipron
+
 File formats
 ------------
 
