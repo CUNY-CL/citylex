@@ -69,62 +69,62 @@ def main() -> None:
     parser.add_argument(
         "--output_textproto_path",
         default="citylex.textproto",
-        help="Output textproto path (default: %(default)s)",
+        help="output textproto path (default: %(default)s)",
     )
     parser.add_argument(
         "--output_tsv_path",
         default="citylex.tsv",
-        help="Output TSV path (default: %(default)s)",
+        help="output TSV path (default: %(default)s)",
     )
-    # Enable particular data sources.
+    # Enables specific data sources.
     parser.add_argument(
         "--enable_celex",
         action="store_true",
-        help="Extracts CELEX data (proprietary use agreement): "
+        help="extract  CELEX data (proprietary use agreement): "
         "http://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf",
     )
     parser.add_argument(
         "--celex_path",
-        help="Path to CELEX directory (usually ends in `celex2`)",
+        help="path to CELEX directory (usually ends in `celex2`)",
     )
     parser.add_argument(
         "--enable_cmu",
         action="store_true",
-        help="Extracts CMU data (BSD 2-clause): "
+        help="extract  CMU data (BSD 2-clause): "
         "http://opensource.org/licenses/BSD-2-Clause",
     )
     parser.add_argument(
         "--enable_elp",
         action="store_true",
-        help="Extracts ELP data (noncommercial use agreement): "
+        help="extract  ELP data (noncommercial use agreement): "
         "http://elexicon.wustl.edu/WordStart.asp",
     )
     parser.add_argument(
         "--elp_path",
-        help="Path to ELP file (see README.md for desired format)",
+        help="path to ELP file (see README.md for desired format)",
     )
     parser.add_argument(
         "--enable_subtlex",
         action="store_true",
-        help="Extracts SUBTLEX data (CC BY-NC-ND 2.0): "
+        help="extract SUBTLEX data (CC BY-NC-ND 2.0): "
         "http://creativecommons.org/licenses/by-nc-nd/2.0/",
     )
     parser.add_argument(
         "--enable_udlexicons",
         action="store_true",
-        help="Extracts Apertium UDLexicons data (GPL 3.0): "
+        help="extract Apertium UDLexicons data (GPL 3.0): "
         "https://opensource.org/licenses/GPL-3.0",
     )
     parser.add_argument(
         "--enable_unimorph",
         action="store_true",
-        help="Extracts UniMorph data (C BY-SA 2.0): "
+        help="extract UniMorph data (C BY-SA 2.0): "
         "http://creativecommons.org/licenses/by-sa/2.0/",
     )
     parser.add_argument(
         "--enable_wikipron",
         action="store_true",
-        help="Extracts WikiPron data (CC BY-SA 3.0 Unported): "
+        help="extract WikiPron data (CC BY-SA 3.0 Unported): "
         "http://creativecommons.org/licenses/by-sa/3.0/",
     )
     args = parser.parse_args()
