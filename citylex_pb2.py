@@ -3,299 +3,521 @@
 # source: citylex.proto
 
 import sys
-_b=sys.version_info[0]<3 and (lambda x:x) or (lambda x:x.encode('latin1'))
+
+_b = (
+    sys.version_info[0] < 3 and (lambda x: x) or (lambda x: x.encode("latin1"))
+)
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
+
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
-
-
 DESCRIPTOR = _descriptor.FileDescriptor(
-  name='citylex.proto',
-  package='citylex',
-  syntax='proto2',
-  serialized_options=None,
-  serialized_pb=_b('\n\rcitylex.proto\x12\x07\x63itylex\"\xc5\x03\n\x05\x45ntry\x12\x12\n\ncelex_freq\x18\x01 \x01(\x03\x12\x17\n\x0fsubtlex_uk_freq\x18\x02 \x01(\x03\x12\x15\n\rsubtlex_uk_cd\x18\x03 \x01(\x03\x12\x17\n\x0fsubtlex_us_freq\x18\x04 \x01(\x03\x12\x15\n\rsubtlex_us_cd\x18\x05 \x01(\x03\x12\x1a\n\x12\x63\x65lex_morph_status\x18\x06 \x01(\t\x12!\n\x19\x63\x65lex_morph_language_code\x18\x07 \x01(\t\x12\x14\n\x0c\x65lp_morph_sp\x18\x08 \x01(\t\x12\x12\n\nelp_nmorph\x18\t \x01(\x05\x12\x33\n\x10udlexicons_morph\x18\n \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x31\n\x0eunimorph_morph\x18\x0b \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x12\n\ncelex_pron\x18\x0c \x03(\t\x12\x10\n\x08\x63mu_pron\x18\r \x03(\t\x12\x15\n\rwikipron_pron\x18\x0e \x03(\t\x1a:\n\nMorphEntry\x12\r\n\x05lemma\x18\x01 \x02(\t\x12\x0b\n\x03pos\x18\x02 \x01(\t\x12\x10\n\x08\x66\x65\x61tures\x18\x03 \x01(\t\"s\n\x07Lexicon\x12*\n\x05\x65ntry\x18\x01 \x03(\x0b\x32\x1b.citylex.Lexicon.EntryEntry\x1a<\n\nEntryEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1d\n\x05value\x18\x02 \x01(\x0b\x32\x0e.citylex.Entry:\x02\x38\x01')
+    name="citylex.proto",
+    package="citylex",
+    syntax="proto2",
+    serialized_options=None,
+    serialized_pb=_b(
+        '\n\rcitylex.proto\x12\x07\x63itylex"\xc5\x03\n\x05\x45ntry\x12\x12\n\ncelex_freq\x18\x01 \x01(\x03\x12\x17\n\x0fsubtlex_uk_freq\x18\x02 \x01(\x03\x12\x15\n\rsubtlex_uk_cd\x18\x03 \x01(\x03\x12\x17\n\x0fsubtlex_us_freq\x18\x04 \x01(\x03\x12\x15\n\rsubtlex_us_cd\x18\x05 \x01(\x03\x12\x1a\n\x12\x63\x65lex_morph_status\x18\x06 \x01(\t\x12!\n\x19\x63\x65lex_morph_language_code\x18\x07 \x01(\t\x12\x14\n\x0c\x65lp_morph_sp\x18\x08 \x01(\t\x12\x12\n\nelp_nmorph\x18\t \x01(\x05\x12\x33\n\x10udlexicons_morph\x18\n \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x31\n\x0eunimorph_morph\x18\x0b \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x12\n\ncelex_pron\x18\x0c \x03(\t\x12\x10\n\x08\x63mu_pron\x18\r \x03(\t\x12\x15\n\rwikipron_pron\x18\x0e \x03(\t\x1a:\n\nMorphEntry\x12\r\n\x05lemma\x18\x01 \x02(\t\x12\x0b\n\x03pos\x18\x02 \x01(\t\x12\x10\n\x08\x66\x65\x61tures\x18\x03 \x01(\t"s\n\x07Lexicon\x12*\n\x05\x65ntry\x18\x01 \x03(\x0b\x32\x1b.citylex.Lexicon.EntryEntry\x1a<\n\nEntryEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1d\n\x05value\x18\x02 \x01(\x0b\x32\x0e.citylex.Entry:\x02\x38\x01'
+    ),
 )
-
-
 
 
 _ENTRY_MORPHENTRY = _descriptor.Descriptor(
-  name='MorphEntry',
-  full_name='citylex.Entry.MorphEntry',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='lemma', full_name='citylex.Entry.MorphEntry.lemma', index=0,
-      number=1, type=9, cpp_type=9, label=2,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='pos', full_name='citylex.Entry.MorphEntry.pos', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='features', full_name='citylex.Entry.MorphEntry.features', index=2,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto2',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=422,
-  serialized_end=480,
+    name="MorphEntry",
+    full_name="citylex.Entry.MorphEntry",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="lemma",
+            full_name="citylex.Entry.MorphEntry.lemma",
+            index=0,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=2,
+            has_default_value=False,
+            default_value=_b("").decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="pos",
+            full_name="citylex.Entry.MorphEntry.pos",
+            index=1,
+            number=2,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=_b("").decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="features",
+            full_name="citylex.Entry.MorphEntry.features",
+            index=2,
+            number=3,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=_b("").decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto2",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=422,
+    serialized_end=480,
 )
 
 _ENTRY = _descriptor.Descriptor(
-  name='Entry',
-  full_name='citylex.Entry',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='celex_freq', full_name='citylex.Entry.celex_freq', index=0,
-      number=1, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='subtlex_uk_freq', full_name='citylex.Entry.subtlex_uk_freq', index=1,
-      number=2, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='subtlex_uk_cd', full_name='citylex.Entry.subtlex_uk_cd', index=2,
-      number=3, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='subtlex_us_freq', full_name='citylex.Entry.subtlex_us_freq', index=3,
-      number=4, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='subtlex_us_cd', full_name='citylex.Entry.subtlex_us_cd', index=4,
-      number=5, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='celex_morph_status', full_name='citylex.Entry.celex_morph_status', index=5,
-      number=6, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='celex_morph_language_code', full_name='citylex.Entry.celex_morph_language_code', index=6,
-      number=7, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='elp_morph_sp', full_name='citylex.Entry.elp_morph_sp', index=7,
-      number=8, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='elp_nmorph', full_name='citylex.Entry.elp_nmorph', index=8,
-      number=9, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='udlexicons_morph', full_name='citylex.Entry.udlexicons_morph', index=9,
-      number=10, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='unimorph_morph', full_name='citylex.Entry.unimorph_morph', index=10,
-      number=11, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='celex_pron', full_name='citylex.Entry.celex_pron', index=11,
-      number=12, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='cmu_pron', full_name='citylex.Entry.cmu_pron', index=12,
-      number=13, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='wikipron_pron', full_name='citylex.Entry.wikipron_pron', index=13,
-      number=14, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[_ENTRY_MORPHENTRY, ],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto2',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=27,
-  serialized_end=480,
+    name="Entry",
+    full_name="citylex.Entry",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="celex_freq",
+            full_name="citylex.Entry.celex_freq",
+            index=0,
+            number=1,
+            type=3,
+            cpp_type=2,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="subtlex_uk_freq",
+            full_name="citylex.Entry.subtlex_uk_freq",
+            index=1,
+            number=2,
+            type=3,
+            cpp_type=2,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="subtlex_uk_cd",
+            full_name="citylex.Entry.subtlex_uk_cd",
+            index=2,
+            number=3,
+            type=3,
+            cpp_type=2,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="subtlex_us_freq",
+            full_name="citylex.Entry.subtlex_us_freq",
+            index=3,
+            number=4,
+            type=3,
+            cpp_type=2,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="subtlex_us_cd",
+            full_name="citylex.Entry.subtlex_us_cd",
+            index=4,
+            number=5,
+            type=3,
+            cpp_type=2,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="celex_morph_status",
+            full_name="citylex.Entry.celex_morph_status",
+            index=5,
+            number=6,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=_b("").decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="celex_morph_language_code",
+            full_name="citylex.Entry.celex_morph_language_code",
+            index=6,
+            number=7,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=_b("").decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="elp_morph_sp",
+            full_name="citylex.Entry.elp_morph_sp",
+            index=7,
+            number=8,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=_b("").decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="elp_nmorph",
+            full_name="citylex.Entry.elp_nmorph",
+            index=8,
+            number=9,
+            type=5,
+            cpp_type=1,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="udlexicons_morph",
+            full_name="citylex.Entry.udlexicons_morph",
+            index=9,
+            number=10,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="unimorph_morph",
+            full_name="citylex.Entry.unimorph_morph",
+            index=10,
+            number=11,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="celex_pron",
+            full_name="citylex.Entry.celex_pron",
+            index=11,
+            number=12,
+            type=9,
+            cpp_type=9,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="cmu_pron",
+            full_name="citylex.Entry.cmu_pron",
+            index=12,
+            number=13,
+            type=9,
+            cpp_type=9,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="wikipron_pron",
+            full_name="citylex.Entry.wikipron_pron",
+            index=13,
+            number=14,
+            type=9,
+            cpp_type=9,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+    ],
+    extensions=[],
+    nested_types=[_ENTRY_MORPHENTRY],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto2",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=27,
+    serialized_end=480,
 )
 
 
 _LEXICON_ENTRYENTRY = _descriptor.Descriptor(
-  name='EntryEntry',
-  full_name='citylex.Lexicon.EntryEntry',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='citylex.Lexicon.EntryEntry.key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='value', full_name='citylex.Lexicon.EntryEntry.value', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=_b('8\001'),
-  is_extendable=False,
-  syntax='proto2',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=537,
-  serialized_end=597,
+    name="EntryEntry",
+    full_name="citylex.Lexicon.EntryEntry",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="key",
+            full_name="citylex.Lexicon.EntryEntry.key",
+            index=0,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=_b("").decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="value",
+            full_name="citylex.Lexicon.EntryEntry.value",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=_b("8\001"),
+    is_extendable=False,
+    syntax="proto2",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=537,
+    serialized_end=597,
 )
 
 _LEXICON = _descriptor.Descriptor(
-  name='Lexicon',
-  full_name='citylex.Lexicon',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='entry', full_name='citylex.Lexicon.entry', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[_LEXICON_ENTRYENTRY, ],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto2',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=482,
-  serialized_end=597,
+    name="Lexicon",
+    full_name="citylex.Lexicon",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="entry",
+            full_name="citylex.Lexicon.entry",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        )
+    ],
+    extensions=[],
+    nested_types=[_LEXICON_ENTRYENTRY],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto2",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=482,
+    serialized_end=597,
 )
 
 _ENTRY_MORPHENTRY.containing_type = _ENTRY
-_ENTRY.fields_by_name['udlexicons_morph'].message_type = _ENTRY_MORPHENTRY
-_ENTRY.fields_by_name['unimorph_morph'].message_type = _ENTRY_MORPHENTRY
-_LEXICON_ENTRYENTRY.fields_by_name['value'].message_type = _ENTRY
+_ENTRY.fields_by_name["udlexicons_morph"].message_type = _ENTRY_MORPHENTRY
+_ENTRY.fields_by_name["unimorph_morph"].message_type = _ENTRY_MORPHENTRY
+_LEXICON_ENTRYENTRY.fields_by_name["value"].message_type = _ENTRY
 _LEXICON_ENTRYENTRY.containing_type = _LEXICON
-_LEXICON.fields_by_name['entry'].message_type = _LEXICON_ENTRYENTRY
-DESCRIPTOR.message_types_by_name['Entry'] = _ENTRY
-DESCRIPTOR.message_types_by_name['Lexicon'] = _LEXICON
+_LEXICON.fields_by_name["entry"].message_type = _LEXICON_ENTRYENTRY
+DESCRIPTOR.message_types_by_name["Entry"] = _ENTRY
+DESCRIPTOR.message_types_by_name["Lexicon"] = _LEXICON
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-Entry = _reflection.GeneratedProtocolMessageType('Entry', (_message.Message,), {
-
-  'MorphEntry' : _reflection.GeneratedProtocolMessageType('MorphEntry', (_message.Message,), {
-    'DESCRIPTOR' : _ENTRY_MORPHENTRY,
-    '__module__' : 'citylex_pb2'
-    # @@protoc_insertion_point(class_scope:citylex.Entry.MorphEntry)
-    })
-  ,
-  'DESCRIPTOR' : _ENTRY,
-  '__module__' : 'citylex_pb2'
-  # @@protoc_insertion_point(class_scope:citylex.Entry)
-  })
+Entry = _reflection.GeneratedProtocolMessageType(
+    "Entry",
+    (_message.Message,),
+    {
+        "MorphEntry": _reflection.GeneratedProtocolMessageType(
+            "MorphEntry",
+            (_message.Message,),
+            {
+                "DESCRIPTOR": _ENTRY_MORPHENTRY,
+                "__module__": "citylex_pb2"
+                # @@protoc_insertion_point(class_scope:citylex.Entry.MorphEntry)
+            },
+        ),
+        "DESCRIPTOR": _ENTRY,
+        "__module__": "citylex_pb2"
+        # @@protoc_insertion_point(class_scope:citylex.Entry)
+    },
+)
 _sym_db.RegisterMessage(Entry)
 _sym_db.RegisterMessage(Entry.MorphEntry)
 
-Lexicon = _reflection.GeneratedProtocolMessageType('Lexicon', (_message.Message,), {
-
-  'EntryEntry' : _reflection.GeneratedProtocolMessageType('EntryEntry', (_message.Message,), {
-    'DESCRIPTOR' : _LEXICON_ENTRYENTRY,
-    '__module__' : 'citylex_pb2'
-    # @@protoc_insertion_point(class_scope:citylex.Lexicon.EntryEntry)
-    })
-  ,
-  'DESCRIPTOR' : _LEXICON,
-  '__module__' : 'citylex_pb2'
-  # @@protoc_insertion_point(class_scope:citylex.Lexicon)
-  })
+Lexicon = _reflection.GeneratedProtocolMessageType(
+    "Lexicon",
+    (_message.Message,),
+    {
+        "EntryEntry": _reflection.GeneratedProtocolMessageType(
+            "EntryEntry",
+            (_message.Message,),
+            {
+                "DESCRIPTOR": _LEXICON_ENTRYENTRY,
+                "__module__": "citylex_pb2"
+                # @@protoc_insertion_point(class_scope:citylex.Lexicon.EntryEntry)
+            },
+        ),
+        "DESCRIPTOR": _LEXICON,
+        "__module__": "citylex_pb2"
+        # @@protoc_insertion_point(class_scope:citylex.Lexicon)
+    },
+)
 _sym_db.RegisterMessage(Lexicon)
 _sym_db.RegisterMessage(Lexicon.EntryEntry)
 
