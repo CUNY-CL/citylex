@@ -148,8 +148,10 @@ def _subtlex_uk(lexicon: citylex_pb2.Lexicon) -> None:
 def _subtlex_us(lexicon: citylex_pb2.Lexicon) -> None:
     """Collects SUBTLEX-US frequencies."""
     counter = 0
-    url = ("http://crr.ugent.be/papers/SUBTLEX-US_frequency_list_with_PoS_"
-           "information_final_text_version.zip")
+    url = (
+        "http://crr.ugent.be/papers/SUBTLEX-US_frequency_list_with_PoS_"
+        "information_final_text_version.zip"
+    )
     path = "SUBTLEX-US frequency list with PoS information text version.txt"
     source = _request_url_zip_resource(url, path)
     for drow in csv.DictReader(source, delimiter="\t"):
@@ -216,8 +218,10 @@ def _unimorph(lexicon: citylex_pb2.Lexicon) -> None:
 def _wikipron(lexicon: citylex_pb2.Lexicon) -> None:
     """Collects WikiPron pronunciations."""
     counter = 0
-    url = ("https://raw.githubusercontent.com/kylebgorman/"
-           "wikipron/master/languages/wikipron/eng.tsv")
+    url = (
+        "https://raw.githubusercontent.com/kylebgorman/"
+        "wikipron/master/languages/wikipron/eng.tsv"
+    )
     for line in _request_url_resource(url):
         (wordform, pron) = line.rstrip().split("\t", 1)
         wordform = wordform.casefold()
@@ -244,7 +248,7 @@ def main() -> None:
     )
     # Enables specific data sources.
     parser.add_argument(
-        "--enable_celex",
+        "--celex",
         action="store_true",
         help="extract  CELEX data (proprietary use agreement): "
         "http://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf",
@@ -254,13 +258,13 @@ def main() -> None:
         help="path to CELEX directory (usually ends in `celex2`)",
     )
     parser.add_argument(
-        "--enable_cmu",
+        "--cmu",
         action="store_true",
         help="extract  CMU data (BSD 2-clause): "
         "http://opensource.org/licenses/BSD-2-Clause",
     )
     parser.add_argument(
-        "--enable_elp",
+        "--elp",
         action="store_true",
         help="extract  ELP data (noncommercial use agreement): "
         "http://elexicon.wustl.edu/WordStart.asp",
@@ -270,31 +274,31 @@ def main() -> None:
         help="path to ELP file (see README.md for desired format)",
     )
     parser.add_argument(
-        "--enable_subtlex_uk",
+        "--subtlex_uk",
         action="store_true",
         help="extract SUBTLEX-UK data (CC BY-NC-ND 2.0): "
         "http://creativecommons.org/licenses/by-nc-nd/2.0/",
     )
     parser.add_argument(
-        "--enable_subtlex_us",
+        "--subtlex_us",
         action="store_true",
         help="extract SUBTLEX-US data (CC BY-NC-ND 2.0): "
         "http://creativecommons.org/licenses/by-nc-nd/2.0/",
     )
     parser.add_argument(
-        "--enable_udlexicons",
+        "--udlexicons",
         action="store_true",
         help="extract Apertium UDLexicons data (GPL 3.0): "
         "https://opensource.org/licenses/GPL-3.0",
     )
     parser.add_argument(
-        "--enable_unimorph",
+        "--unimorph",
         action="store_true",
         help="extract UniMorph data (C BY-SA 2.0): "
         "http://creativecommons.org/licenses/by-sa/2.0/",
     )
     parser.add_argument(
-        "--enable_wikipron",
+        "--wikipron",
         action="store_true",
         help="extract WikiPron data (CC BY-SA 3.0 Unported): "
         "http://creativecommons.org/licenses/by-sa/3.0/",
@@ -303,27 +307,27 @@ def main() -> None:
 
     # Builds TSV fieldnames.
     fieldnames = []
-    if args.enable_celex:
+    if args.celex:
         if not args.celex_path:
             logging.error("CELEX requested but --celex_path was not specified")
             exit(1)
         fieldnames.extend(["celex_freq", "celex_pron"])
-    if args.enable_cmu:
+    if args.cmu:
         fieldnames.append("cmu_pron")
-    if args.enable_elp:
+    if args.elp:
         if not args.elp_path:
             logging.error("ELP requested but --elp_path was not specified")
             exit(1)
         fieldnames.extend(["elp_morph_sp", "elp_nmorph"])
-    if args.enable_subtlex_uk:
+    if args.subtlex_uk:
         fieldnames.extend(["subtlex_uk_freq", "subtlex_uk_cd"])
-    if args.enable_subtlex_us:
+    if args.subtlex_us:
         fieldnames.extend(["subtlex_us_freq", "subtlex_us_cd"])
-    if args.enable_udlexicons:
+    if args.udlexicons:
         fieldnames.append("udlexicons_morph")
-    if args.enable_unimorph:
+    if args.unimorph:
         fieldnames.append("unimorph_morph")
-    if args.enable_wikipron:
+    if args.wikipron:
         fieldnames.append("wikipron_pron")
     if not fieldnames:
         logging.error("No data sources selected")
@@ -332,21 +336,21 @@ def main() -> None:
 
     # Populates lexicon.
     lexicon = citylex_pb2.Lexicon()
-    if args.enable_celex:
+    if args.celex:
         _celex(args.celex_path, lexicon)
-    if args.enable_cmu:
+    if args.cmu:
         _cmu(lexicon)
-    if args.enable_elp:
+    if args.elp:
         _elp(args.elp_path, lexicon)
-    if args.enable_subtlex_uk:
+    if args.subtlex_uk:
         _subtlex_uk(lexicon)
-    if args.enable_subtlex_us:
+    if args.subtlex_us:
         _subtlex_us(lexicon)
-    if args.enable_udlexicons:
+    if args.udlexicons:
         _udlexicons(lexicon)
-    if args.enable_unimorph:
+    if args.unimorph:
         _unimorph(lexicon)
-    if args.enable_wikipron:
+    if args.wikipron:
         _wikipron(lexicon)
 
     logging.info("Writing out textproto")
