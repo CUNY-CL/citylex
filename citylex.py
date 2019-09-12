@@ -305,53 +305,43 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    # Builds TSV fieldnames.
+    # Builds TSV fieldnames and lexicon.
+    lexicon = citylex_pb2.Lexicon()
     fieldnames = []
     if args.celex:
         if not args.celex_path:
             logging.error("CELEX requested but --celex_path was not specified")
             exit(1)
+        _celex(args.celex_path, lexicon)
         fieldnames.extend(["celex_freq", "celex_pron"])
     if args.cmu:
+        _cmu(lexicon)
         fieldnames.append("cmu_pron")
     if args.elp:
         if not args.elp_path:
             logging.error("ELP requested but --elp_path was not specified")
             exit(1)
+        _elp(args.elp_path, lexicon)
         fieldnames.extend(["elp_morph_sp", "elp_nmorph"])
     if args.subtlex_uk:
+        _subtlex_uk(lexicon)
         fieldnames.extend(["subtlex_uk_freq", "subtlex_uk_cd"])
     if args.subtlex_us:
+        _subtlex_us(lexicon)
         fieldnames.extend(["subtlex_us_freq", "subtlex_us_cd"])
     if args.udlexicons:
+        _udlexicons(lexicon)
         fieldnames.append("udlexicons_morph")
     if args.unimorph:
+        _unimorph(lexicon)
         fieldnames.append("unimorph_morph")
     if args.wikipron:
+        _wikipron(lexicon)
         fieldnames.append("wikipron_pron")
     if not fieldnames:
         logging.error("No data sources selected")
         logging.error("Run `citylex --help` for more information")
         exit(1)
-
-    # Populates lexicon.
-    lexicon = citylex_pb2.Lexicon()
-    if args.celex:
-        _celex(args.celex_path, lexicon)
-    if args.cmu:
-        _cmu(lexicon)
-    if args.elp:
-        _elp(args.elp_path, lexicon)
-    if args.subtlex_uk:
-        _subtlex_uk(lexicon)
-    if args.subtlex_us:
-        _subtlex_us(lexicon)
-    if args.udlexicons:
-        _udlexicons(lexicon)
-    if args.unimorph:
-        _unimorph(lexicon)
-    if args.wikipron:
-        _wikipron(lexicon)
 
     logging.info("Writing out textproto")
     with open(args.output_textproto_path, "w") as sink:
