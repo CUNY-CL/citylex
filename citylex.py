@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Creates the CityLex lexicon."""
+"""Creates a CityLex lexicon."""
 
 import argparse
 import csv
