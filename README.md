@@ -24,7 +24,7 @@ To install CityLex execute
 To see the available data sources and options, execute `citylex --help`.
 
 To generate the lexicon, execute `citylex` with at least one source enabled
-using the `--enable_X` flags. As most of the data is downloaded from outline
+using command-line flags. As most of the data is downloaded from outline
 sources, an internet connection is normally required. The process takes roughly
 four minutes with all sources enabled; much of the time is spent downloading
 large files.
@@ -32,13 +32,13 @@ large files.
 To generate a lexicon with all the sources that don't require manual downloads,
 execute
 
-    citylex --enable_cmu \
-            --enable_elp \
-            --enable_subtlex_uk \
-            --enable_subtlex_uk \
-            --enable_udlexicons \
-            --enable_unimorph \
-            --enable_wikipron
+    citylex --cmu \
+            --elp \
+            --subtlex_uk \
+            --subtlex_uk \
+            --udlexicons \
+            --unimorph \
+            --wikipron
 
 File formats
 ------------
@@ -82,7 +82,7 @@ should be decompressed using
     tar -xzf LDC96L14.tgz
 
 This will produce a directory named `celex2`. To enable CELEX2 features, use
-`--enable_celex` and pass the local path of this directory as an argument to
+`--celex` and pass the local path of this directory as an argument to
 `--celex_path`.
 
 For more information
