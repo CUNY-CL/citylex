@@ -107,20 +107,24 @@ def _cmu(lexicon: citylex_pb2.Lexicon) -> None:
     logging.info(f"Collected {counter:,} CMU pronunciations")
 
 
-def _elp(elp_path: str, lexicon: citylex_pb2.Lexicon) -> None:
+def _elp(lexicon: citylex_pb2.Lexicon) -> None:
     """Collects ELP analyses."""
     counter = 0
-    with open(elp_path, "r") as source:
-        for drow in csv.DictReader(source):
-            wordform = drow["Word"].casefold()
-            ptr = lexicon.entry[wordform]
-            morph_sp = drow["MorphSp"]
-            # Skips lines without a morphological analysis.
-            if morph_sp == "NULL":
-                continue
-            ptr.elp_morph_sp = morph_sp
-            ptr.elp_nmorph = int(drow["NMorph"])
-            counter += 1
+    url = "https://github.com/kylebgorman/ELP-annotations/raw/master/ELP.csv"
+    source = _request_url_resource(url)
+    for drow in csv.DictReader(source):
+        wordform = drow["Word"].casefold()
+        ptr = lexicon.entry[wordform]
+        morph_sp = drow["MorphSp"]
+        nmorph = drow["NMorph"]
+        # Skips lines without a morphological analysis.
+        if morph_sp == "NULL" or morph_sp is None:
+            continue
+        if nmorph == "NULL" or nmorph is None:
+            continue
+        ptr.elp_morph_sp = morph_sp
+        ptr.elp_nmorph = int(nmorph)
+        counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} ELP analyses")
 
@@ -250,7 +254,7 @@ def main() -> None:
     parser.add_argument(
         "--celex",
         action="store_true",
-        help="extract  CELEX data (proprietary use agreement): "
+        help="extract CELEX data (proprietary use agreement): "
         "http://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf",
     )
     parser.add_argument(
@@ -260,18 +264,14 @@ def main() -> None:
     parser.add_argument(
         "--cmu",
         action="store_true",
-        help="extract  CMU data (BSD 2-clause): "
+        help="extract CMU data (BSD 2-clause): "
         "http://opensource.org/licenses/BSD-2-Clause",
     )
     parser.add_argument(
         "--elp",
         action="store_true",
-        help="extract  ELP data (noncommercial use agreement): "
-        "http://elexicon.wustl.edu/WordStart.asp",
-    )
-    parser.add_argument(
-        "--elp_path",
-        help="path to ELP file (see README.md for desired format)",
+        help="extract ELP data (CC BY-NC 4.0): "
+        "http://creativecommons.org/licenses/by-nc/4.0/",
     )
     parser.add_argument(
         "--subtlex_uk",
@@ -318,10 +318,7 @@ def main() -> None:
         _cmu(lexicon)
         fieldnames.append("cmu_pron")
     if args.elp:
-        if not args.elp_path:
-            logging.error("ELP requested but --elp_path was not specified")
-            exit(1)
-        _elp(args.elp_path, lexicon)
+        _elp(lexicon)
         fieldnames.extend(["elp_morph_sp", "elp_nmorph"])
     if args.subtlex_uk:
         _subtlex_uk(lexicon)
