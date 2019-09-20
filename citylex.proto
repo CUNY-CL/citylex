@@ -40,7 +40,7 @@ message Entry {
 
   repeated string celex_pron = 12;
 
-  repeated string cmu_pron = 13;
+  repeated string cmudict_pron = 13;
 
   repeated string wikipron_pron = 14;
 }

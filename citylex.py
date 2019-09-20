@@ -7,6 +7,7 @@ import io
 import logging
 import os
 import re
+import unicodedata
 import zipfile
 
 from typing import Iterator, List
@@ -17,6 +18,11 @@ import pandas
 import requests
 
 import citylex_pb2
+
+
+def _normalize(field: str) -> str:
+    """Performs basic Unicode normalization and casefolding on field."""
+    return unicodedata.normalize("NFC", field).casefold()
 
 
 # Helpers for downloading from URLs.
@@ -57,7 +63,7 @@ def _celex(celex_path: str, lexicon: citylex_pb2.Lexicon) -> None:
     with open(path, "r") as source:
         for line in source:
             row = _parse_celex_row(line)
-            wordform = row[1].casefold()
+            wordform = _normalize(row[1])
             # Throws out multiword entries.
             if " " in wordform:
                 continue
@@ -75,7 +81,7 @@ def _celex(celex_path: str, lexicon: citylex_pb2.Lexicon) -> None:
     with open(path, "r") as source:
         for line in source:
             row = _parse_celex_row(line)
-            wordform = row[1].casefold()
+            wordform = _normalize(row[1])
             # Throws out multiword entries.
             if " " in wordform:
                 continue
@@ -89,22 +95,22 @@ def _celex(celex_path: str, lexicon: citylex_pb2.Lexicon) -> None:
     logging.info(f"Collected {counter:,} CELEX pronunciations")
 
 
-def _cmu(lexicon: citylex_pb2.Lexicon) -> None:
-    """Collects CMU pronuciations."""
+def _cmudict(lexicon: citylex_pb2.Lexicon) -> None:
+    """Collects CMUdict pronuciations."""
     counter = 0
     url = "http://svn.code.sf.net/p/cmusphinx/code/trunk/cmudict/cmudict-0.7b"
     for line in _request_url_resource(url):
         if line.startswith(";"):
             continue
         (wordform, pron) = line.rstrip().split("  ", 1)
-        wordform = wordform.casefold()
+        wordform = _normalize(wordform)
         # Removes "numbering" on wordforms like `BASS(1)`.
         wordform = re.sub(r"\(\d+\)$", "", wordform)
         ptr = lexicon.entry[wordform]
-        ptr.cmu_pron.append(pron)
+        ptr.cmudict_pron.append(pron)
         counter += 1
     assert counter, "No data read"
-    logging.info(f"Collected {counter:,} CMU pronunciations")
+    logging.info(f"Collected {counter:,} CMUdict pronunciations")
 
 
 def _elp(lexicon: citylex_pb2.Lexicon) -> None:
@@ -113,7 +119,7 @@ def _elp(lexicon: citylex_pb2.Lexicon) -> None:
     url = "https://github.com/kylebgorman/ELP-annotations/raw/master/ELP.csv"
     source = _request_url_resource(url)
     for drow in csv.DictReader(source):
-        wordform = drow["Word"].casefold()
+        wordform = _normalize(drow["Word"])
         ptr = lexicon.entry[wordform]
         morph_sp = drow["MorphSp"]
         nmorph = drow["NMorph"]
@@ -140,7 +146,7 @@ def _subtlex_uk(lexicon: citylex_pb2.Lexicon) -> None:
         df = source.parse(sheet, na_values=[], keep_default_na=False)
         gen = zip(df.Spelling, df.FreqCount, df.CD_count)
         for (wordform, freq, cd) in gen:
-            wordform = wordform.casefold()
+            wordform = _normalize(wordform)
             ptr = lexicon.entry[wordform]
             ptr.subtlex_uk_freq = freq
             ptr.subtlex_uk_cd = cd
@@ -159,7 +165,7 @@ def _subtlex_us(lexicon: citylex_pb2.Lexicon) -> None:
     path = "SUBTLEX-US frequency list with PoS information text version.txt"
     source = _request_url_zip_resource(url, path)
     for drow in csv.DictReader(source, delimiter="\t"):
-        wordform = drow["Word"].casefold()
+        wordform = _normalize(drow["Word"])
         ptr = lexicon.entry[wordform]
         ptr.subtlex_us_freq = int(drow["FREQcount"])
         ptr.subtlex_us_cd = int(drow["CDcount"])
@@ -182,9 +188,9 @@ def _udlexicons(lexicon: citylex_pb2.Lexicon) -> None:
         # TODO: Is there a more elegant way to do this?
         if pieces[0].startswith("0-"):
             continue
-        wordform = pieces[2].casefold()
+        wordform = _normalize(pieces[2])
         ptr = lexicon.entry[wordform]
-        lemma = pieces[3].casefold()
+        lemma = _normalize(pieces[3])
         entry = ptr.udlexicons_morph.add()
         # Ignores unspecified lemmata.
         if lemma != "_":
@@ -208,8 +214,8 @@ def _unimorph(lexicon: citylex_pb2.Lexicon) -> None:
         if not line:
             continue
         (lemma, wordform, features) = line.split("\t", 2)
-        wordform = wordform.casefold()
-        lemma = lemma.casefold()
+        wordform = _normalize(wordform)
+        lemma = _normalize(lemma)
         ptr = lexicon.entry[wordform]
         entry = ptr.unimorph_morph.add()
         entry.lemma = lemma
@@ -228,7 +234,7 @@ def _wikipron(lexicon: citylex_pb2.Lexicon) -> None:
     )
     for line in _request_url_resource(url):
         (wordform, pron) = line.rstrip().split("\t", 1)
-        wordform = wordform.casefold()
+        wordform = _normalize(wordform)
         ptr = lexicon.entry[wordform]
         ptr.wikipron_pron.append(pron)
         counter += 1
@@ -262,9 +268,9 @@ def main() -> None:
         help="path to CELEX directory (usually ends in `celex2`)",
     )
     parser.add_argument(
-        "--cmu",
+        "--cmudict",
         action="store_true",
-        help="extract CMU data (BSD 2-clause): "
+        help="extract CMUdict data (BSD 2-clause): "
         "http://opensource.org/licenses/BSD-2-Clause",
     )
     parser.add_argument(
@@ -314,9 +320,9 @@ def main() -> None:
             exit(1)
         _celex(args.celex_path, lexicon)
         fieldnames.extend(["celex_freq", "celex_pron"])
-    if args.cmu:
-        _cmu(lexicon)
-        fieldnames.append("cmu_pron")
+    if args.cmudict:
+        _cmudict(lexicon)
+        fieldnames.append("cmudict_pron")
     if args.elp:
         _elp(lexicon)
         fieldnames.extend(["elp_morph_sp", "elp_nmorph"])

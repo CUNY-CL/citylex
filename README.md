@@ -32,7 +32,7 @@ large files.
 To generate a lexicon with all the sources that don't require manual downloads,
 execute
 
-    citylex --cmu \
+    citylex --cmudict \
             --elp \
             --subtlex_uk \
             --subtlex_uk \
