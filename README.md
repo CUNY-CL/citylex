@@ -2,9 +2,9 @@
 ======================================================
 
 [![PyPI
-version](https://badge.fury.io/py/wikipron.svg)](https://pypi.org/project/wikipron)
+version](https://badge.fury.io/py/citylex.svg)](https://pypi.org/project/citylex)
 [![Supported Python
-versions](https://img.shields.io/pypi/pyversions/wikipron.svg)](https://pypi.org/project/wikipron)
+versions](https://img.shields.io/pypi/pyversions/citylex.svg)](https://pypi.org/project/citylex)
 
 CityLex is an English lexical database intended to replace or enhance databases
 like [CELEX](https://catalog.ldc.upenn.edu/LDC96L14). It combines data from up
