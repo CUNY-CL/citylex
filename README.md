@@ -62,7 +62,7 @@ from google.protobuf import text_format
 import citylex_pb2
 
 lexicon = citylex_pb2.Lexicon()
-with open("citylex.textproto, "r") as source: 
+with open("citylex.textproto", "r") as source: 
    text_format.ParseLines(source, lexicon)
 ```
 
