@@ -35,7 +35,7 @@ execute
     citylex --cmudict \
             --elp \
             --subtlex_uk \
-            --subtlex_uk \
+            --subtlex_us \
             --udlexicons \
             --unimorph \
             --wikipron
