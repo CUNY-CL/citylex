@@ -19,7 +19,7 @@ Building your own CityLex
 
 To install CityLex execute
 
-    pip install git+https://github.com/kylebgorman/citylex.git
+    pip install citylex
 
 To see the available data sources and options, execute `citylex --help`.
 
