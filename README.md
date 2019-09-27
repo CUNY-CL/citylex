@@ -5,6 +5,7 @@
 version](https://badge.fury.io/py/citylex.svg)](https://pypi.org/project/citylex)
 [![Supported Python
 versions](https://img.shields.io/pypi/pyversions/citylex.svg)](https://pypi.org/project/citylex)
+[![CircleCI](https://circleci.com/gh/kylebgorman/citylex/tree/master.svg?style=svg)](https://circleci.com/gh/kylebgorman/citylex/tree/master)
 
 CityLex is an English lexical database intended to replace or enhance databases
 like [CELEX](https://catalog.ldc.upenn.edu/LDC96L14). It combines data from up
@@ -19,7 +20,9 @@ Building your own CityLex
 
 To install CityLex execute
 
-    pip install citylex
+```bash
+pip install citylex
+```
 
 To see the available data sources and options, execute `citylex --help`.
 
@@ -32,13 +35,15 @@ large files.
 To generate a lexicon with all the sources that don't require manual downloads,
 execute
 
-    citylex --cmudict \
-            --elp \
-            --subtlex_uk \
-            --subtlex_us \
-            --udlexicons \
-            --unimorph \
-            --wikipron
+```bash
+citylex --cmudict \
+        --elp \
+        --subtlex_uk \
+        --subtlex_us \
+        --udlexicons \
+        --unimorph \
+        --wikipron
+```
 
 File formats
 ------------
@@ -56,7 +61,7 @@ Advanced users may wish to make use of the second file, by default
 provides a better representation of the repeated fields. To parse this file in
 Python, use the following snippet:
 
-``` {.sourceCode .python}
+```python
 from google.protobuf import text_format
 
 import citylex_pb2
@@ -79,7 +84,9 @@ This proprietary resource must be obtained from the [Linguistic Data
 Consortium](https://catalog.ldc.upenn.edu/LDC96L14) as `LDC96L14.tgz`. The file
 should be decompressed using
 
-    tar -xzf LDC96L14.tgz
+```bash
+tar -xzf LDC96L14.tgz
+```
 
 This will produce a directory named `celex2`. To enable CELEX2 features, use
 `--celex` and pass the local path of this directory as an argument to
