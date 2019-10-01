@@ -6,7 +6,9 @@ import csv
 import io
 import logging
 import os
+import pkg_resources
 import re
+import sys
 import unicodedata
 import zipfile
 
@@ -18,6 +20,7 @@ import pandas
 import requests
 
 import citylex_pb2
+
 
 
 def _normalize(field: str) -> str:
@@ -347,7 +350,10 @@ def main() -> None:
         exit(1)
 
     logging.info("Writing out textproto")
+    version = pkg_resources.get_distribution("citylex").version
     with open(args.output_textproto_path, "w") as sink:
+        print(f"# CityLex ({version}) lexicon generated using: ", file=sink)
+        print(f"#     {' '.join(sys.argv)}", file=sink)
         text_format.PrintMessage(lexicon, sink, as_utf8=True)
         logging.debug("Wrote %d entries", len(lexicon.entry))
 
