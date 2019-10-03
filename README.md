@@ -68,7 +68,7 @@ import citylex_pb2
 
 lexicon = citylex_pb2.Lexicon()
 with open("citylex.textproto", "r") as source: 
-   text_format.ParseLines(source, lexicon)
+    text_format.ParseLines(source, lexicon)
 ```
 
 This will parse the text-format data and populate `lexicon`. One can then
