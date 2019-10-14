@@ -233,7 +233,7 @@ def _wikipron(lexicon: citylex_pb2.Lexicon) -> None:
     counter = 0
     url = (
         "https://raw.githubusercontent.com/kylebgorman/"
-        "wikipron/master/languages/wikipron/eng.tsv"
+        "wikipron/master/languages/wikipron/tsv/eng_phonemic.tsv"
     )
     for line in _request_url_resource(url):
         (wordform, pron) = line.rstrip().split("\t", 1)

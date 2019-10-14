@@ -18,7 +18,7 @@ with open(os.path.join(_THIS_DIR, "README.md")) as f:
     _LONG_DESCRIPTION = f.read().strip()
 
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 
 def main() -> None:
