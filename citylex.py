@@ -22,7 +22,6 @@ import requests
 import citylex_pb2
 
 
-
 def _normalize(field: str) -> str:
     """Performs basic Unicode normalization and casefolding on field."""
     return unicodedata.normalize("NFC", field).casefold()
@@ -233,7 +232,7 @@ def _wikipron(lexicon: citylex_pb2.Lexicon) -> None:
     counter = 0
     url = (
         "https://raw.githubusercontent.com/kylebgorman/"
-        "wikipron/master/languages/wikipron/tsv/eng_phonemic.tsv"
+        "wikipron/master/languages/wikipron/tsv/eng_us_phonemic.tsv"
     )
     for line in _request_url_resource(url):
         (wordform, pron) = line.rstrip().split("\t", 1)
