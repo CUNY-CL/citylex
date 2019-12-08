@@ -118,7 +118,10 @@ def _cmudict(lexicon: citylex_pb2.Lexicon) -> None:
 def _elp(lexicon: citylex_pb2.Lexicon) -> None:
     """Collects ELP analyses."""
     counter = 0
-    url = "https://github.com/kylebgorman/ELP-annotations/raw/master/ELP.csv"
+    url = (
+        "https://raw.githubusercontent.com/kylebgorman/"
+        "ELP-annotations/master/ELP.csv"
+    )
     source = _request_url_resource(url)
     for drow in csv.DictReader(source):
         wordform = _normalize(drow["Word"])
@@ -210,8 +213,8 @@ def _udlexicons(lexicon: citylex_pb2.Lexicon) -> None:
 def _unimorph(lexicon: citylex_pb2.Lexicon) -> None:
     """Collects UniMorph analyses."""
     counter = 0
-    unimorph_url = "http://github.com/unimorph/eng/raw/master/eng"
-    for line in _request_url_resource(unimorph_url):
+    url = "https://raw.githubusercontent.com/unimorph/eng/master/eng"
+    for line in _request_url_resource(url):
         line = line.rstrip()
         if not line:
             continue
