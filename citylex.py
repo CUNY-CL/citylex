@@ -397,6 +397,8 @@ def main() -> None:
             drow = {"wordform": wordform}
             for field in fieldnames:
                 attr = getattr(entry, field)
+                if not attr:
+                    continue
                 if field.endswith("_pron"):
                     # Deduplicate and join on '^'.
                     drow[field] = "^".join(frozenset(attr))
