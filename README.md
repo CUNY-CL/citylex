@@ -42,7 +42,8 @@ citylex --cmudict \
         --subtlex_us \
         --udlexicons \
         --unimorph \
-        --wikipron
+        --wikipron_uk \
+        --wikipron_us
 ```
 
 File formats
