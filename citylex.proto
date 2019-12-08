@@ -42,7 +42,8 @@ message Entry {
 
   repeated string cmudict_pron = 13;
 
-  repeated string wikipron_pron = 14;
+  repeated string wikipron_uk_pron = 14;
+  repeated string wikipron_us_pron = 15;
 }
 
 // A collection of entries.

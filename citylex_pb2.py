@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='citylex',
   syntax='proto2',
   serialized_options=None,
-  serialized_pb=_b('\n\rcitylex.proto\x12\x07\x63itylex\"\xc9\x03\n\x05\x45ntry\x12\x12\n\ncelex_freq\x18\x01 \x01(\x03\x12\x17\n\x0fsubtlex_uk_freq\x18\x02 \x01(\x03\x12\x15\n\rsubtlex_uk_cd\x18\x03 \x01(\x03\x12\x17\n\x0fsubtlex_us_freq\x18\x04 \x01(\x03\x12\x15\n\rsubtlex_us_cd\x18\x05 \x01(\x03\x12\x1a\n\x12\x63\x65lex_morph_status\x18\x06 \x01(\t\x12!\n\x19\x63\x65lex_morph_language_code\x18\x07 \x01(\t\x12\x14\n\x0c\x65lp_morph_sp\x18\x08 \x01(\t\x12\x12\n\nelp_nmorph\x18\t \x01(\x05\x12\x33\n\x10udlexicons_morph\x18\n \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x31\n\x0eunimorph_morph\x18\x0b \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x12\n\ncelex_pron\x18\x0c \x03(\t\x12\x14\n\x0c\x63mudict_pron\x18\r \x03(\t\x12\x15\n\rwikipron_pron\x18\x0e \x03(\t\x1a:\n\nMorphEntry\x12\r\n\x05lemma\x18\x01 \x02(\t\x12\x0b\n\x03pos\x18\x02 \x01(\t\x12\x10\n\x08\x66\x65\x61tures\x18\x03 \x01(\t\"s\n\x07Lexicon\x12*\n\x05\x65ntry\x18\x01 \x03(\x0b\x32\x1b.citylex.Lexicon.EntryEntry\x1a<\n\nEntryEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1d\n\x05value\x18\x02 \x01(\x0b\x32\x0e.citylex.Entry:\x02\x38\x01')
+  serialized_pb=_b('\n\rcitylex.proto\x12\x07\x63itylex\"\xe6\x03\n\x05\x45ntry\x12\x12\n\ncelex_freq\x18\x01 \x01(\x03\x12\x17\n\x0fsubtlex_uk_freq\x18\x02 \x01(\x03\x12\x15\n\rsubtlex_uk_cd\x18\x03 \x01(\x03\x12\x17\n\x0fsubtlex_us_freq\x18\x04 \x01(\x03\x12\x15\n\rsubtlex_us_cd\x18\x05 \x01(\x03\x12\x1a\n\x12\x63\x65lex_morph_status\x18\x06 \x01(\t\x12!\n\x19\x63\x65lex_morph_language_code\x18\x07 \x01(\t\x12\x14\n\x0c\x65lp_morph_sp\x18\x08 \x01(\t\x12\x12\n\nelp_nmorph\x18\t \x01(\x05\x12\x33\n\x10udlexicons_morph\x18\n \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x31\n\x0eunimorph_morph\x18\x0b \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x12\n\ncelex_pron\x18\x0c \x03(\t\x12\x14\n\x0c\x63mudict_pron\x18\r \x03(\t\x12\x18\n\x10wikipron_uk_pron\x18\x0e \x03(\t\x12\x18\n\x10wikipron_us_pron\x18\x0f \x03(\t\x1a:\n\nMorphEntry\x12\r\n\x05lemma\x18\x01 \x02(\t\x12\x0b\n\x03pos\x18\x02 \x01(\t\x12\x10\n\x08\x66\x65\x61tures\x18\x03 \x01(\t\"s\n\x07Lexicon\x12*\n\x05\x65ntry\x18\x01 \x03(\x0b\x32\x1b.citylex.Lexicon.EntryEntry\x1a<\n\nEntryEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1d\n\x05value\x18\x02 \x01(\x0b\x32\x0e.citylex.Entry:\x02\x38\x01')
 )
 
 
@@ -66,8 +66,8 @@ _ENTRY_MORPHENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=426,
-  serialized_end=484,
+  serialized_start=455,
+  serialized_end=513,
 )
 
 _ENTRY = _descriptor.Descriptor(
@@ -169,8 +169,15 @@ _ENTRY = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='wikipron_pron', full_name='citylex.Entry.wikipron_pron', index=13,
+      name='wikipron_uk_pron', full_name='citylex.Entry.wikipron_uk_pron', index=13,
       number=14, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='wikipron_us_pron', full_name='citylex.Entry.wikipron_us_pron', index=14,
+      number=15, type=9, cpp_type=9, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -188,7 +195,7 @@ _ENTRY = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=27,
-  serialized_end=484,
+  serialized_end=513,
 )
 
 
@@ -225,8 +232,8 @@ _LEXICON_ENTRYENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=541,
-  serialized_end=601,
+  serialized_start=570,
+  serialized_end=630,
 )
 
 _LEXICON = _descriptor.Descriptor(
@@ -255,8 +262,8 @@ _LEXICON = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=486,
-  serialized_end=601,
+  serialized_start=515,
+  serialized_end=630,
 )
 
 _ENTRY_MORPHENTRY.containing_type = _ENTRY

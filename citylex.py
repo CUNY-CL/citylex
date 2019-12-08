@@ -227,8 +227,25 @@ def _unimorph(lexicon: citylex_pb2.Lexicon) -> None:
     logging.info(f"Collected {counter:,} UniMorph analyses")
 
 
-def _wikipron(lexicon: citylex_pb2.Lexicon) -> None:
-    """Collects WikiPron pronunciations."""
+def _wikipron_uk(lexicon: citylex_pb2.Lexicon) -> None:
+    """Collects WikiPron US pronunciations."""
+    counter = 0
+    url = (
+        "https://raw.githubusercontent.com/kylebgorman/"
+        "wikipron/master/languages/wikipron/tsv/eng_uk_phonemic.tsv"
+    )
+    for line in _request_url_resource(url):
+        (wordform, pron) = line.rstrip().split("\t", 1)
+        wordform = _normalize(wordform)
+        ptr = lexicon.entry[wordform]
+        ptr.wikipron_uk_pron.append(pron)
+        counter += 1
+    assert counter, "No data read"
+    logging.info(f"Collected {counter:,} WikiPron UK pronunciations")
+
+
+def _wikipron_us(lexicon: citylex_pb2.Lexicon) -> None:
+    """Collects WikiPron US pronunciations."""
     counter = 0
     url = (
         "https://raw.githubusercontent.com/kylebgorman/"
@@ -238,10 +255,10 @@ def _wikipron(lexicon: citylex_pb2.Lexicon) -> None:
         (wordform, pron) = line.rstrip().split("\t", 1)
         wordform = _normalize(wordform)
         ptr = lexicon.entry[wordform]
-        ptr.wikipron_pron.append(pron)
+        ptr.wikipron_us_pron.append(pron)
         counter += 1
     assert counter, "No data read"
-    logging.info(f"Collected {counter:,} WikiPron pronunciations")
+    logging.info(f"Collected {counter:,} WikiPron US pronunciations")
 
 
 def main() -> None:
@@ -306,9 +323,15 @@ def main() -> None:
         "http://creativecommons.org/licenses/by-sa/2.0/",
     )
     parser.add_argument(
-        "--wikipron",
+        "--wikipron_uk",
         action="store_true",
-        help="extract WikiPron data (CC BY-SA 3.0 Unported): "
+        help="extract WikiPron UK data (CC BY-SA 3.0 Unported): "
+        "http://creativecommons.org/licenses/by-sa/3.0/",
+    )
+    parser.add_argument(
+        "--wikipron_us",
+        action="store_true",
+        help="extract WikiPron US data (CC BY-SA 3.0 Unported): "
         "http://creativecommons.org/licenses/by-sa/3.0/",
     )
     args = parser.parse_args()
@@ -340,9 +363,12 @@ def main() -> None:
     if args.unimorph:
         _unimorph(lexicon)
         fieldnames.append("unimorph_morph")
-    if args.wikipron:
-        _wikipron(lexicon)
-        fieldnames.append("wikipron_pron")
+    if args.wikipron_uk:
+        _wikipron_uk(lexicon)
+        fieldnames.append("wikipron_uk_pron")
+    if args.wikipron_us:
+        _wikipron_us(lexicon)
+        fieldnames.append("wikipron_us_pron")
     if not fieldnames:
         logging.error("No data sources selected")
         logging.error("Run `citylex --help` for more information")
