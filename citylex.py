@@ -219,11 +219,13 @@ def _unimorph(lexicon: citylex_pb2.Lexicon) -> None:
         if not line:
             continue
         (lemma, wordform, features) = line.split("\t", 2)
+        (pos, features) = features.split(";", 1)
         wordform = _normalize(wordform)
         lemma = _normalize(lemma)
         ptr = lexicon.entry[wordform]
         entry = ptr.unimorph_morph.add()
         entry.lemma = lemma
+        entry.pos = pos
         entry.features = features
         counter += 1
     assert counter, "No data read"
