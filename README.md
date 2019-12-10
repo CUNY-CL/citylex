@@ -63,13 +63,9 @@ provides a better representation of the repeated fields. To parse this file in
 Python, use the following snippet:
 
 ```python
-from google.protobuf import text_format
+import citylex
 
-import citylex_pb2
-
-lexicon = citylex_pb2.Lexicon()
-with open("citylex.textproto", "r") as source: 
-    text_format.ParseLines(source, lexicon)
+lexicon = citylex.read_textproto("citylex.textproto")
 ```
 
 This will parse the text-format data and populate `lexicon`. One can then

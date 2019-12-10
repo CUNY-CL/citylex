@@ -22,12 +22,20 @@ import requests
 import citylex_pb2
 
 
+def read_textproto(path: str) -> citylex_pb2.Lexicon:
+    """Parses textproto."""
+    lexicon = citylex_pb2.Lexicon()
+    with open(path, "r") as source:
+        text_format.ParseLines(source, lexicon)
+    return lexicon
+
+
+# Helper methods.
+
+
 def _normalize(field: str) -> str:
     """Performs basic Unicode normalization and casefolding on field."""
     return unicodedata.normalize("NFC", field).casefold()
-
-
-# Helpers for downloading from URLs.
 
 
 def _request_url_resource(url: str) -> Iterator[str]:
