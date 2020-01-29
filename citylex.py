@@ -3,6 +3,7 @@
 
 import argparse
 import csv
+import datetime
 import io
 import logging
 import os
@@ -390,8 +391,9 @@ def main() -> None:
     logging.info("Writing out textproto")
     version = pkg_resources.get_distribution("citylex").version
     with open(args.output_textproto_path, "w") as sink:
-        print(f"# CityLex ({version}) lexicon generated using:", file=sink)
-        print(f"#     {' '.join(sys.argv)}", file=sink)
+        print(f"# CityLex ({version}) lexicon:", file=sink)
+        print(f"#   date: {datetime.date.today()}", file=sink)
+        print(f"#   command: {' '.join(sys.argv)}", file=sink)
         text_format.PrintMessage(lexicon, sink, as_utf8=True)
         logging.debug("Wrote %d entries", len(lexicon.entry))
 
