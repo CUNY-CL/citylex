@@ -18,7 +18,7 @@ with open(os.path.join(_THIS_DIR, "README.md")) as f:
     _LONG_DESCRIPTION = f.read().strip()
 
 
-__version__ = "0.1.6"
+__version__ = "0.1.4"
 
 
 def main() -> None:
@@ -55,7 +55,6 @@ def main() -> None:
             "Operating System :: OS Independent",
             "Topic :: Text Processing :: Linguistic",
         ],
-        data_files=[(".", ["citylex.bib", "citylex.proto", "LICENSE.txt"])],
     )
 
 
