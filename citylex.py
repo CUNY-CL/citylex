@@ -96,8 +96,7 @@ def _celex(celex_path: str, lexicon: citylex_pb2.Lexicon) -> None:
             # Throws out multiword entries.
             if " " in wordform:
                 continue
-            # TODO: what ought to be done here?
-            # Eliminates inconsistent syllable boundaries.
+            # Eliminates syllable boundaries, known to be inconsistent.
             pron = row[6].replace("-", "")
             ptr = lexicon.entry[wordform]
             ptr.celex_pron.append(pron)
