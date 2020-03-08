@@ -25,25 +25,23 @@ message Entry {
     optional string features = 3;
   }
 
-  // TODO(kbg): Implement the morphological features.
-  optional string celex_morph_status = 6;
-  optional string celex_morph_language_code = 7;
+  repeated MorphEntry celex_morph = 6;
 
-  optional string elp_morph_sp = 8;  // Morphological analysis.
-  optional int32 elp_nmorph = 9;     // Number of morphs in that analysis.
+  optional string elp_morph_sp = 7;  // Morphological analysis.
+  optional int32 elp_nmorph = 8;     // Number of morphs in that analysis.
 
-  repeated MorphEntry udlexicons_morph = 10;
+  repeated MorphEntry udlexicons_morph = 9;
 
-  repeated MorphEntry unimorph_morph = 11;
+  repeated MorphEntry unimorph_morph = 10;
 
   // Pronunciations.
 
-  repeated string celex_pron = 12;
+  repeated string celex_pron = 11;
 
-  repeated string cmudict_pron = 13;
+  repeated string cmudict_pron = 12;
 
-  repeated string wikipron_uk_pron = 14;
-  repeated string wikipron_us_pron = 15;
+  repeated string wikipron_uk_pron = 13;
+  repeated string wikipron_us_pron = 14;
 }
 
 // A collection of entries.

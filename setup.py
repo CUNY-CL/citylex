@@ -18,7 +18,7 @@ with open(os.path.join(_THIS_DIR, "README.md")) as f:
     _LONG_DESCRIPTION = f.read().strip()
 
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 
 def main() -> None:
@@ -49,6 +49,7 @@ def main() -> None:
         classifiers=[
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
+            "Programming Language :: Python :: 3.8",
             "Development Status :: 3 - Alpha",
             "Environment :: Console",
             "License :: OSI Approved :: Apache Software License",
