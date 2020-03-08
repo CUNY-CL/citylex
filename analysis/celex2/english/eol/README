@@ -1,0 +1,71 @@
+ENGLISH ORTHOGRAPHY, LEMMAS
+
+
+The eol.cd file contains the following fields:
+
+   1.     IdNum
+   2.     HeadDia
+   3.     Cob
+   4.     OrthoCnt
+   5.     OrthoStatus
+   6.     CobSpellFreq
+   7.     CobSpellDev
+   8.     HeadSylDia
+
+Those words which appear with spelling variants (OrthoCnt > 1) are
+assigned four extra columns for each new spelling. For instance, the columns
+ 
+   9.     OrthoStatus
+  10.     CobSpellFreq
+  11.     CobSpellDev
+  12.     HeadSylDia
+
+specify the first non-preferred spelling, if present. The second
+non-preferred spelling, if present, is specified by columns 13--16, etc.
+
+The fields marked with "Dia" may contain diacritics of various kinds.
+These diacritics have been coded as a sequence of two ASCII symbols,
+a diacritic marker followed by the hosting letter. The following
+conventions have been used:
+
+  diacritic symbol           diacritic sign
+        #                           '         (acute accent)
+        `                           `         (grave accent)
+        "                           "         (diaeresis)
+        ^                           ^         (circumflex accent)
+        ,                           ,         (cedilla)
+        ~                           ~         (tilde)
+
+
+
+The awk directory contains the following scripts:
+
+   script CountCharacters(String):               countchr.awk
+   script CountSyllables(String):                countsyl.awk
+   script ReverseString(String):                 reverse.awk
+   script SortString(String):                    sortstr.awk
+   script StripDiacritics(String):               stripdia.awk
+   script ToLower(String):                       tolower.awk
+
+
+These scripts may be used to obtain those columns listed in the CELEX
+User Guide that do not appear in the above list, as follows:
+
+
+   Fields in the CELEX User Guide.  Fields in eol.cd.
+
+   1.    IdNum                      $1
+   2.    OrthoCnt                   $4
+   3.    OrthoNum                   -
+   4.    OrthoStatus                $5
+   5.    CobSpellFreq               $6
+   6.    CobSpellDev                $7
+   7.    Head                       StripDiacritics(HeadDia);
+   8.    HeadRev                    ReverseString(HeadDia);
+   9.    HeadDia                    $2
+   10.   HeadLow                    ToLower(HeadDia);
+   11.   HeadLowSort                SortString(HeadDia);
+   12.   HeadCnt                    CountCharacters(HeadDia);
+   13.   HeadSyl                    StripDiacritics(HeadSylDia);
+   14.   HeadSylDia                 $8
+   15.   HeadSylCnt                 CountSyllables(HeadSylDia);

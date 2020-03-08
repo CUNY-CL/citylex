@@ -1,0 +1,153 @@
+ENGLISH PHONOLOGY, WORDFORMS
+
+
+The epw.cd file contains the following fields:
+
+   1.      IdNum
+   2.      Word
+   3.      Cob
+   4.      IdNumLemma
+   5.      PronCnt
+   6.      PronStatus
+   7.      PhonStrsDISC
+   8.      PhonCVBr
+   9.      PhonSylBCLX
+
+Those words which appear with alternative pronunciations are assigned
+4 extra fields for each pronuncation. For instance, the columns
+
+  10.      PronStatus
+  11.      PhonStrsDISC   
+  12.      PhonCVBr
+  13.      PhonSylBCLX
+
+specify the second pronunciation variant, if present. the third 
+variant, if present, occupies columns 14-17, etc.
+
+For 48 words, the number of different pronunciations was too large
+(greater than 23) to allow listing of all variants on a single line
+without exceeding the AWK limit of 100 fields per line. These words
+appear in epw.cd with their first 23 variants. Additional variants
+--- the maximum number of variants is 60, for "proportional-representation"
+--- are available in the directory variants. This directory contains
+the files
+
+    5045.Bahasa_Indonesia              57170.natural_philosophy
+   75610.Royal_Automobile_Club         57171.natural_resources
+   95559.Uruguay                       59716.orangutan
+    7072.bicameral_legislature         59717.orangutans
+    7073.bicameral_legislatures        59835.organizational
+   17701.congratulatory                61805.parity_of_exchange
+  103797.contretemps                   63121.peremptorily
+   18406.contretemps                   67105.preliminary_to
+   28264.electroencephalograph         68465.proportional_representation
+   28265.electroencephalographs        73004.rendezvouing
+   28547.embonpoint                    78952.sericultural
+   29188.en_passant                    80934.simultaneity
+   30924.extraordinarily               92671.transitional
+   31287.faits_accomplis               92672.transitionally
+   42009.homogeneity                   92728.transparence
+   42024.homosexual                    92729.transparencies
+   42025.homosexual                    92730.transparency
+   42027.homosexuals                   92731.transparent
+   44287.incontrovertible              92732.transparently
+   44288.incontrovertibly              92769.transsexual
+   48294.kyrie_eleison                 92770.transsexuals
+   54491.milk_of_magnesia              95771.valetudinary
+   54740.minority_government           96839.vol-au-vent
+   54741.minority_governments          96840.vol-au-vents
+
+Each file contains the remaining pronunciation variants for a single
+word, one variant per line:
+
+   1.      IdNum
+   2.      Word
+   3.      Cob
+   4.      IdNumLemma
+   5.      PronCnt
+   6.      PronStatus
+   7.      PhonStrsDISC
+   8.      PhonCVBr
+   9.      PhonSylBCLX
+
+The name of the file specifies the IdNum and the word itself.
+
+
+The awk directory contains the following scripts:
+
+   script ConvertBrackets(String):                   convbrac.awk
+   script CountSyllables(String):                    countsyl.awk
+   script MakeStressPattern(String):                 mkstress.awk
+   script NumOfChar(String):                         numofchr.awk
+   script PhoneticTranscriptions(String):            phon.awk
+   script PhonStrsTranscriptions(String):            phonstrs.awk
+   script PhonSylTranscriptions(String):             phonsyl.awk
+
+For each of the scripts starting with 'phon*', an extra argument can
+be given on the command line (behind the program name, input filename
+and field number) to retrieve transcriptions in another phonetic
+alphabet notation than the basic DISC set. Thus, if you just want to
+derive plain phonetic transcriptions in the DISC set, the following
+command would suffice:
+
+     awk -f phon.awk epw.cd 7 > outfile
+
+Otherwise, use any of the following:
+
+     awk -f phon.awk epw.cd 7 SP > outfile      (for SAM-PA notation)
+     awk -f phon.awk epw.cd 7 CX > outfile      (for CELEX notation)
+     awk -f phon.awk epw.cd 7 CP > outfile      (for CPA notation)
+
+Whenever a script allows an extra argument, this is indicated by means
+of the labels 'SP', 'CX' and 'CP' below.
+
+These scripts  may be used to obtain those columns listed in the CELEX
+User Guide that do not appear in the above list, as follows:
+
+
+   EPW-fields in CELEX.        EPW-fields in CD-file.
+
+   1.   IdNum            $1
+   2.   PronCnt          $5
+   3.   PronNum          -
+   4.   PronStatus       $6
+   5.   PhonSAM          PhoneticTranscriptions(PhonStrsDISC) SP
+   6.   PhonCLX          PhoneticTranscriptions(PhonStrsDISC) CX
+   7.   PhonCPA          PhoneticTranscriptions(PhonStrsDISC) CP
+   8.   PhonDISC         PhoneticTranscriptions(PhonStrsDISC)
+   9.   PhonCnt          NumOfChar(PhonStrsDISC)
+  10.   PhonSylSAM       PhonSylTranscriptions(PhonStrsDISC) SP
+  11.   PhonSylCLX       PhonSylTranscriptions(PhonStrsDISC) CX
+  12.   PhonSylBCLX      $9
+  13.   PhonSylCPA       PhonSylTranscriptions(PhonStrsDISC) CP
+  14.   PhonSylDISC      PhonSylTranscriptions(PhonStrsDISC)
+  15.   SylCnt           CountSyllables(PhonStrsDISC)
+  16.   PhonStrsSAM      PhonStrsTranscriptions(PhonStrsDISC) SP
+  17.   PhonStrsCLX      PhonStrsTranscriptions(PhonStrsDISC) CX
+  18.   PhonStrsCPA      PhonStrsTranscriptions(PhonStrsDISC) CP
+  19.   PhonStrsDISC     $7
+  20.   StrsPat          MakeStressPattern(PhonStrsDISC)
+  21.   PhonCV           ConvertBrackets(PhonCVBr)
+  22.   PhonCVBr         $8
+
+Should running of the awk scripts starting with 'phon*' cause memory
+problems on your PC, it is advisable to try running the c-program
+'chngrepr' in the c subdirectory:
+
+   chngrepr (Hewlett Packard UNIX binary)
+   chngrepr.c (source)
+   chngrepr.exe (MS-DOS executable)
+
+It is used as follows:
+
+   chngrepr <File> <Representation> <Field> [<Repr> <Field>...]
+
+Here <File> denotes the input lexicon file, <Representation> denotes
+the kind of phonetic alphabet required,
+      SP : SAM-PA
+      CX : CELEX
+      CP : CPA
+and <Field> the number of the column in <File> which contains the
+DISC representation. The first column is numbered 1. Fields should
+be separated by a '\'. The maximum number of pairs that chngrepr can
+convert in one call is 10.

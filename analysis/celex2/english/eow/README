@@ -1,0 +1,79 @@
+ENGLISH ORTHOGRAPHY, WORDFORMS
+
+
+The eow.cd file contains the following fields:
+
+   1.    IdNum
+   2.    WordDia
+   3.    Cob
+   4.    IdNumLemma
+   5.    OrthoCnt
+   6.    OrthoStatus
+   7.    CobSpellFreq
+   8.    CobSpellDev
+   9.    WordSylDia
+
+Those words which appear with spelling variants (OrthoCnt > 1) are
+assigned five extra columns for each new spelling. For instance, the columns
+
+  10.    WordDia
+  11.    OrthoStatus
+  12.    CobSpellFreq
+  13.    CobSpellDev
+  14.    WordSylDia
+
+specify the first non-preferred spelling, if present. The next spelling
+variant, if present, occupies columns 15--19, etc.
+
+The fields marked with "Dia" may contain diacritics of various kinds.
+These diacritics have been coded as a sequence of two ASCII symbols,
+a diacritic marker followed by the hosting letter. The following
+conventions have been used:
+
+  diacritic symbol           diacritic sign
+        #                           '         (acute accent)
+        `                           `         (grave accent)
+        "                           "         (diaeresis)
+        ^                           ^         (circumflex accent)
+        ,                           ,         (cedilla)
+        ~                           ~         (tilde)
+
+The awk directory contains the following scripts:
+
+   script CountCharacters(string):        countchr.awk
+   script CountSyllables(string):         countsyl.awk
+   script ReverseString(string):          reverse.awk
+   script SortString(string):             sortstr.awk
+   script StripDiacritics(string):        stripdia.awk
+   script ToLower(string):                tolower.awk
+
+These scripts may be used to obtain those columns listed in the CELEX
+User Guide that do not appear in the above list, as follows:
+
+   Fields in the CELEX Guide.      Fields in eow.cd.
+
+
+   1.    IdNum                     $1
+   2.    OrthoCnt                  $5
+   3.    OrthoNum                  -
+   4.    OrthoStatus               $6
+   5.    CobSpellFreq              $7
+   6.    CobSpellDev               $8
+   7.    Word                      StripDiacritics(WordDia);
+   8.    WordRev                   ReverseString(WordDia);
+   9.    WordDia                   $2
+   10.   WordLow                   ToLower(WordDia);
+   11.   WordLowSort               SortString(WordDia);
+   12.   WordCnt                   CountCharacters(WordDia);
+   13.   WordSyl                   StripDiacritics(WordSylDia);
+   14.   WordSylDia                $9
+   15.   WordSylCnt                CountSyllables(WordSylDia);
+   16.   IdNumLemma                $4
+
+Thus, the field "Word" is obtained by applying the awk script
+stripdia.awk to the second field in dow.cd.
+
+Note that the field OrthoNum (specifying the spelling number) is no
+longer necessary - the spelling variants can be retrieved by selecting
+the appropriate columns in dow.cd (columns 6--9 for the preferred
+spelling, columns 10--14 for the first alternative spelling, etc.).
