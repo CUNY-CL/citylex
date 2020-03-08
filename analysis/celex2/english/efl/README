@@ -1,0 +1,16 @@
+ENGLISH FREQUENCY, LEMMAS
+
+The efl.cd file contains the following fields:
+ 
+1.    IdNum
+2.    Head
+3.    Cob
+4.    CobDev
+5.    CobMln
+6.    CobLog
+7.    CobW
+8.    CobWMln
+9.    CobWLog
+10.   CobS
+11.   CobSMln
+12.   CobSLog
