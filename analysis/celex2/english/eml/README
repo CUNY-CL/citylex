@@ -1,0 +1,156 @@
+ENGLISH MORPHOLOGY, LEMMAS
+
+
+The eml.cd file contains the following fields:
+
+    1.     IdNum
+    2.     Head
+    3.     Cob
+    4.     MorphStatus
+    5.     Lang
+    6.     MorphCnt
+    7.     NVAffComp
+    8.     Der
+    9.     Comp
+   10.     DerComp
+   11.     Def
+   12.     Imm
+   13.     ImmSubCat
+   14.     ImmSA
+   15.     ImmAllo
+   16.     ImmSubst
+   17.     ImmOpac
+   18.     TransDer
+   19.     ImmInfix
+   20.     ImmRevers
+   21      FlatSA
+   22.     StrucLab
+   23.     StrucAllo
+   24.     StrucSubst
+   25.     StrucOpac
+
+Those words which appear with alternative parsings are assigned 19
+fields for each extra parsing. For instance, the columns
+
+   26.     NVAffComp
+   27.     Der 
+   28.     Comp
+   29.     DerComp
+   30.     Def
+   31.     Imm
+   32.     ImmSubCat
+   33.     ImmSA
+   34.     ImmAllo
+   35.     ImmSubst
+   36.     ImmOpac
+   37.     TransDer
+   38.     ImmInfix
+   39.     ImmRevers
+   40.     FlatSA
+   41.     StrucLab 
+   42.     StrucAllo
+   43.     StrucSubst
+   44.     StrucOpac
+
+specify the second parsing, if present. The next parsing variant is
+specified in the columns 45--63, etc. 
+
+
+Six lemmas have more than 4 possible parsings. With AWK supporting a
+maximum of 100 fields per line, the fourth, fifth and sixth parsing
+variants of these six lemmas have not been listed with the other parsing
+variants. Instead, they can be found in the `variants' directory, in
+the files
+
+    9706.copyholder        36659.putterer
+   25610.leaseholder       43485.southeaster       
+   34966.potterer          43509.southwester
+             
+
+Each file contains the remaining parsings for a single word, one parsing
+per line:
+
+    1.     IdNum
+    2.     Head
+    3.     Cob
+    4.     MorphStatus
+    5.     Lang
+    6.     MorphCnt
+    7.     NVAffComp
+    8.     Der 
+    9.     Comp
+   10.     DerComp
+   11.     Def
+   12.     Imm
+   13.     ImmSubCat
+   14.     ImmSA
+   15.     ImmAllo
+   16.     ImmSubst
+   17.     ImmOpac
+   18.     TransDer
+   19.     ImmInfix
+   20.     ImmRevers
+   21.     FlatSA
+   22.     StrucLab 
+   23.     StrucAllo
+   24.     StrucSubst
+   25.     StrucOpac
+
+The name of the file specifies the IdNum and the word itself.
+
+
+The awk directory contains the following scripts:
+
+       script CountLevels(String):                      cntlevel.awk
+       script CountMorpComponents(String):              cntmc.awk
+       script CountMorphemes(String):                   cntmorph.awk
+       script ConvertVerbNumbersToV(String):            cnvnum2v.awk 
+       script ExtractWordClass(String):                 extrctwc.awk
+       script StripClassLabels(String):                 stripcls.awk
+       script StripOrthographicInformation(String):     striport.awk
+       script StripStructureMarkers(String):            stripstr.awk
+
+These scripts may be used to obtain those columns listed in the CELEX
+User Guide that do not appear in the above list, as follows:
+
+   EML-fields in CELEX.               EML-fields in CD-file.
+
+   1.     IdNum                        $1
+   2.     Head                         $2
+   3.     MorphStatus                  $4
+   4.     Lang                         $5
+   5.     MorphCnt                     $6
+   6.     MorphNum                     -
+   7.     NVAffComp                    $7
+   8.     Der                          $8
+   9.     Comp                         $9
+   10.    DerComp                      $10
+   11.    Def                          $11
+   12.    Imm                          $12
+   13.    ImmClass                     ConvertVerbNumbersToV(ImmSubCat);
+   14.    ImmSubCat                    $13
+   15.    ImmSA                        $14
+   16.    ImmAllo                      $15
+   17.    ImmSubst                     $16
+   18.    ImmOpac                      $17
+   19.    TransDer                     $18
+   20.    ImmInfix                     $19
+   21.    ImmRevers                    $20
+   22.    Flat                         StripStructureMarkers(StrucLab);
+   23.    FlatClass                    ExtractWordClass(StrucLab);
+   24.    FlatSA                       $21
+   25.    Struc                        StripClassLabels(StrucLab);
+   26.    StrucLab                     $22
+   27.    StrucBrackLab                StripOrthographicInformation(StrucLab);
+   28.    StrucAllo                    $23
+   29.    StrucSubst                   $24
+   30.    StrucOpac                    $25
+   31.    CompCnt                      CountMorpComponents(ImmSubCat);
+   32.    MorphCnt                     CountMorphemes(StrucLab);
+   33.    LevelCnt                     CountLevels(StrucLab);
+
+Note that the field MorphNum (specifying the morphological analysis
+number) is no longer necessary -- parsing variants can be retrieved
+by selecting the appropriate columns in eml.cd (columns 7--25 for the
+parse preferred by CELEX, columns 26--44 for the first alternative
+parse, etc.).
