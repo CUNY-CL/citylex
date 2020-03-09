@@ -85,7 +85,39 @@ def _celex(celex_path: str, lexicon: citylex_pb2.Lexicon) -> None:
             counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CELEX frequencies")
-    # TODO: Add morphology.
+    # Morphology.
+    # Reads lemmata information.
+    path = os.path.join(celex_path,  "english/eml/eml.cd")
+    # TODO(kbg): will probably have to expand this later.
+    lemma_info: Dict[int, str] = {}
+    with open(path, "r") as source:
+        for line in source:
+            row = _parse_celex_row(line)
+            li = int(row[0])
+            lemma = _normalize(row[1])
+            if " " in lemma:
+                continue
+            lemma_info[li] = lemma
+    # Reads wordform information.
+    path = os.path.join(celex_path,  "english/emw/emw.cd")
+    with open(path, "r") as source:
+        for line in source:
+            row = _parse_celex_row(line)
+            wordform = _normalize(row[1])
+            if " " in wordform:
+                continue
+            # Lemma lookup.
+            li = int(row[3])
+            # For whatever reason, "stove" is missing from the lemmata
+            # table. So we need to catch the error.
+            try:
+                lemma = lemma_info[li]
+            except KeyError:
+                continue
+            # Handles wordform codes.
+            code = _normalize(row[4])
+            # FIXME process the code here
+            print(lemma, wordform, code)
     # Pronunciations.
     counter = 0
     path = os.path.join(celex_path, "english/epw/epw.cd")
