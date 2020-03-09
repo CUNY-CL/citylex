@@ -1,11 +1,17 @@
 #!/usr/bin/env python
-"""Creates a CityLex lexicon."""
+"""Creates a CityLex lexicon.
+
+For more information on CityLex, see:
+
+https://github.com/kylebgorman/citylex
+"""
 
 import argparse
 import csv
 import datetime
 import io
 import logging
+import operator
 import os
 import pkg_resources
 import re
@@ -13,7 +19,7 @@ import sys
 import unicodedata
 import zipfile
 
-from typing import Iterator, List
+from typing import Iterator, List, Tuple
 
 from google.protobuf import text_format
 
@@ -61,6 +67,9 @@ def _request_url_zip_resource(url: str, path: str) -> Iterator[str]:
             yield line.decode("utf8", "ignore")
 
 
+# CELEX.
+
+
 def _parse_celex_row(line: str) -> List[str]:
     """Parses a single line of CELEX."""
     return line.rstrip().split("\\")
@@ -85,39 +94,6 @@ def _celex(celex_path: str, lexicon: citylex_pb2.Lexicon) -> None:
             counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CELEX frequencies")
-    # Morphology.
-    # Reads lemmata information.
-    path = os.path.join(celex_path,  "english/eml/eml.cd")
-    # TODO(kbg): will probably have to expand this later.
-    lemma_info: Dict[int, str] = {}
-    with open(path, "r") as source:
-        for line in source:
-            row = _parse_celex_row(line)
-            li = int(row[0])
-            lemma = _normalize(row[1])
-            if " " in lemma:
-                continue
-            lemma_info[li] = lemma
-    # Reads wordform information.
-    path = os.path.join(celex_path,  "english/emw/emw.cd")
-    with open(path, "r") as source:
-        for line in source:
-            row = _parse_celex_row(line)
-            wordform = _normalize(row[1])
-            if " " in wordform:
-                continue
-            # Lemma lookup.
-            li = int(row[3])
-            # For whatever reason, "stove" is missing from the lemmata
-            # table. So we need to catch the error.
-            try:
-                lemma = lemma_info[li]
-            except KeyError:
-                continue
-            # Handles wordform codes.
-            code = _normalize(row[4])
-            # FIXME process the code here
-            print(lemma, wordform, code)
     # Pronunciations.
     counter = 0
     path = os.path.join(celex_path, "english/epw/epw.cd")
@@ -137,6 +113,9 @@ def _celex(celex_path: str, lexicon: citylex_pb2.Lexicon) -> None:
     logging.info(f"Collected {counter:,} CELEX pronunciations")
 
 
+# CMUDict.
+
+
 def _cmudict(lexicon: citylex_pb2.Lexicon) -> None:
     """Collects CMUdict pronuciations."""
     counter = 0
@@ -153,6 +132,9 @@ def _cmudict(lexicon: citylex_pb2.Lexicon) -> None:
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CMUdict pronunciations")
+
+
+# ELP.
 
 
 def _elp(lexicon: citylex_pb2.Lexicon) -> None:
@@ -180,6 +162,9 @@ def _elp(lexicon: citylex_pb2.Lexicon) -> None:
     logging.info(f"Collected {counter:,} ELP analyses")
 
 
+# SUBTLEX-UK.
+
+
 def _subtlex_uk(lexicon: citylex_pb2.Lexicon) -> None:
     """Collects SUBTLEX-UK frequencies."""
     counter = 0
@@ -198,6 +183,9 @@ def _subtlex_uk(lexicon: citylex_pb2.Lexicon) -> None:
             counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} SUBTLEX-UK frequencies")
+
+
+# SUBTLEX-US.
 
 
 def _subtlex_us(lexicon: citylex_pb2.Lexicon) -> None:
@@ -219,11 +207,66 @@ def _subtlex_us(lexicon: citylex_pb2.Lexicon) -> None:
     logging.info(f"Collected {counter:,} SUBTLEX-US frequencies")
 
 
+# UDLexicons.
+
+# These transformations are based on the mappings used by McCarthy et al.
+# (2018) and listed here:
+#
+# https://github.com/unimorph/ud-compatibility/blob/master/UD_UM/UD-UniMorph.tsv
+#
+# We leave out a few identity mappings, by design.
+UD_POS_MAP = {
+    "AUX": "V",
+    "CCONJ": "CONJ",
+    "NOUN": "N",
+    "VERB": "V",
+    "SCONJ": "CONJ",
+    "PRON": "PRO",
+}
+# Handled in code: "VerbForm=Gen" and "VerbForm=Part".
+# Intentionally ignored: "Gender=Masc" and "Gender=Fem" (on proper names).
+UD_FEATURE_MAP = {
+    "Case=Gen": ("GEN", 0),  # Possessives, in this case.
+    "Degree=Cmp": ("CMPR", 1),
+    "Degree=Sup": ("RL", 1),
+    "VerbForm=Inf": ("NFIN", 2),
+    "Mood=Imp": ("IMP", 3),
+    "Number=Sing": ("SG", 4),
+    "Number=Plur": ("PL", 4),
+    "Person=3": ("3", 5),
+    "Tense=Pres": ("PRS", 6),
+    "Tense=Past": ("PST", 6),
+}
+
+
+def _canonicalize_ud(pos: str, features: str) -> Tuple[str, str]:
+    """ Converts UD features to UniMorph features."""
+    pos = UD_POS_MAP.get(pos, pos)
+    ud_pieces = features.split("|")
+    um_pieces = []
+    # First we take care of the POS-changing categories.
+    if ud_pieces[-1] == "VerbForm=Gen":
+        pos = "V.MSDR"
+        ud_pieces.pop()
+    elif ud_pieces[-1] == "VerbForm=Part":
+        pos = "V.PTCP"
+        ud_pieces.pop()
+    for piece in ud_pieces:
+        try:
+            um_pieces.append(UD_FEATURE_MAP[piece])
+        except KeyError:
+            logging.debug("Ignoring UD feature: %s", piece)
+    if not um_pieces:
+        return (pos, "_")
+    um_pieces.sort(key=operator.itemgetter(1))
+    return (pos, ";".join(piece for (piece, _) in um_pieces))
+
+
 def _udlexicons(lexicon: citylex_pb2.Lexicon) -> None:
     """Collects UDLexicons analyses."""
     counter = 0
-    # TODO: We chose not to use the EnLex data here, which looks quite
-    # messy by comparison; maybe revisit this decision someday.
+    # TODO: We do not use the EnLex data here, which looks quite messy by
+    # comparison; maybe revisit this decision someday.
     url = "http://atoll.inria.fr/~sagot/UDLexicons.0.2.zip"
     path = "UDLexicons.0.2/UDLex_English-Apertium.conllul"
     source = _request_url_zip_resource(url, path)
@@ -240,14 +283,16 @@ def _udlexicons(lexicon: citylex_pb2.Lexicon) -> None:
         # Ignores unspecified lemmata.
         if lemma != "_":
             entry.lemma = lemma
-        entry.pos = pieces[4]
-        features = pieces[6]
-        # Ignores unspecified feature bundles.
+        (pos, features) = _canonicalize_ud(pieces[4], pieces[6])
+        entry.pos = pos
         if features != "_":
             entry.features = features
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} UDLexicon analyses")
+
+
+# UniMorph.
 
 
 def _unimorph(lexicon: citylex_pb2.Lexicon) -> None:
@@ -272,6 +317,9 @@ def _unimorph(lexicon: citylex_pb2.Lexicon) -> None:
     logging.info(f"Collected {counter:,} UniMorph analyses")
 
 
+# WikiPron-UK.
+
+
 def _wikipron_uk(lexicon: citylex_pb2.Lexicon) -> None:
     """Collects WikiPron US pronunciations."""
     counter = 0
@@ -287,6 +335,9 @@ def _wikipron_uk(lexicon: citylex_pb2.Lexicon) -> None:
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} WikiPron UK pronunciations")
+
+
+# WikiPron-US.
 
 
 def _wikipron_us(lexicon: citylex_pb2.Lexicon) -> None:
@@ -308,7 +359,7 @@ def _wikipron_us(lexicon: citylex_pb2.Lexicon) -> None:
 
 def main() -> None:
     logging.basicConfig(format="%(levelname)s: %(message)s", level="INFO")
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description="Creates a CityLex lexicon.")
     # Output paths.
     parser.add_argument(
         "--output_textproto_path",
@@ -419,7 +470,7 @@ def main() -> None:
         logging.error("Run `citylex --help` for more information")
         exit(1)
 
-    logging.info("Writing out textproto")
+    logging.info("Writing out textproto...")
     version = pkg_resources.get_distribution("citylex").version
     with open(args.output_textproto_path, "w") as sink:
         print(f"# CityLex ({version}) lexicon:", file=sink)
@@ -428,7 +479,7 @@ def main() -> None:
         text_format.PrintMessage(lexicon, sink, as_utf8=True)
         logging.debug("Wrote %d entries", len(lexicon.entry))
 
-    logging.info("Writing out TSV")
+    logging.info("Writing out TSV...")
     with open(args.output_tsv_path, "w") as sink:
         tsv_writer = csv.DictWriter(
             sink,
