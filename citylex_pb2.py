@@ -19,36 +19,29 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='citylex.proto',
   package='citylex',
   syntax='proto2',
-  serialized_pb=_b('\n\rcitylex.proto\x12\x07\x63itylex\"\xd7\x03\n\x05\x45ntry\x12\x12\n\ncelex_freq\x18\x01 \x01(\x03\x12\x17\n\x0fsubtlex_uk_freq\x18\x02 \x01(\x03\x12\x15\n\rsubtlex_uk_cd\x18\x03 \x01(\x03\x12\x17\n\x0fsubtlex_us_freq\x18\x04 \x01(\x03\x12\x15\n\rsubtlex_us_cd\x18\x05 \x01(\x03\x12.\n\x0b\x63\x65lex_morph\x18\x06 \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x14\n\x0c\x65lp_morph_sp\x18\x07 \x01(\t\x12\x12\n\nelp_nmorph\x18\x08 \x01(\x05\x12\x33\n\x10udlexicons_morph\x18\t \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x31\n\x0eunimorph_morph\x18\n \x03(\x0b\x32\x19.citylex.Entry.MorphEntry\x12\x12\n\ncelex_pron\x18\x0b \x03(\t\x12\x14\n\x0c\x63mudict_pron\x18\x0c \x03(\t\x12\x18\n\x10wikipron_uk_pron\x18\r \x03(\t\x12\x18\n\x10wikipron_us_pron\x18\x0e \x03(\t\x1a:\n\nMorphEntry\x12\r\n\x05lemma\x18\x01 \x02(\t\x12\x0b\n\x03pos\x18\x02 \x01(\t\x12\x10\n\x08\x66\x65\x61tures\x18\x03 \x01(\t\"s\n\x07Lexicon\x12*\n\x05\x65ntry\x18\x01 \x03(\x0b\x32\x1b.citylex.Lexicon.EntryEntry\x1a<\n\nEntryEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1d\n\x05value\x18\x02 \x01(\x0b\x32\x0e.citylex.Entry:\x02\x38\x01')
+  serialized_pb=_b('\n\rcitylex.proto\x12\x07\x63itylex\"\x84\x04\n\x05\x45ntry\x12\x12\n\ncelex_freq\x18\x01 \x01(\x03\x12\x17\n\x0fsubtlex_uk_freq\x18\x02 \x01(\x03\x12\x15\n\rsubtlex_uk_cd\x18\x03 \x01(\x03\x12\x17\n\x0fsubtlex_us_freq\x18\x04 \x01(\x03\x12\x15\n\rsubtlex_us_cd\x18\x05 \x01(\x03\x12/\n\x0b\x63\x65lex_morph\x18\x06 \x03(\x0b\x32\x1a.citylex.Entry.MorphTriple\x12\x14\n\x0c\x65lp_morph_sp\x18\x07 \x01(\t\x12\x12\n\nelp_nmorph\x18\x08 \x01(\x05\x12\x34\n\x10udlexicons_morph\x18\t \x03(\x0b\x32\x1a.citylex.Entry.MorphTriple\x12\x32\n\x0eunimorph_morph\x18\n \x03(\x0b\x32\x1a.citylex.Entry.MorphTriple\x12\x12\n\ncelex_pron\x18\x0b \x03(\t\x12\x14\n\x0c\x63mudict_pron\x18\x0c \x03(\t\x12\x18\n\x10wikipron_uk_pron\x18\r \x03(\t\x12\x18\n\x10wikipron_us_pron\x18\x0e \x03(\t\x1a.\n\x0bMorphTriple\x12\r\n\x05lemma\x18\x01 \x02(\t\x12\x10\n\x08\x66\x65\x61tures\x18\x03 \x01(\t\x1a\x34\n\x0cSegmentation\x12\x14\n\x0csegmentation\x18\x01 \x02(\t\x12\x0e\n\x06nmorph\x18\x02 \x02(\x05\"s\n\x07Lexicon\x12*\n\x05\x65ntry\x18\x01 \x03(\x0b\x32\x1b.citylex.Lexicon.EntryEntry\x1a<\n\nEntryEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1d\n\x05value\x18\x02 \x01(\x0b\x32\x0e.citylex.Entry:\x02\x38\x01')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
 
-_ENTRY_MORPHENTRY = _descriptor.Descriptor(
-  name='MorphEntry',
-  full_name='citylex.Entry.MorphEntry',
+_ENTRY_MORPHTRIPLE = _descriptor.Descriptor(
+  name='MorphTriple',
+  full_name='citylex.Entry.MorphTriple',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='lemma', full_name='citylex.Entry.MorphEntry.lemma', index=0,
+      name='lemma', full_name='citylex.Entry.MorphTriple.lemma', index=0,
       number=1, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='pos', full_name='citylex.Entry.MorphEntry.pos', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='features', full_name='citylex.Entry.MorphEntry.features', index=2,
+      name='features', full_name='citylex.Entry.MorphTriple.features', index=1,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -66,8 +59,45 @@ _ENTRY_MORPHENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=440,
-  serialized_end=498,
+  serialized_start=443,
+  serialized_end=489,
+)
+
+_ENTRY_SEGMENTATION = _descriptor.Descriptor(
+  name='Segmentation',
+  full_name='citylex.Entry.Segmentation',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='segmentation', full_name='citylex.Entry.Segmentation.segmentation', index=0,
+      number=1, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='nmorph', full_name='citylex.Entry.Segmentation.nmorph', index=1,
+      number=2, type=5, cpp_type=1, label=2,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto2',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=491,
+  serialized_end=543,
 )
 
 _ENTRY = _descriptor.Descriptor(
@@ -178,7 +208,7 @@ _ENTRY = _descriptor.Descriptor(
   ],
   extensions=[
   ],
-  nested_types=[_ENTRY_MORPHENTRY, ],
+  nested_types=[_ENTRY_MORPHTRIPLE, _ENTRY_SEGMENTATION, ],
   enum_types=[
   ],
   options=None,
@@ -188,7 +218,7 @@ _ENTRY = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=27,
-  serialized_end=498,
+  serialized_end=543,
 )
 
 
@@ -225,8 +255,8 @@ _LEXICON_ENTRYENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=555,
-  serialized_end=615,
+  serialized_start=600,
+  serialized_end=660,
 )
 
 _LEXICON = _descriptor.Descriptor(
@@ -255,14 +285,15 @@ _LEXICON = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=500,
-  serialized_end=615,
+  serialized_start=545,
+  serialized_end=660,
 )
 
-_ENTRY_MORPHENTRY.containing_type = _ENTRY
-_ENTRY.fields_by_name['celex_morph'].message_type = _ENTRY_MORPHENTRY
-_ENTRY.fields_by_name['udlexicons_morph'].message_type = _ENTRY_MORPHENTRY
-_ENTRY.fields_by_name['unimorph_morph'].message_type = _ENTRY_MORPHENTRY
+_ENTRY_MORPHTRIPLE.containing_type = _ENTRY
+_ENTRY_SEGMENTATION.containing_type = _ENTRY
+_ENTRY.fields_by_name['celex_morph'].message_type = _ENTRY_MORPHTRIPLE
+_ENTRY.fields_by_name['udlexicons_morph'].message_type = _ENTRY_MORPHTRIPLE
+_ENTRY.fields_by_name['unimorph_morph'].message_type = _ENTRY_MORPHTRIPLE
 _LEXICON_ENTRYENTRY.fields_by_name['value'].message_type = _ENTRY
 _LEXICON_ENTRYENTRY.containing_type = _LEXICON
 _LEXICON.fields_by_name['entry'].message_type = _LEXICON_ENTRYENTRY
@@ -271,10 +302,17 @@ DESCRIPTOR.message_types_by_name['Lexicon'] = _LEXICON
 
 Entry = _reflection.GeneratedProtocolMessageType('Entry', (_message.Message,), dict(
 
-  MorphEntry = _reflection.GeneratedProtocolMessageType('MorphEntry', (_message.Message,), dict(
-    DESCRIPTOR = _ENTRY_MORPHENTRY,
+  MorphTriple = _reflection.GeneratedProtocolMessageType('MorphTriple', (_message.Message,), dict(
+    DESCRIPTOR = _ENTRY_MORPHTRIPLE,
     __module__ = 'citylex_pb2'
-    # @@protoc_insertion_point(class_scope:citylex.Entry.MorphEntry)
+    # @@protoc_insertion_point(class_scope:citylex.Entry.MorphTriple)
+    ))
+  ,
+
+  Segmentation = _reflection.GeneratedProtocolMessageType('Segmentation', (_message.Message,), dict(
+    DESCRIPTOR = _ENTRY_SEGMENTATION,
+    __module__ = 'citylex_pb2'
+    # @@protoc_insertion_point(class_scope:citylex.Entry.Segmentation)
     ))
   ,
   DESCRIPTOR = _ENTRY,
@@ -282,7 +320,8 @@ Entry = _reflection.GeneratedProtocolMessageType('Entry', (_message.Message,), d
   # @@protoc_insertion_point(class_scope:citylex.Entry)
   ))
 _sym_db.RegisterMessage(Entry)
-_sym_db.RegisterMessage(Entry.MorphEntry)
+_sym_db.RegisterMessage(Entry.MorphTriple)
+_sym_db.RegisterMessage(Entry.Segmentation)
 
 Lexicon = _reflection.GeneratedProtocolMessageType('Lexicon', (_message.Message,), dict(
 
