@@ -20,12 +20,12 @@ import zipfile
 
 from typing import Dict, Iterator, List
 
-from google.protobuf import text_format
+from google.protobuf import text_format  # type: ignore
 
-import pandas
+import pandas  # type: ignore
 import requests
 
-import citylex_pb2
+import citylex_pb2   # type: ignore
 
 
 def read_textproto(path: str) -> citylex_pb2.Lexicon:
@@ -419,6 +419,11 @@ def main() -> None:
     )
     # Enables specific data sources.
     parser.add_argument(
+        "--all_free",
+        action="store_true",
+        help="extracts all free data sources"
+    )
+    parser.add_argument(
         "--celex",
         action="store_true",
         help="extract CELEX data (proprietary use agreement): "
@@ -487,28 +492,28 @@ def main() -> None:
             exit(1)
         _celex(args.celex_path, lexicon)
         fieldnames.extend(["celex_freq", "celex_pron"])
-    if args.cmudict:
+    if args.all_free or args.cmudict:
         _cmudict(lexicon)
         fieldnames.append("cmudict_pron")
-    if args.elp:
+    if args.all_free or args.elp:
         _elp(lexicon)
         fieldnames.extend(["elp_morph_sp", "elp_nmorph"])
-    if args.subtlex_uk:
+    if args.all_free or args.subtlex_uk:
         _subtlex_uk(lexicon)
         fieldnames.extend(["subtlex_uk_freq", "subtlex_uk_cd"])
-    if args.subtlex_us:
+    if args.all_free or args.subtlex_us:
         _subtlex_us(lexicon)
         fieldnames.extend(["subtlex_us_freq", "subtlex_us_cd"])
-    if args.udlexicons:
+    if args.all_free or args.udlexicons:
         _udlexicons(lexicon)
         fieldnames.append("udlexicons_morph")
-    if args.unimorph:
+    if args.all_free or args.unimorph:
         _unimorph(lexicon)
         fieldnames.append("unimorph_morph")
-    if args.wikipron_uk:
+    if args.all_free or args.wikipron_uk:
         _wikipron_uk(lexicon)
         fieldnames.append("wikipron_uk_pron")
-    if args.wikipron_us:
+    if args.all_free or args.wikipron_us:
         _wikipron_us(lexicon)
         fieldnames.append("wikipron_us_pron")
     if not fieldnames:
