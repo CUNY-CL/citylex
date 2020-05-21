@@ -325,7 +325,7 @@ def _wikipron_uk(lexicon: citylex_pb2.Lexicon) -> None:
     counter = 0
     url = (
         "https://raw.githubusercontent.com/kylebgorman/"
-        "wikipron/master/languages/wikipron/tsv/eng_uk_phonemic.tsv"
+        "wikipron/master/data/wikipron/tsv/eng_uk_phonemic.tsv"
     )
     for line in _request_url_resource(url):
         (wordform, pron) = line.rstrip().split("\t", 1)
@@ -345,7 +345,7 @@ def _wikipron_us(lexicon: citylex_pb2.Lexicon) -> None:
     counter = 0
     url = (
         "https://raw.githubusercontent.com/kylebgorman/"
-        "wikipron/master/languages/wikipron/tsv/eng_us_phonemic.tsv"
+        "wikipron/master/data/wikipron/tsv/eng_us_phonemic.tsv"
     )
     for line in _request_url_resource(url):
         (wordform, pron) = line.rstrip().split("\t", 1)
@@ -372,6 +372,11 @@ def main() -> None:
         help="output TSV path (default: %(default)s)",
     )
     # Enables specific data sources.
+    parser.add_argument(
+        "--all_free",
+        action="store_true",
+        help="extracts all all_free data sources"
+    )
     parser.add_argument(
         "--celex",
         action="store_true",
@@ -441,28 +446,28 @@ def main() -> None:
             exit(1)
         _celex(args.celex_path, lexicon)
         fieldnames.extend(["celex_freq", "celex_pron"])
-    if args.cmudict:
+    if args.all_free or args.cmudict:
         _cmudict(lexicon)
         fieldnames.append("cmudict_pron")
-    if args.elp:
+    if args.all_free or args.elp:
         _elp(lexicon)
         fieldnames.extend(["elp_morph_sp", "elp_nmorph"])
-    if args.subtlex_uk:
+    if args.all_free or args.subtlex_uk:
         _subtlex_uk(lexicon)
         fieldnames.extend(["subtlex_uk_freq", "subtlex_uk_cd"])
-    if args.subtlex_us:
+    if args.all_free or args.subtlex_us:
         _subtlex_us(lexicon)
         fieldnames.extend(["subtlex_us_freq", "subtlex_us_cd"])
-    if args.udlexicons:
+    if args.all_free or args.udlexicons:
         _udlexicons(lexicon)
         fieldnames.append("udlexicons_morph")
-    if args.unimorph:
+    if args.all_free or args.unimorph:
         _unimorph(lexicon)
         fieldnames.append("unimorph_morph")
-    if args.wikipron_uk:
+    if args.all_free or args.wikipron_uk:
         _wikipron_uk(lexicon)
         fieldnames.append("wikipron_uk_pron")
-    if args.wikipron_us:
+    if args.all_free or args.wikipron_us:
         _wikipron_us(lexicon)
         fieldnames.append("wikipron_us_pron")
     if not fieldnames:
