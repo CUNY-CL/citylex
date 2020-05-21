@@ -419,7 +419,7 @@ def main() -> None:
     )
     # Enables specific data sources.
     parser.add_argument(
-        "--all_free",
+        "--all-free",
         action="store_true",
         help="extracts all free data sources"
     )
@@ -430,7 +430,7 @@ def main() -> None:
         "http://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf",
     )
     parser.add_argument(
-        "--celex_path",
+        "--celex-path",
         help="path to CELEX directory (usually ends in `celex2`)",
     )
     parser.add_argument(
@@ -446,13 +446,13 @@ def main() -> None:
         "http://creativecommons.org/licenses/by-nc/4.0/",
     )
     parser.add_argument(
-        "--subtlex_uk",
+        "--subtlex-uk",
         action="store_true",
         help="extract SUBTLEX-UK data (CC BY-NC-ND 2.0): "
         "http://creativecommons.org/licenses/by-nc-nd/2.0/",
     )
     parser.add_argument(
-        "--subtlex_us",
+        "--subtlex-us",
         action="store_true",
         help="extract SUBTLEX-US data (CC BY-NC-ND 2.0): "
         "http://creativecommons.org/licenses/by-nc-nd/2.0/",
@@ -470,13 +470,13 @@ def main() -> None:
         "http://creativecommons.org/licenses/by-sa/2.0/",
     )
     parser.add_argument(
-        "--wikipron_uk",
+        "--wikipron-uk",
         action="store_true",
         help="extract WikiPron UK data (CC BY-SA 3.0 Unported): "
         "http://creativecommons.org/licenses/by-sa/3.0/",
     )
     parser.add_argument(
-        "--wikipron_us",
+        "--wikipron-us",
         action="store_true",
         help="extract WikiPron US data (CC BY-SA 3.0 Unported): "
         "http://creativecommons.org/licenses/by-sa/3.0/",
