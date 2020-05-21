@@ -19,7 +19,11 @@ import sys
 import unicodedata
 import zipfile
 
+<<<<<<< HEAD
 from typing import Iterator, List, Tuple
+=======
+from typing import Dict, Iterator, List
+>>>>>>> 196d4b90082df30e412189e5eaad394684f07e2e
 
 from google.protobuf import text_format
 
@@ -75,6 +79,27 @@ def _parse_celex_row(line: str) -> List[str]:
     return line.rstrip().split("\\")
 
 
+# This is original work, based on my reading of the CELEX2 English and UniMorph
+# guidelines. It covers four main parts of speech: adjectives, adverbs, nouns,
+# and verbs.
+CELEX_FEATURE_MAP = {
+    "b": "ADJ",  # We don't mark positive adjectives in UniMorph.
+    "c": "ADJ;CMPR",
+    "s": "ADJ;RL",  # English superlatives are "relative" ones.
+    "B": "ADV",
+    "S": "N;SG",
+    "P": "N;PL",
+    "i": "V;NFIN",
+    "e3S": "V;SG;3;PRS",
+    "a1S": "V;PST",
+    "pe": "V.PTCP;PRS",
+    "pa": "V.PTCP;PST",
+}
+# Deliberately excluded:
+# * "e[123]S": no need to distinguish this from the non-finite.
+# * "a2S" and "a3S": no need to distinguish between this and "a1S".
+
+
 def _celex(celex_path: str, lexicon: citylex_pb2.Lexicon) -> None:
     """Collects CELEX data."""
     # Frequencies.
@@ -88,12 +113,61 @@ def _celex(celex_path: str, lexicon: citylex_pb2.Lexicon) -> None:
             if " " in wordform:
                 continue
             freq = int(row[3])
-            ptr = lexicon.entry[wordform]
-            # Add to the sum if it's already defined.
-            ptr.celex_freq += freq
+            lexicon.entry[wordform].celex_freq += freq
             counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CELEX frequencies")
+<<<<<<< HEAD
+=======
+    # Morphology.
+    # Reads lemmata information.
+    path = os.path.join(celex_path, "english/eml/eml.cd")
+    lemma_info: Dict[int, str] = {}
+    with open(path, "r") as source:
+        for line in source:
+            row = _parse_celex_row(line)
+            li = int(row[0])
+            lemma = _normalize(row[1])
+            if " " in lemma:
+                continue
+            lemma_info[li] = lemma
+    # Reads wordform information.
+    counter = 0
+    path = os.path.join(celex_path, "english/emw/emw.cd")
+    with open(path, "r") as source:
+        for line in source:
+            row = _parse_celex_row(line)
+            wordform = _normalize(row[1])
+            if " " in wordform:
+                continue
+            li = int(row[3])
+            # There are a few wordforms whose lemma IDs point to nothing. This
+            # catches it.
+            try:
+                lemma = lemma_info[li]
+            except KeyError:
+                logging.debug(
+                    "Ignoring wordform missing lemma ID: %s (%d)", wordform, li
+                )
+                continue
+            features = row[4]
+            try:
+                features = CELEX_FEATURE_MAP[row[4]]
+            except KeyError:
+                logging.debug(
+                    "Ignoring wordform feature bundle: %s (%s)",
+                    wordform,
+                    features,
+                )
+                continue
+            # TODO: Avoid duplication.
+            entry = lexicon.entry[wordform].celex_morph.add()
+            entry.lemma = lemma
+            entry.features = features
+            counter += 1
+    assert counter, "No data read"
+    logging.info(f"Collected {counter:,} CELEX analyses")
+>>>>>>> 196d4b90082df30e412189e5eaad394684f07e2e
     # Pronunciations.
     counter = 0
     path = os.path.join(celex_path, "english/epw/epw.cd")
@@ -106,9 +180,11 @@ def _celex(celex_path: str, lexicon: citylex_pb2.Lexicon) -> None:
                 continue
             # Eliminates syllable boundaries, known to be inconsistent.
             pron = row[6].replace("-", "")
-            ptr = lexicon.entry[wordform]
-            ptr.celex_pron.append(pron)
-            counter += 1
+            # We check for duplicates.
+            celex_pron = lexicon.entry[wordform].celex_pron
+            if pron not in celex_pron:
+                celex_pron.append(pron)
+                counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CELEX pronunciations")
 
@@ -127,8 +203,7 @@ def _cmudict(lexicon: citylex_pb2.Lexicon) -> None:
         wordform = _normalize(wordform)
         # Removes "numbering" on wordforms like `BASS(1)`.
         wordform = re.sub(r"\(\d+\)$", "", wordform)
-        ptr = lexicon.entry[wordform]
-        ptr.cmudict_pron.append(pron)
+        lexicon.entry[wordform].cmudict_pron.append(pron)
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CMUdict pronunciations")
@@ -214,6 +289,7 @@ def _subtlex_us(lexicon: citylex_pb2.Lexicon) -> None:
 #
 # https://github.com/unimorph/ud-compatibility/blob/master/UD_UM/UD-UniMorph.tsv
 #
+<<<<<<< HEAD
 # We leave out a few identity mappings, by design.
 UD_POS_MAP = {
     "AUX": "V",
@@ -260,6 +336,32 @@ def _canonicalize_ud(pos: str, features: str) -> Tuple[str, str]:
         return (pos, "_")
     um_pieces.sort(key=operator.itemgetter(1))
     return (pos, ";".join(piece for (piece, _) in um_pieces))
+=======
+# It covers four main parts of speech: adjectives, adverbs, nouns, and verbs.
+UDLEXICONS_FEATURE_MAP = {
+    "ADJ|_": "ADJ",  # We don't mark positive adjectives in UniMorph
+    "ADJ|Degree=Cmp": "ADJ;CMPR",
+    "ADJ|Degree=Sup": "ADJ;RL",  # English superlatives are "relative" ones.
+    "ADV|_": "ADV",
+    "NOUN|Number=Sing": "N;SG",
+    "NOUN|Number=Plur": "N;PL",
+    "PROPN|Number=Sing": "N;SG",
+    "PROPN|Number=Plur": "N;PL",
+    "PROPN|Gender=Fem|Number=Sing": "N;SG",
+    "PROPN|Gender=Fem|Number=Plur": "N;PL",
+    "PROPN|Gender=Masc|Number=SG": "N;SG",
+    "PROPN|Gender=Masc|Number=Plur": "N;PL",
+    "VERB|VerbForm=Inf": "V;NFIN",
+    "VERB|Number=Sing|Person=3|Tense=Pres": "V;SG;3;PRS",
+    "VERB|Tense=Past": "V;PST",
+    "VERB|Tense=Pres|VerbForm=Part": "V;PTCP;PRS",
+    "VERB|Tense=Past|VerbForm=Part": "V.PTCP;PST",
+}
+# Deliberately excluded:
+# * imperatives ("VERB|Mood=Imp")
+# * 1/2 present forms
+# * "VERB|VerbForm=Ger"
+>>>>>>> 196d4b90082df30e412189e5eaad394684f07e2e
 
 
 def _udlexicons(lexicon: citylex_pb2.Lexicon) -> None:
@@ -271,11 +373,12 @@ def _udlexicons(lexicon: citylex_pb2.Lexicon) -> None:
     path = "UDLexicons.0.2/UDLex_English-Apertium.conllul"
     source = _request_url_zip_resource(url, path)
     for line in source:
-        pieces = line.rstrip().split("\t")
+        tags = line.rstrip().split("\t")
         # Skips multiword expressions.
         # TODO: Is there a more elegant way to do this?
-        if pieces[0].startswith("0-"):
+        if tags[0].startswith("0-"):
             continue
+<<<<<<< HEAD
         wordform = _normalize(pieces[2])
         ptr = lexicon.entry[wordform]
         lemma = _normalize(pieces[3])
@@ -287,6 +390,24 @@ def _udlexicons(lexicon: citylex_pb2.Lexicon) -> None:
         entry.pos = pos
         if features != "_":
             entry.features = features
+=======
+        wordform = _normalize(tags[2])
+        lemma = _normalize(tags[3])
+        if lemma == "_":
+            continue
+        features = f"{tags[4]}|{tags[6]}"
+        try:
+            features = UDLEXICONS_FEATURE_MAP[features]
+        except KeyError:
+            logging.debug(
+                "Ignoring wordform feature bundle: %s (%s)", wordform, features
+            )
+            continue
+        # TODO: Avoid duplication.
+        entry = lexicon.entry[wordform].udlexicons_morph.add()
+        entry.lemma = lemma
+        entry.features = features
+>>>>>>> 196d4b90082df30e412189e5eaad394684f07e2e
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} UDLexicon analyses")
@@ -304,13 +425,11 @@ def _unimorph(lexicon: citylex_pb2.Lexicon) -> None:
         if not line:
             continue
         (lemma, wordform, features) = line.split("\t", 2)
-        (pos, features) = features.split(";", 1)
         wordform = _normalize(wordform)
         lemma = _normalize(lemma)
-        ptr = lexicon.entry[wordform]
-        entry = ptr.unimorph_morph.add()
+        # TODO: Avoid duplication.
+        entry = lexicon.entry[wordform].unimorph_morph.add()
         entry.lemma = lemma
-        entry.pos = pos
         entry.features = features
         counter += 1
     assert counter, "No data read"
@@ -328,10 +447,9 @@ def _wikipron_uk(lexicon: citylex_pb2.Lexicon) -> None:
         "wikipron/master/data/wikipron/tsv/eng_uk_phonemic.tsv"
     )
     for line in _request_url_resource(url):
-        (wordform, pron) = line.rstrip().split("\t", 1)
+        (wordform, pron, *_) = line.rstrip().split("\t")
         wordform = _normalize(wordform)
-        ptr = lexicon.entry[wordform]
-        ptr.wikipron_uk_pron.append(pron)
+        lexicon.entry[wordform].wikipron_uk_pron.append(pron)
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} WikiPron UK pronunciations")
@@ -348,10 +466,9 @@ def _wikipron_us(lexicon: citylex_pb2.Lexicon) -> None:
         "wikipron/master/data/wikipron/tsv/eng_us_phonemic.tsv"
     )
     for line in _request_url_resource(url):
-        (wordform, pron) = line.rstrip().split("\t", 1)
+        (wordform, pron, *_) = line.rstrip().split("\t")
         wordform = _normalize(wordform)
-        ptr = lexicon.entry[wordform]
-        ptr.wikipron_us_pron.append(pron)
+        lexicon.entry[wordform].wikipron_us_pron.append(pron)
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} WikiPron US pronunciations")
@@ -359,7 +476,11 @@ def _wikipron_us(lexicon: citylex_pb2.Lexicon) -> None:
 
 def main() -> None:
     logging.basicConfig(format="%(levelname)s: %(message)s", level="INFO")
+<<<<<<< HEAD
     parser = argparse.ArgumentParser(description="Creates a CityLex lexicon.")
+=======
+    parser = argparse.ArgumentParser(description="Creates a CityLex lexicon")
+>>>>>>> 196d4b90082df30e412189e5eaad394684f07e2e
     # Output paths.
     parser.add_argument(
         "--output_textproto_path",
@@ -502,15 +623,12 @@ def main() -> None:
                 if not attr:
                     continue
                 if field.endswith("_pron"):
-                    # Deduplicate and join on '^'.
-                    drow[field] = "^".join(frozenset(attr))
+                    # Join on '^'.
+                    drow[field] = "^".join(attr)
                 elif field.endswith("_morph"):
-                    # Make triples and join on '^'.
-                    triples = [
-                        f"{triple.lemma}_{triple.pos}_{triple.features}"
-                        for triple in attr
-                    ]
-                    drow[field] = "^".join(triples)
+                    # Make pairs and join on '^'.
+                    pairs = [f"{pair.lemma}_{pair.features}" for pair in attr]
+                    drow[field] = "^".join(pairs)
                 elif entry.HasField(field):
                     drow[field] = attr
             tsv_writer.writerow(drow)
