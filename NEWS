@@ -7,5 +7,6 @@
     (0.1.5)
 -   Normalizes UDLexicons (Universal Dependency) morphological features to the
     appropriate UniMorph tags (0.1.5)
+-   Usees filtered WikiPron lexicons (0.1.7)
 
 (This record begins with release 0.1.5.)
