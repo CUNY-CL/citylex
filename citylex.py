@@ -408,12 +408,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Creates a CityLex lexicon")
     # Output paths.
     parser.add_argument(
-        "--output_textproto_path",
+        "--output-textproto-path",
         default="citylex.textproto",
         help="output textproto path (default: %(default)s)",
     )
     parser.add_argument(
-        "--output_tsv_path",
+        "--output-tsv-path",
         default="citylex.tsv",
         help="output TSV path (default: %(default)s)",
     )
