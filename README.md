@@ -92,8 +92,8 @@ This will produce a directory named `celex2`. To enable CELEX2 features, use
 For more information
 --------------------
 
--   `citylex.proto` for the protocol buffer data structure
--   `citylex.bib` for references to the data sources used
+-   [`citylex.proto`](citylex.proto) for the protocol buffer data structure
+-   [`citylex.bib`](citylex.bib) for references to the data sources used
 
 For contributors
 ----------------
