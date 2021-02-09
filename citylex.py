@@ -237,7 +237,7 @@ def _subtlex_uk(lexicon: citylex_pb2.Lexicon) -> None:
     counter = 0
     url = "http://crr.ugent.be/papers/SUBTLEX-UK.xlsx"
     logging.info("Requesting URL: %s", url)
-    with pandas.ExcelFile(url) as source:
+    with pandas.ExcelFile(url, engine="openpyxl") as source:
         sheet = source.sheet_names[0]
         # Disables parsing "nan" as, well, `nan`.
         df = source.parse(sheet, na_values=[], keep_default_na=False)
