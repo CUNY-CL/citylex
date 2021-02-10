@@ -98,10 +98,10 @@ For more information
 For contributors
 ----------------
 
-To regenerate `citylex_pb2.py` you will need to install the [Protocol Buffers
-C++ runtime](https://github.com/protocolbuffers/protobuf) for your platform,
-making sure the version number (e.g., the one returned by `protoc --version`
-matches that of `protobuf` in `requirements.txt`. Then, run
+To regenerate [`citylex_pb2.py`](citylex_pb2.py) you will need to install the
+[Protocol Buffers C++ runtime](https://github.com/protocolbuffers/protobuf)
+for your platform, making sure the version number (e.g., the one returned by
+`protoc --version` matches that of `protobuf` in `requirements.txt`. Then, run
 `protoc --python_out=. citylex.proto`.
 
 License
