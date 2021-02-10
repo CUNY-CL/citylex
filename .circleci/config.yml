@@ -4,14 +4,14 @@ workflows:
   version: 2
   test:
     jobs:
-      - build-python-3.6
       - build-python-3.7
       - build-python-3.8
+      - build-python-3.9
 
 jobs:
-  build-python-3.6: &template
+  build-python-3.7: &template
     docker:
-      - image: python:3.6
+      - image: python:3.7
     steps:
       - checkout
       - run:
@@ -36,12 +36,11 @@ jobs:
           # Avoid being able to import citylex by relative import.
           # Test code by importing the *installed* citylex in site-packages.
           command: flake8 project/setup.py project/citylex
-  build-python-3.7:
-    <<: *template
-    docker:
-      - image: python:3.7
   build-python-3.8:
     <<: *template
     docker:
       - image: python:3.8
-
+  build-python-3.9:
+    <<: *template
+    docker:
+      - image: python:3.9
