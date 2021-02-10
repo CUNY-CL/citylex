@@ -18,7 +18,7 @@ with open(os.path.join(_THIS_DIR, "README.md")) as f:
     _LONG_DESCRIPTION = f.read().strip()
 
 
-__version__ = "0.1.7"
+__version__ = "0.1.8"
 
 
 def main() -> None:
@@ -42,15 +42,15 @@ def main() -> None:
         ],
         license="Apache 2.0",
         py_modules=["citylex", "citylex_pb2"],
-        python_requires=">=3.6",
+        python_requires=">=3.7",
         zip_safe=False,
         install_requires=["pandas", "protobuf", "requests"],
         entry_points={"console_scripts": ["citylex = citylex:main"]},
         classifiers=[
-            "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
-            "Development Status :: 3 - Alpha",
+            "Programming Language :: Python :: 3.9",
+            "Development Status :: 4 - Beta",
             "Environment :: Console",
             "License :: OSI Approved :: Apache Software License",
             "Operating System :: OS Independent",
