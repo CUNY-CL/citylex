@@ -421,7 +421,7 @@ def main() -> None:
     parser.add_argument(
         "--all-free",
         action="store_true",
-        help="extracts all free data sources"
+        help="extract all free data sources"
     )
     parser.add_argument(
         "--celex",
@@ -466,7 +466,7 @@ def main() -> None:
     parser.add_argument(
         "--unimorph",
         action="store_true",
-        help="extract UniMorph data (C BY-SA 2.0): "
+        help="extract UniMorph data (CC BY-SA 2.0): "
         "http://creativecommons.org/licenses/by-sa/2.0/",
     )
     parser.add_argument(
