@@ -373,7 +373,7 @@ def _wikipron_uk(lexicon: citylex_pb2.Lexicon) -> None:
     counter = 0
     url = (
         "https://raw.githubusercontent.com/kylebgorman/"
-        "wikipron/master/data/tsv/eng_uk_phonemic_filtered.tsv"
+        "wikipron/master/data/scrape/tsv/eng_latn_us_broad_filtered.tsv"
     )
     for line in _request_url_resource(url):
         (wordform, pron, *_) = line.rstrip().split("\t")
@@ -392,7 +392,7 @@ def _wikipron_us(lexicon: citylex_pb2.Lexicon) -> None:
     counter = 0
     url = (
         "https://raw.githubusercontent.com/kylebgorman/"
-        "wikipron/master/data/tsv/eng_us_phonemic_filtered.tsv"
+        "wikipron/master/data/scrape/tsv/eng_latn_us_broad_filtered.tsv"
     )
     for line in _request_url_resource(url):
         (wordform, pron, *_) = line.rstrip().split("\t")
