@@ -36,14 +36,7 @@ To generate a lexicon with all the sources that don't require manual downloads,
 execute
 
 ```bash
-citylex --cmudict \
-        --elp \
-        --subtlex_uk \
-        --subtlex_us \
-        --udlexicons \
-        --unimorph \
-        --wikipron_uk \
-        --wikipron_us
+citylex --all-free
 ```
 
 File formats
