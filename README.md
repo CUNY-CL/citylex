@@ -1,5 +1,5 @@
-🗽 CityLex: a free multisource English lexical database
-======================================================
+🗽 CityLex: a free English lexical database
+===========================================
 
 [![PyPI
 version](https://badge.fury.io/py/citylex.svg)](https://pypi.org/project/citylex)
