@@ -25,7 +25,7 @@ from google.protobuf import text_format  # type: ignore
 import pandas  # type: ignore
 import requests
 
-import citylex_pb2   # type: ignore
+import citylex_pb2  # type: ignore
 
 
 def read_textproto(path: str) -> citylex_pb2.Lexicon:
@@ -419,9 +419,7 @@ def main() -> None:
     )
     # Enables specific data sources.
     parser.add_argument(
-        "--all-free",
-        action="store_true",
-        help="extract all free data sources"
+        "--all-free", action="store_true", help="extract all free data sources"
     )
     parser.add_argument(
         "--celex",
