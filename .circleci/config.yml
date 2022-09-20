@@ -36,7 +36,7 @@ jobs:
           working_directory: ~/
           # Avoid being able to import citylex by relative import.
           # Test code by importing the *installed* citylex in site-packages.
-          command: flake8 project/setup.py project/citylex
+          command: flake8 project/setup.py project/citylex.py
   python-3.8:
     <<: *template
     docker:
