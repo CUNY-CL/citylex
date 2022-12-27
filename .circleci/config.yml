@@ -66,9 +66,3 @@ workflows:
           matrix:
             parameters:
               python-version: ["3.8", "3.9", "3.10", "3.11"]
-      - build-python-win:
-          requires:
-            - flake8
-            - black
-            - mypy
-            - twine
