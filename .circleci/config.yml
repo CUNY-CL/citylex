@@ -1,46 +1,74 @@
-version: 2
+version: 2.1
 
-workflows:
-  version: 2
-  test:
-    jobs:
-      - python3.8
-      - python3.9
-      - python3.10
-      - python3.11
 jobs:
-  python3.8: &template
+  pre-build:
+    description: A check that needs to be done on only one supported Python version
+    parameters:
+      command-run:
+        type: string
     docker:
-      - image: python:3.8
+      # Use the latest Python 3.x image from CircleCI.
+      # See: https://circleci.com/developer/images/image/cimg/python
+      - image: cimg/python:3.11
     steps:
       - checkout
       - run:
-          name: Install the full development requirements
-          working_directory: ~/project/
-          command: pip install --progress-bar off -r requirements.txt
+          command: pip install -r requirements.txt
       - run:
-          name: Run flake8 check
-          working_directory: ~/project
-          command: flake8 citylex.py
+          command: << parameters.command-run >>
+
+  build-python:
+    parameters:
+      python-version:
+        type: string
+    docker:
+      - image: cimg/python:<< parameters.python-version >>
+        #auth:
+        #  username: $DOCKERHUB_USERNAME
+        #  password: $DOCKERHUB_PASSWORD
+    steps:
+      - checkout
       - run:
-          name: Run black check
-          working_directory: ~/project
-          command: black --line-length 79 --check citylex.py
-      - run:
-          name: Build source distribution
-          working_directory: ~/project/
+          name: Build source distribution and install package from it
           command: |
-              python -m build
+              pip install -r requirements.txt && \
+              python -m build && \
               pip install dist/`ls dist/ | grep .whl`
-  python3.9:
-    <<: *template
-    docker:
-      - image: python:3.9
-  python3.10:
-    <<: *template
-    docker:
-      - image: python:3.10
-  python3.11:
-    <<: *template
-    docker:
-      - image: python:3.11
+      - run:
+          name: Show installed Python packages
+          command: pip list -v
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - pre-build:
+          name: flake8
+          command-run: flake8 citylex.py
+      - pre-build:
+          name: black
+          command-run: black --line-length=79 --check citylex.py
+      - pre-build:
+          name: mypy
+          command-run: mypy --install-types --ignore-missing-imports --non-interactive citylex.py
+      - pre-build:
+          name: twine
+          command-run: |
+            python -m build && \
+            twine check dist/`ls dist/ | grep .tar.gz` && \
+            twine check dist/`ls dist/ | grep .whl`
+      - build-python:
+          requires:
+            - flake8
+            - black
+            - mypy
+            - twine
+          matrix:
+            parameters:
+              python-version: ["3.8", "3.9", "3.10", "3.11"]
+      - build-python-win:
+          requires:
+            - flake8
+            - black
+            - mypy
+            - twine
