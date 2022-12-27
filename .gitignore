@@ -4,3 +4,4 @@ __pycache__/
 *.py[cdo]
 *.egg-info/
 analysis/
+build/
