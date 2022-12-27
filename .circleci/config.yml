@@ -4,15 +4,14 @@ workflows:
   version: 2
   test:
     jobs:
-      - python3.7
       - python3.8
       - python3.9
       - python3.10
-
+      - python3.11
 jobs:
-  python3.7: &template
+  python3.8: &template
     docker:
-      - image: python:3.7
+      - image: python:3.8
     steps:
       - checkout
       - run:
@@ -22,24 +21,17 @@ jobs:
       - run:
           name: Run flake8 check
           working_directory: ~/project
-          command: flake8 citylex.py setup.py
+          command: flake8 citylex.py
       - run:
           name: Run black check
           working_directory: ~/project
-          command: black --line-length 79 --check citylex.py setup.py
+          command: black --line-length 79 --check citylex.py
       - run:
           name: Build source distribution
           working_directory: ~/project/
-          # Ensure we can build a source distribution that can correctly install.
-          # "python setup.py sdist" creates dist/citylex-x.y.z.tar.gz
           command: |
-              pip install --progress-bar off --upgrade pip setuptools
-              python setup.py sdist
-              pip install dist/`ls dist/ | grep .tar.gz`
-  python3.8:
-    <<: *template
-    docker:
-      - image: python:3.8
+              python -m build
+              pip install dist/`ls dist/ | grep .whl`
   python3.9:
     <<: *template
     docker:
@@ -48,3 +40,7 @@ jobs:
     <<: *template
     docker:
       - image: python:3.10
+  python3.11:
+    <<: *template
+    docker:
+      - image: python:3.11

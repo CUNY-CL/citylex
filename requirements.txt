@@ -4,3 +4,4 @@ openpyxl>=3.0.6
 pandas>=1.2.2
 protobuf>=3.15.0
 requests>=2.25.1
+setuptools>=65.5.0

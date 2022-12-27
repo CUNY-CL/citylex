@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools >= 65.3.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "citylex"
+version = "0.1.10"
+description = "Builds a multi-source English lexicon"
+readme = "README.md"
+requires-python = ">= 3.7.*"
+license = { text = "Apache 2.0" }
+authors = ["Kyle Gorman <kylebgorman@gmail.com>"]
+keywords = [
+    "computational linguistics",
+    "morphology",
+    "natural language processing",
+    "phonology",
+    "phonetics",
+    "speech",
+    "language",
+]
+dependencies = [
+    "pandas >= 1.2.2",
+    "protobuf >= 3.15.0",
+    "requests >= 2.25.1",
+]
+classifiers = [
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Topic :: Text Processing :: Linguistic",
+]
+
+[project.scripts]
+citylex = "citylex:main"
+
+[project.urls]
+homepage = "https://github.com/kylebgorman/citylex"
+
+[tool.setuptools]
+zip-safe = false
+
+[tool.setuptools.packages.find]
+where = ["."]
