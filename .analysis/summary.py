@@ -36,7 +36,7 @@ def main(args: argparse.Namespace) -> None:
     # Collects counts.
     field_counts = dict.fromkeys(FIELDS, 0)
     unique_counts = dict.fromkeys(FIELDS, 0)
-    for (wordform, entry) in lexicon.entry.items():
+    for wordform, entry in lexicon.entry.items():
         for field in OPTIONAL_FIELDS:
             if entry.HasField(field):
                 field_counts[field] += 1
@@ -48,7 +48,7 @@ def main(args: argparse.Namespace) -> None:
                 unique_counts[field] += 1
     # Prints counts.
     print("Counts:\n")
-    for (field, count) in sorted(field_counts.items()):
+    for field, count in sorted(field_counts.items()):
         unique_count = unique_counts[field]
         if count == unique_count:
             print(f"\t{field}:\t{count:,}")

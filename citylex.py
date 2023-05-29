@@ -242,7 +242,7 @@ def _subtlex_uk(lexicon: citylex_pb2.Lexicon) -> None:
         # Disables parsing "nan" as, well, `nan`.
         df = source.parse(sheet, na_values=[], keep_default_na=False)
         gen = zip(df.Spelling, df.FreqCount, df.CD_count)
-        for (wordform, freq, cd) in gen:
+        for wordform, freq, cd in gen:
             wordform = _normalize(wordform)
             ptr = lexicon.entry[wordform]
             ptr.subtlex_uk_freq = freq
@@ -539,7 +539,7 @@ def main() -> None:
         )
         tsv_writer.writeheader()
         # Sorting for stability.
-        for (wordform, entry) in sorted(lexicon.entry.items()):
+        for wordform, entry in sorted(lexicon.entry.items()):
             drow = {"wordform": wordform}
             for field in fieldnames:
                 attr = getattr(entry, field)

@@ -22,11 +22,11 @@ def main(args: argparse.Namespace) -> None:
     lexicon = citylex.read_textproto(args.textproto_path)
     elp_latency: Dict[str, float] = {}
     with open(args.latencies_path, "r") as source:
-        for (word, latency) in csv.reader(source, delimiter="\t"):
+        for word, latency in csv.reader(source, delimiter="\t"):
             elp_latency[word.casefold()] = float(latency)
     # Correlations between the frequency bands.
     print("Frequency-frequency correlations")
-    for (f1, f2) in itertools.combinations(FREQUENCIES, 2):
+    for f1, f2 in itertools.combinations(FREQUENCIES, 2):
         f1_list: List[int] = []
         f2_list: List[int] = []
         for entry in lexicon.entry.values():
@@ -45,7 +45,7 @@ def main(args: argparse.Namespace) -> None:
     for f1 in FREQUENCIES:
         f1_list = []
         f2_list = []
-        for (word, entry) in lexicon.entry.items():
+        for word, entry in lexicon.entry.items():
             if entry.HasField(f1):
                 try:
                     f2_list.append(elp_latency[word])
