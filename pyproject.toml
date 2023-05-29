@@ -43,7 +43,4 @@ citylex = "citylex:main"
 homepage = "https://github.com/kylebgorman/citylex"
 
 [tool.setuptools]
-zip-safe = false
-
-[tool.setuptools.packages.find]
-where = ["."]
+py-modules = ["citylex", "citylex_pb2"]
