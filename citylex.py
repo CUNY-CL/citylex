@@ -372,8 +372,8 @@ def _wikipron_uk(lexicon: citylex_pb2.Lexicon) -> None:
     """Collects WikiPron US pronunciations."""
     counter = 0
     url = (
-        "https://raw.githubusercontent.com/kylebgorman/"
-        "wikipron/master/data/scrape/tsv/eng_latn_us_broad_filtered.tsv"
+        "https://raw.githubusercontent.com/cuny-cl/"
+        "wikipron/master/data/scrape/tsv/eng_latn_uk_broad_filtered.tsv"
     )
     for line in _request_url_resource(url):
         (wordform, pron, *_) = line.rstrip().split("\t")
@@ -391,7 +391,7 @@ def _wikipron_us(lexicon: citylex_pb2.Lexicon) -> None:
     """Collects WikiPron US pronunciations."""
     counter = 0
     url = (
-        "https://raw.githubusercontent.com/kylebgorman/"
+        "https://raw.githubusercontent.com/cuny-cl/"
         "wikipron/master/data/scrape/tsv/eng_latn_us_broad_filtered.tsv"
     )
     for line in _request_url_resource(url):
