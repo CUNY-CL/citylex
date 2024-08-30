@@ -53,13 +53,17 @@ def _request_url_resource(url: str) -> Iterator[str]:
         yield line.decode("utf8", "ignore")
 
 
-def _request_url_zip_resource(url: str, path: str) -> Iterator[str]:
-    """Requests a zip file by URL and the path to the desired file."""
+def _request_url_mock_file(url: str) -> io.BytesIO:
+    """Requests a URL and returns a mock file."""
     logging.info("Requesting URL: %s", url)
     response = requests.get(url)
     response.raise_for_status()
-    # Pretends to be a local zip file.
-    mock_zip_file = io.BytesIO(response.content)
+    return io.BytesIO(response.content)
+
+
+def _request_url_zip_resource(url: str, path: str) -> Iterator[str]:
+    """Requests a zip file by URL and the path to the desired file."""
+    mock_zip_file = _request_url_mock_file(url)
     # Opens the zip file, and then the specific enclosed file.
     with zipfile.ZipFile(mock_zip_file, "r").open(path, "r") as source:
         for line in source:
@@ -235,9 +239,14 @@ def _elp(lexicon: citylex_pb2.Lexicon) -> None:
 def _subtlex_uk(lexicon: citylex_pb2.Lexicon) -> None:
     """Collects SUBTLEX-UK frequencies."""
     counter = 0
-    url = "http://crr.ugent.be/papers/SUBTLEX-UK.xlsx"
-    logging.info("Requesting URL: %s", url)
-    with pandas.ExcelFile(url, engine="openpyxl") as source:
+    # TODO(2024-01-11): this is currently dead, so we're using the
+    # archived one instead.
+    url = (
+        "https://web.archive.org/web/20211125032415/"
+        "http://crr.ugent.be/papers/SUBTLEX-UK.xlsx"
+    )
+    mock_zip_file = _request_url_mock_file(url)
+    with pandas.ExcelFile(mock_zip_file, engine="openpyxl") as source:
         sheet = source.sheet_names[0]
         # Disables parsing "nan" as, well, `nan`.
         df = source.parse(sheet, na_values=[], keep_default_na=False)
@@ -258,9 +267,13 @@ def _subtlex_uk(lexicon: citylex_pb2.Lexicon) -> None:
 def _subtlex_us(lexicon: citylex_pb2.Lexicon) -> None:
     """Collects SUBTLEX-US frequencies."""
     counter = 0
+    # TODO(2024-01-11): this is currently dead, so we're using the
+    # archived one instead.
     url = (
-        "http://crr.ugent.be/papers/SUBTLEX-US_frequency_list_with_PoS_"
-        "information_final_text_version.zip"
+        "https://web.archive.org/web/20211125032415/"
+        "http://crr.ugent.be/papers/"
+        "SUBTLEX-US_frequency_list_with_PoS_information_"
+        "final_text_version.zip"
     )
     path = "SUBTLEX-US frequency list with PoS information text version.txt"
     source = _request_url_zip_resource(url, path)

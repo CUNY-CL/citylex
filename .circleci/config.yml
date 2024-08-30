@@ -9,7 +9,7 @@ jobs:
     docker:
       # Use the latest Python 3.x image from CircleCI.
       # See: https://circleci.com/developer/images/image/cimg/python
-      - image: cimg/python:3.11
+      - image: cimg/python:3.12.1
     steps:
       - checkout
       - run:

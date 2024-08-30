@@ -3,6 +3,7 @@
 # source: citylex.proto
 # Protobuf Python Version: 4.25.3
 """Generated protocol buffer code."""
+from google.protobuf.internal import builder as _builder
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import symbol_database as _symbol_database
@@ -33,4 +34,5 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_LEXICON']._serialized_end=660
   _globals['_LEXICON_ENTRYENTRY']._serialized_start=600
   _globals['_LEXICON_ENTRYENTRY']._serialized_end=660
+
 # @@protoc_insertion_point(module_scope)
