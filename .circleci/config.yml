@@ -49,9 +49,6 @@ workflows:
           name: black
           command-run: black --line-length=79 --check citylex.py
       # Disabled: returns a bunch of nonsense to do with protos.
-      #- pre-build:
-          #name: mypy
-          #command-run: mypy --install-types --ignore-missing-imports --non-interactive citylex.py
       - pre-build:
           name: twine
           command-run: |
@@ -62,7 +59,6 @@ workflows:
           requires:
             - flake8
             - black
-            #- mypy
             - twine
           matrix:
             parameters:
