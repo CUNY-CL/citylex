@@ -535,5 +535,3 @@ def main():
     conn.close()
 
     logging.info("Success!")
-
-main()
