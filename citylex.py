@@ -8,32 +8,17 @@ https://github.com/kylebgorman/citylex
 
 import argparse
 import csv
-import datetime
 import io
 import logging
 import os
-import pkg_resources
-import re
-import sys
 import unicodedata
 import zipfile
+import sqlite3
 
 from typing import Dict, Iterator, List
 
-from google.protobuf import text_format  # type: ignore
-
 import pandas  # type: ignore
 import requests
-
-import citylex_pb2  # type: ignore
-
-
-def read_textproto(path: str) -> citylex_pb2.Lexicon:
-    """Parses textproto."""
-    lexicon = citylex_pb2.Lexicon()
-    with open(path, "r") as source:
-        text_format.ParseLines(source, lexicon)
-    return lexicon
 
 
 # Helper methods.
@@ -99,40 +84,56 @@ CELEX_FEATURE_MAP = {
 # * "a2S" and "a3S": no need to distinguish between this and "a1S".
 
 
-def _celex(celex_path: str, lexicon: citylex_pb2.Lexicon) -> None:
-    """Collects CELEX data."""
-    # Frequencies.
+def _celex(conn: str, celex_path: str) -> None:
+    """Collects Celex data and inserts it into database."""
+    cursor = conn.cursor()
+    # Frequencies
     counter = 0
     path = os.path.join(celex_path, "english/efw/efw.cd")
-    with open(path, "r") as source:
-        for line in source:
+    total_freq = 0
+    # Sum frequency of all words
+    with open(path, "r") as file:
+        for line in file:
+            row = _parse_celex_row(line)
+            wordform = _normalize(row[1])
+            # Skip multiword entries
+            if " " in wordform:
+                continue
+            freq = int(row[3])
+            total_freq += freq
+    # Insert fields into database
+    with open(path, "r") as file:
+        for line in file:
             row = _parse_celex_row(line)
             wordform = _normalize(row[1])
             # Throws out multiword entries.
             if " " in wordform:
                 continue
             freq = int(row[3])
-            lexicon.entry[wordform].celex_freq += freq
+            freq_per_million = round((freq / total_freq) * 1_000_000, 2)
+            cursor.execute("INSERT INTO frequency (wordform, source, raw_frequency, freq_per_million) VALUES (?, ?, ?, ?)", (wordform, "CELEX", freq, freq_per_million))
             counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CELEX frequencies")
-    # Morphology.
-    # Reads lemmata information.
+    # Morphology
+    # Reads lemma information
     path = os.path.join(celex_path, "english/eml/eml.cd")
     lemma_info: Dict[int, str] = {}
-    with open(path, "r") as source:
-        for line in source:
+    counter = 0
+    with open(path, "r") as file:
+        for line in file:
             row = _parse_celex_row(line)
             li = int(row[0])
             lemma = _normalize(row[1])
             if " " in lemma:
                 continue
             lemma_info[li] = lemma
-    # Reads wordform information.
+            counter += 1
+    # Reads wordform information
     counter = 0
     path = os.path.join(celex_path, "english/emw/emw.cd")
-    with open(path, "r") as source:
-        for line in source:
+    with open(path, "r") as file:
+        for line in file:
             row = _parse_celex_row(line)
             wordform = _normalize(row[1])
             if " " in wordform:
@@ -157,18 +158,15 @@ def _celex(celex_path: str, lexicon: citylex_pb2.Lexicon) -> None:
                     features,
                 )
                 continue
-            # TODO: Avoid duplication.
-            entry = lexicon.entry[wordform].celex_morph.add()
-            entry.lemma = lemma
-            entry.features = features
+            cursor.execute("INSERT INTO morphology (wordform, source, lemma, features) VALUES (?, ?, ?, ?)", (wordform, "CELEX", lemma, features))
             counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CELEX analyses")
     # Pronunciations.
     counter = 0
     path = os.path.join(celex_path, "english/epw/epw.cd")
-    with open(path, "r") as source:
-        for line in source:
+    with open(path, "r") as file:
+        for line in file:
             row = _parse_celex_row(line)
             wordform = _normalize(row[1])
             # Throws out multiword entries.
@@ -176,40 +174,18 @@ def _celex(celex_path: str, lexicon: citylex_pb2.Lexicon) -> None:
                 continue
             # Eliminates syllable boundaries, known to be inconsistent.
             pron = row[6].replace("-", "")
-            # We check for duplicates.
-            celex_pron = lexicon.entry[wordform].celex_pron
-            if pron not in celex_pron:
-                celex_pron.append(pron)
-                counter += 1
+            cursor.execute("INSERT INTO pronunciation (wordform, dialect, source, standard, pronunciation, is_observed) VALUES (?, ?, ?, ?, ?, ?)", (wordform, "UK", "CELEX", "DISC", pron, 1))
+            counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CELEX pronunciations")
-
-
-# CMUDict.
-
-
-def _cmudict(lexicon: citylex_pb2.Lexicon) -> None:
-    """Collects CMUdict pronuciations."""
-    counter = 0
-    url = "http://svn.code.sf.net/p/cmusphinx/code/trunk/cmudict/cmudict-0.7b"
-    for line in _request_url_resource(url):
-        if line.startswith(";"):
-            continue
-        (wordform, pron) = line.rstrip().split("  ", 1)
-        wordform = _normalize(wordform)
-        # Removes "numbering" on wordforms like `BASS(1)`.
-        wordform = re.sub(r"\(\d+\)$", "", wordform)
-        lexicon.entry[wordform].cmudict_pron.append(pron)
-        counter += 1
-    assert counter, "No data read"
-    logging.info(f"Collected {counter:,} CMUdict pronunciations")
 
 
 # ELP.
 
 
-def _elp(lexicon: citylex_pb2.Lexicon) -> None:
-    """Collects ELP analyses."""
+def _elp(conn: str) -> None:
+    """Collects ELP analyses and inserts them into database."""
+    cursor = conn.cursor()
     counter = 0
     url = (
         "https://raw.githubusercontent.com/kylebgorman/"
@@ -218,7 +194,6 @@ def _elp(lexicon: citylex_pb2.Lexicon) -> None:
     source = _request_url_resource(url)
     for drow in csv.DictReader(source):
         wordform = _normalize(drow["Word"])
-        ptr = lexicon.entry[wordform]
         morph_sp = drow["MorphSp"]
         nmorph = drow["NMorph"]
         # Skips lines without a morphological analysis.
@@ -226,49 +201,45 @@ def _elp(lexicon: citylex_pb2.Lexicon) -> None:
             continue
         if nmorph == "NULL" or nmorph is None:
             continue
-        ptr.elp_morph_sp = morph_sp
-        ptr.elp_nmorph = int(nmorph)
+        cursor.execute("INSERT INTO segmentation (wordform, source, nmorph, segmentation) VALUES (?, ?, ?, ?)", (wordform, "ELP", nmorph, morph_sp))
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} ELP analyses")
 
 
-# SUBTLEX-UK.
+# SUBTLEX-UK
 
 
-def _subtlex_uk(lexicon: citylex_pb2.Lexicon) -> None:
-    """Collects SUBTLEX-UK frequencies."""
+def _subtlex_uk(conn: str) -> None:
+    """Collects SUBTLEX-UK frequencies and inserts them into database."""
     counter = 0
-    # TODO(2024-01-11): this is currently dead, so we're using the
-    # archived one instead.
     url = (
         "https://web.archive.org/web/20211125032415/"
         "http://crr.ugent.be/papers/SUBTLEX-UK.xlsx"
     )
     mock_zip_file = _request_url_mock_file(url)
-    with pandas.ExcelFile(mock_zip_file, engine="openpyxl") as source:
-        sheet = source.sheet_names[0]
+    cursor = conn.cursor()
+    with pandas.ExcelFile(mock_zip_file, engine="openpyxl") as file:
+        sheet = file.sheet_names[0]
         # Disables parsing "nan" as, well, `nan`.
-        df = source.parse(sheet, na_values=[], keep_default_na=False)
+        df = file.parse(sheet, na_values=[], keep_default_na=False)
         gen = zip(df.Spelling, df.FreqCount, df.CD_count)
+        total_freq = df.FreqCount.sum()
         for wordform, freq, cd in gen:
             wordform = _normalize(wordform)
-            ptr = lexicon.entry[wordform]
-            ptr.subtlex_uk_freq = freq
-            ptr.subtlex_uk_cd = cd
+            freq_per_million = round((freq / total_freq) * 1_000_000, 2)
+            cursor.execute("INSERT INTO frequency (wordform, source, raw_frequency, freq_per_million) VALUES (?, ?, ?, ?)", (wordform, "SUBTLEX-UK", freq, freq_per_million))
             counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} SUBTLEX-UK frequencies")
 
 
-# SUBTLEX-US.
+# SUBTLEX-US
 
 
-def _subtlex_us(lexicon: citylex_pb2.Lexicon) -> None:
-    """Collects SUBTLEX-US frequencies."""
+def _subtlex_us(conn: str) -> None:
+    """Collects SUBTLEX-US frequencies and inserts them into database."""
     counter = 0
-    # TODO(2024-01-11): this is currently dead, so we're using the
-    # archived one instead.
     url = (
         "https://web.archive.org/web/20211125032415/"
         "http://crr.ugent.be/papers/"
@@ -276,12 +247,20 @@ def _subtlex_us(lexicon: citylex_pb2.Lexicon) -> None:
         "final_text_version.zip"
     )
     path = "SUBTLEX-US frequency list with PoS information text version.txt"
-    source = _request_url_zip_resource(url, path)
-    for drow in csv.DictReader(source, delimiter="\t"):
-        wordform = _normalize(drow["Word"])
-        ptr = lexicon.entry[wordform]
-        ptr.subtlex_us_freq = int(drow["FREQcount"])
-        ptr.subtlex_us_cd = int(drow["CDcount"])
+    file = _request_url_zip_resource(url, path)
+    cursor = conn.cursor()
+    total_freq = 0
+    data = []
+    for drow in csv.DictReader(file, delimiter="\t"):
+        freq = int(drow["FREQcount"])
+        total_freq += freq
+        data.append((drow["Word"], freq))
+    if total_freq <= 0:
+        raise ValueError("Total frequency is zero or negative. Cannot compute frequency per million.")
+    for wordform, freq in data:
+        wordform = _normalize(wordform)
+        freq_per_million = round((freq / total_freq) * 1_000_000, 2)
+        cursor.execute("INSERT INTO frequency (wordform, source, raw_frequency, freq_per_million) VALUES (?, ?, ?, ?)", (wordform, "SUBTLEX-US", freq, freq_per_million))
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} SUBTLEX-US frequencies")
@@ -319,37 +298,31 @@ UDLEXICONS_FEATURE_MAP = {
 # * 1/2 present forms
 # * "VERB|VerbForm=Ger"
 
-
-def _udlexicons(lexicon: citylex_pb2.Lexicon) -> None:
+def _udlexicons(conn: str) -> None:
     """Collects UDLexicons analyses."""
     counter = 0
-    # TODO: We do not use the EnLex data here, which looks quite messy by
-    # comparison; maybe revisit this decision someday.
+    cursor = conn.cursor()
     url = "http://atoll.inria.fr/~sagot/UDLexicons.0.2.zip"
     path = "UDLexicons.0.2/UDLex_English-Apertium.conllul"
-    source = _request_url_zip_resource(url, path)
-    for line in source:
+    file = _request_url_zip_resource(url, path)
+    for line in file:
         tags = line.rstrip().split("\t")
         # Skips multiword expressions.
-        # TODO: Is there a more elegant way to do this?
         if tags[0].startswith("0-"):
-            continue
+                continue
         wordform = _normalize(tags[2])
         lemma = _normalize(tags[3])
         if lemma == "_":
             continue
         features = f"{tags[4]}|{tags[6]}"
         try:
-            features = UDLEXICONS_FEATURE_MAP[features]
+                features = UDLEXICONS_FEATURE_MAP[features]
         except KeyError:
-            logging.debug(
-                "Ignoring wordform feature bundle: %s (%s)", wordform, features
-            )
-            continue
-        # TODO: Avoid duplication.
-        entry = lexicon.entry[wordform].udlexicons_morph.add()
-        entry.lemma = lemma
-        entry.features = features
+                logging.debug(
+                    "Ignoring wordform feature bundle: %s (%s)", wordform, features
+                )
+                continue
+        cursor.execute("INSERT INTO morphology (wordform, source, lemma, features) VALUES (?, ?, ?, ?)", (wordform, "UDLexicons", lemma, features))
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} UDLexicon analyses")
@@ -358,9 +331,10 @@ def _udlexicons(lexicon: citylex_pb2.Lexicon) -> None:
 # UniMorph.
 
 
-def _unimorph(lexicon: citylex_pb2.Lexicon) -> None:
-    """Collects UniMorph analyses."""
+def _unimorph(conn: str) -> None:
+    """Collects UniMorph analyses and inserts them into the database."""
     counter = 0
+    cursor = conn.cursor()
     url = "https://raw.githubusercontent.com/unimorph/eng/master/eng"
     for line in _request_url_resource(url):
         line = line.rstrip()
@@ -369,10 +343,7 @@ def _unimorph(lexicon: citylex_pb2.Lexicon) -> None:
         (lemma, wordform, features) = line.split("\t", 2)
         wordform = _normalize(wordform)
         lemma = _normalize(lemma)
-        # TODO: Avoid duplication.
-        entry = lexicon.entry[wordform].unimorph_morph.add()
-        entry.lemma = lemma
-        entry.features = features
+        cursor.execute("INSERT INTO morphology (wordform, source, lemma, features) VALUES (?, ?, ?, ?)", (wordform, "UniMorph", lemma, features))
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} UniMorph analyses")
@@ -381,17 +352,18 @@ def _unimorph(lexicon: citylex_pb2.Lexicon) -> None:
 # WikiPron-UK.
 
 
-def _wikipron_uk(lexicon: citylex_pb2.Lexicon) -> None:
-    """Collects WikiPron US pronunciations."""
+def _wikipron_uk(conn: str) -> None:
+    """Collects WikiPron UK pronunciations and inserts them into the database."""
     counter = 0
+    cursor = conn.cursor()
     url = (
-        "https://raw.githubusercontent.com/cuny-cl/"
+        "https://raw.githubusercontent.com/kylebgorman/"
         "wikipron/master/data/scrape/tsv/eng_latn_uk_broad_filtered.tsv"
     )
     for line in _request_url_resource(url):
         (wordform, pron, *_) = line.rstrip().split("\t")
         wordform = _normalize(wordform)
-        lexicon.entry[wordform].wikipron_uk_pron.append(pron)
+        cursor.execute("INSERT INTO pronunciation (wordform, dialect, source, standard, pronunciation, is_observed) VALUES (?, ?, ?, ?, ?, ?)", (wordform, "UK", "WikiPron UK", "IPA", pron, 1))
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} WikiPron UK pronunciations")
@@ -400,37 +372,32 @@ def _wikipron_uk(lexicon: citylex_pb2.Lexicon) -> None:
 # WikiPron-US.
 
 
-def _wikipron_us(lexicon: citylex_pb2.Lexicon) -> None:
-    """Collects WikiPron US pronunciations."""
+def _wikipron_us(conn: str) -> None:
+    """Collects WikiPron US pronunciations and inserts them into the database."""
     counter = 0
+    cursor = conn.cursor()
     url = (
-        "https://raw.githubusercontent.com/cuny-cl/"
+        "https://raw.githubusercontent.com/kylebgorman/"
         "wikipron/master/data/scrape/tsv/eng_latn_us_broad_filtered.tsv"
     )
     for line in _request_url_resource(url):
         (wordform, pron, *_) = line.rstrip().split("\t")
         wordform = _normalize(wordform)
-        lexicon.entry[wordform].wikipron_us_pron.append(pron)
+        cursor.execute("INSERT INTO pronunciation (wordform, dialect, source, standard, pronunciation, is_observed) VALUES (?, ?, ?, ?, ?, ?)", (wordform, "US", "WikiPron US", "IPA", pron, 1))
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} WikiPron US pronunciations")
 
 
-def main() -> None:
+def main():
     logging.basicConfig(format="%(levelname)s: %(message)s", level="INFO")
     parser = argparse.ArgumentParser(description="Creates a CityLex lexicon")
-    # Output paths.
+
     parser.add_argument(
-        "--output-textproto-path",
-        default="citylex.textproto",
-        help="output textproto path (default: %(default)s)",
+        "--db_path",
+        default="citylex.db",
+        help="path to database file (default: %(default)s)",
     )
-    parser.add_argument(
-        "--output-tsv-path",
-        default="citylex.tsv",
-        help="output TSV path (default: %(default)s)",
-    )
-    # Enables specific data sources.
     parser.add_argument(
         "--all-free", action="store_true", help="extract all free data sources"
     )
@@ -443,12 +410,6 @@ def main() -> None:
     parser.add_argument(
         "--celex-path",
         help="path to CELEX directory (usually ends in `celex2`)",
-    )
-    parser.add_argument(
-        "--cmudict",
-        action="store_true",
-        help="extract CMUdict data (BSD 2-clause): "
-        "http://opensource.org/licenses/BSD-2-Clause",
     )
     parser.add_argument(
         "--elp",
@@ -494,79 +455,79 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    # Builds TSV fieldnames and lexicon.
-    lexicon = citylex_pb2.Lexicon()
-    fieldnames = []
+    conn = sqlite3.connect(args.db_path)
+    cursor = conn.cursor()
+
+    logging.info("Dropping existing tables if they exist...")
+    cursor.execute("DROP TABLE IF EXISTS frequency;")
+    cursor.execute("DROP TABLE IF EXISTS pronunciation;")
+    cursor.execute("DROP TABLE IF EXISTS morphology;")
+    cursor.execute("DROP TABLE IF EXISTS segmentation;")
+
+    logging.info("Creating tables...")
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS frequency (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            wordform TEXT NOT NULL,
+            source TEXT NOT NULL,
+            raw_frequency INTEGER NOT NULL,
+            freq_per_million DECIMAL(5, 2) NOT NULL
+        );
+    """)
+    cursor.execute("""    
+        CREATE TABLE IF NOT EXISTS pronunciation (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            wordform TEXT NOT NULL,
+            dialect TEXT NOT NULL,
+            source TEXT NOT NULL,
+            standard TEXT NOT NULL,
+            pronunciation TEXT NOT NULL,
+            is_observed BOOLEAN NOT NULL
+        );
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS morphology (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            wordform TEXT NOT NULL,
+            source TEXT NOT NULL,
+            lemma TEXT NOT NULL,
+            features TEXT NOT NULL
+        );
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS segmentation (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            wordform TEXT NOT NULL,
+            source TEXT NOT NULL,
+            nmorph TEXT NOT NULL,
+            segmentation TEXT NOT NULL
+        );
+    """)
+
     if args.celex:
         if not args.celex_path:
             logging.error("CELEX requested but --celex_path was not specified")
             exit(1)
-        _celex(args.celex_path, lexicon)
-        fieldnames.extend(["celex_freq", "celex_pron"])
-    if args.all_free or args.cmudict:
-        _cmudict(lexicon)
-        fieldnames.append("cmudict_pron")
+        _celex(conn, args.celex_path)
     if args.all_free or args.elp:
-        _elp(lexicon)
-        fieldnames.extend(["elp_morph_sp", "elp_nmorph"])
+        _elp(conn)
     if args.all_free or args.subtlex_uk:
-        _subtlex_uk(lexicon)
-        fieldnames.extend(["subtlex_uk_freq", "subtlex_uk_cd"])
+        _subtlex_uk(conn)
     if args.all_free or args.subtlex_us:
-        _subtlex_us(lexicon)
-        fieldnames.extend(["subtlex_us_freq", "subtlex_us_cd"])
+        _subtlex_us(conn)
     if args.all_free or args.udlexicons:
-        _udlexicons(lexicon)
-        fieldnames.append("udlexicons_morph")
+        _udlexicons(conn)
     if args.all_free or args.unimorph:
-        _unimorph(lexicon)
-        fieldnames.append("unimorph_morph")
+        _unimorph(conn)
     if args.all_free or args.wikipron_uk:
-        _wikipron_uk(lexicon)
-        fieldnames.append("wikipron_uk_pron")
+        _wikipron_uk(conn)
     if args.all_free or args.wikipron_us:
-        _wikipron_us(lexicon)
-        fieldnames.append("wikipron_us_pron")
-    if not fieldnames:
+        _wikipron_us(conn)
+    if not args:
         logging.error("No data sources selected")
         logging.error("Run `citylex --help` for more information")
         exit(1)
-
-    logging.info("Writing out textproto...")
-    version = pkg_resources.get_distribution("citylex").version
-    with open(args.output_textproto_path, "w") as sink:
-        print(f"# CityLex ({version}) lexicon:", file=sink)
-        print(f"#   date: {datetime.date.today()}", file=sink)
-        print(f"#   command: {' '.join(sys.argv)}", file=sink)
-        text_format.PrintMessage(lexicon, sink, as_utf8=True)
-        logging.debug("Wrote %d entries", len(lexicon.entry))
-
-    logging.info("Writing out TSV...")
-    with open(args.output_tsv_path, "w") as sink:
-        tsv_writer = csv.DictWriter(
-            sink,
-            delimiter="\t",
-            fieldnames=["wordform"] + fieldnames,
-            restval="NA",
-            lineterminator="\n",
-        )
-        tsv_writer.writeheader()
-        # Sorting for stability.
-        for wordform, entry in sorted(lexicon.entry.items()):
-            drow = {"wordform": wordform}
-            for field in fieldnames:
-                attr = getattr(entry, field)
-                if not attr:
-                    continue
-                if field.endswith("_pron"):
-                    # Join on '^'.
-                    drow[field] = "^".join(attr)
-                elif field.endswith("_morph"):
-                    # Make pairs and join on '^'.
-                    pairs = [f"{pair.lemma}_{pair.features}" for pair in attr]
-                    drow[field] = "^".join(pairs)
-                elif entry.HasField(field):
-                    drow[field] = attr
-            tsv_writer.writerow(drow)
+    conn.commit()
+    conn.close()
 
     logging.info("Success!")
