@@ -101,6 +101,8 @@ def _celex(conn: str, celex_path: str) -> None:
                 continue
             freq = int(row[3])
             total_freq += freq
+    if total_freq <= 0:
+        raise ValueError("Total frequency is zero or negative. Cannot compute frequency per million.")
     # Insert fields into database
     with open(path, "r") as file:
         for line in file:
@@ -225,6 +227,8 @@ def _subtlex_uk(conn: str) -> None:
         df = file.parse(sheet, na_values=[], keep_default_na=False)
         gen = zip(df.Spelling, df.FreqCount, df.CD_count)
         total_freq = df.FreqCount.sum()
+        if total_freq <= 0:
+            raise ValueError("Total frequency is zero or negative. Cannot compute frequency per million.")
         for wordform, freq, cd in gen:
             wordform = _normalize(wordform)
             freq_per_million = round((freq / total_freq) * 1_000_000, 2)
@@ -531,3 +535,5 @@ def main():
     conn.close()
 
     logging.info("Success!")
+
+main()
