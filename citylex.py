@@ -213,6 +213,7 @@ def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
             counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CELEX pronunciations")
+    conn.commit()
 
 
 # ELP.
@@ -250,6 +251,7 @@ def _elp(conn: sqlite3.Connection) -> None:
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} ELP analyses")
+    conn.commit()
 
 
 # SUBTLEX-UK.
@@ -297,6 +299,7 @@ def _subtlex_uk(conn: sqlite3.Connection) -> None:
         (total_freq,),
     )
     logging.info(f"Collected {counter:,} SUBTLEX-UK frequencies")
+    conn.commit()
 
 
 # SUBTLEX-US.
@@ -342,6 +345,7 @@ def _subtlex_us(conn: sqlite3.Connection) -> None:
         (total_freq,),
     )
     logging.info(f"Collected {counter:,} SUBTLEX-US frequencies")
+    conn.commit()
 
 
 # UDLexicons.
@@ -378,6 +382,7 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} UDLexicon analyses")
+    conn.commit()
 
 
 # UniMorph.
@@ -412,6 +417,7 @@ def _unimorph(conn: sqlite3.Connection) -> None:
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} UniMorph analyses")
+    conn.commit()
 
 
 # WikiPron-UK.
@@ -448,6 +454,7 @@ def _wikipron_uk(conn: sqlite3.Connection) -> None:
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} WikiPron UK pronunciations")
+    conn.commit()
 
 
 # WikiPron-US.
@@ -485,6 +492,7 @@ def _wikipron_us(conn: sqlite3.Connection) -> None:
         counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} WikiPron US pronunciations")
+    conn.commit()
 
 
 def main():
@@ -603,6 +611,7 @@ def main():
         )
     """
     )
+    conn.commit()
     if args.celex:
         if not args.celex_path:
             logging.error("CELEX requested but --celex_path was not specified")
@@ -626,6 +635,5 @@ def main():
         logging.error("No data sources selected")
         logging.error("Run `citylex --help` for more information")
         exit(1)
-    conn.commit()
     conn.close()
     logging.info("Success!")
