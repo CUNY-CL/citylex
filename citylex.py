@@ -220,7 +220,7 @@ def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
 
 
 def _elp(conn: sqlite3.Connection) -> None:
-    """Collects ELP analyses and inserts them into database."""
+    """Collects ELP analyses."""
     cursor = conn.cursor()
     counter = 0
     url = (
@@ -258,7 +258,7 @@ def _elp(conn: sqlite3.Connection) -> None:
 
 
 def _subtlex_uk(conn: sqlite3.Connection) -> None:
-    """Collects SUBTLEX-UK frequencies and inserts them into database."""
+    """Collects SUBTLEX-UK frequencies."""
     counter = 0
     url = (
         "https://web.archive.org/web/20211125032415/"
@@ -306,7 +306,7 @@ def _subtlex_uk(conn: sqlite3.Connection) -> None:
 
 
 def _subtlex_us(conn: sqlite3.Connection) -> None:
-    """Collects SUBTLEX-US frequencies and inserts them into database."""
+    """Collects SUBTLEX-US frequencies."""
     counter = 0
     url = (
         "https://web.archive.org/web/20211125032415/"
@@ -389,7 +389,7 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
 
 
 def _unimorph(conn: sqlite3.Connection) -> None:
-    """Collects UniMorph analyses and inserts them into the database."""
+    """Collects UniMorph analyses."""
     counter = 0
     cursor = conn.cursor()
     url = "https://raw.githubusercontent.com/unimorph/eng/master/eng"
@@ -424,9 +424,7 @@ def _unimorph(conn: sqlite3.Connection) -> None:
 
 
 def _wikipron_uk(conn: sqlite3.Connection) -> None:
-    """Collects WikiPron UK pronunciations and
-    inserts them into the database.
-    """
+    """Collects WikiPron UK pronunciations."""
     counter = 0
     cursor = conn.cursor()
     url = (
@@ -461,9 +459,7 @@ def _wikipron_uk(conn: sqlite3.Connection) -> None:
 
 
 def _wikipron_us(conn: sqlite3.Connection) -> None:
-    """Collects WikiPron US pronunciations and
-    inserts them into the database.
-    """
+    """Collects WikiPron US pronunciations."""
     counter = 0
     cursor = conn.cursor()
     url = (
