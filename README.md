@@ -5,7 +5,7 @@
 version](https://badge.fury.io/py/citylex.svg)](https://pypi.org/project/citylex)
 [![Supported Python
 versions](https://img.shields.io/pypi/pyversions/citylex.svg)](https://pypi.org/project/citylex)
-[![CircleCI](https://circleci.com/gh/kylebgorman/citylex/tree/master.svg?style=svg)](https://circleci.com/gh/kylebgorman/citylex/tree/master)
+[![CircleCI](https://circleci.com/gh/cuny-cl/citylex/tree/master.svg?style=svg)](https://circleci.com/gh/cuny-cl/citylex/tree/master)
 
 CityLex is an English lexical database intended to replace or enhance databases
 like [CELEX](https://catalog.ldc.upenn.edu/LDC96L14). It combines data from up
@@ -109,4 +109,5 @@ see `citylex --help` for more information.
 Author
 ------
 
-CityLex was created by [Kyle Gorman](http://wellformedness.com).
+CityLex was created by [Kyle Gorman](http://wellformedness.com) with help from
+[contributors](https://github.com/CUNY-CL/citylex/graphs/contributors).
