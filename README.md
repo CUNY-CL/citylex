@@ -5,7 +5,7 @@
 version](https://badge.fury.io/py/citylex.svg)](https://pypi.org/project/citylex)
 [![Supported Python
 versions](https://img.shields.io/pypi/pyversions/citylex.svg)](https://pypi.org/project/citylex)
-[![CircleCI](https://circleci.com/gh/cuny-cl/citylex/tree/master.svg?style=svg)](https://circleci.com/gh/cuny-cl/citylex/tree/master)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/CUNY-CL/citylex/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/CUNY-CL/citylex/tree/master)
 
 CityLex is an English lexical database intended to replace or enhance databases
 like [CELEX](https://catalog.ldc.upenn.edu/LDC96L14). It combines data from up
