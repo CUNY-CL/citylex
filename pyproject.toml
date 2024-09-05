@@ -44,4 +44,4 @@ citylex = "citylex:main"
 homepage = "https://github.com/kylebgorman/citylex"
 
 [tool.setuptools]
-py-modules = ["citylex", "citylex_pb2"]
+py-modules = ["citylex"]
