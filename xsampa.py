@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""X-SAMPSA conversion functions for English.
+"""X-SAMPA conversion functions for English.
 
 Table based on: https://en.wikipedia.org/wiki/X-SAMPA
 """
