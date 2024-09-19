@@ -8,3 +8,4 @@ requests>=2.25.1
 setuptools>=65.5.0
 twine>=3.7.1
 types-requests==2.32.0.20240905
+Pynini==2.1.6.post1

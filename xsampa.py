@@ -1,7 +1,11 @@
+#!/usr/bin/env python
+"""X-SAMPSA conversion functions for English.
+
+Table based on: https://en.wikipedia.org/wiki/X-SAMPA
+"""
 import pynini
 from pynini.lib import rewrite, pynutil
 
-# defining the IPA to X-SAMPA mappings as a list of tuples
 ipa_xsampa_map = [
     ("a", "a"), ("b", "b"), ("ɓ", "b<"), ("c", "c"), ("d", "d"), ("ɖ", "d"),
     ("e", "e"), ("f", "f"), ("ɡ", "g"), ("h", "h"), ("i", "i"), ("j", "j"),
@@ -23,7 +27,6 @@ ipa_xsampa_map = [
     ("m̩", "m_="), ("əː", "@:"), ("n̩", "n_=")
 ]
 
-# pynini string map FST with space handling
 IPA_TO_XSAMPA = pynutil.join(pynini.string_map(ipa_xsampa_map), " ").closure().optimize()
 
 def ipa_to_xsampa(ipa_string: str) -> str:
