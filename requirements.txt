@@ -4,8 +4,8 @@ flake8==7.1.1
 mypy==1.11.2
 openpyxl>=3.1.5
 pandas>=1.2.2
+pynini==2.1.6.post1
 requests>=2.25.1
 setuptools>=65.5.0
 twine>=3.7.1
 types-requests==2.32.0.20240905
-Pynini==2.1.6.post1
