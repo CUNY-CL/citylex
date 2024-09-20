@@ -1,8 +1,8 @@
-#!/usr/bin/env python
 """X-SAMPA conversion functions for English.
 
 Table based on: https://en.wikipedia.org/wiki/X-SAMPA
 """
+
 import pynini
 from pynini.lib import rewrite, pynutil
 
