@@ -6,7 +6,7 @@ Table based on: https://en.wikipedia.org/wiki/X-SAMPA
 import pynini
 from pynini.lib import rewrite, pynutil
 
-ipa_xsampa_map = [
+_ipa_xsampa_map = [
     ("a", "a"),
     ("b", "b"),
     ("ɓ", "b<"),
@@ -108,10 +108,10 @@ ipa_xsampa_map = [
     ("n̩", "n_="),
 ]
 
-IPA_TO_XSAMPA = (
-    pynutil.join(pynini.string_map(ipa_xsampa_map), " ").closure().optimize()
+_IPA_TO_XSAMPA = (
+    pynutil.join(pynini.string_map(_ipa_xsampa_map), " ").closure().optimize()
 )
 
 
 def ipa_to_xsampa(ipa_string: str) -> str:
-    return rewrite.one_top_rewrite(ipa_string, IPA_TO_XSAMPA)
+    return rewrite.one_top_rewrite(ipa_string, _IPA_TO_XSAMPA)

@@ -23,9 +23,9 @@ jobs:
         type: string
     docker:
       - image: cimg/python:<< parameters.python-version >>
-        #auth:
-        #  username: $DOCKERHUB_USERNAME
-        #  password: $DOCKERHUB_PASSWORD
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
     steps:
       - checkout
       - run:
@@ -37,6 +37,10 @@ jobs:
       - run:
           name: Show installed Python packages
           command: pip list -v
+      - run:
+          name: Run Python tests
+          command: |
+              pytest -vv tests --junitxml /tmp/testxml/report.xml
 
 workflows:
   version: 2
