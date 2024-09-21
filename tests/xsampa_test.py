@@ -1,6 +1,6 @@
 import unittest
 
-import xsampa
+from citylex import xsampa
 
 
 class XSAMPATest(unittest.TestCase):

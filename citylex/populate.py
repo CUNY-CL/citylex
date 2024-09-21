@@ -1,10 +1,4 @@
-#!/usr/bin/env python
-"""Creates a CityLex lexicon.
-
-For more information on CityLex, see:
-
-https://github.com/kylebgorman/citylex
-"""
+"""Populates the CityLex database."""
 
 import argparse
 import csv
