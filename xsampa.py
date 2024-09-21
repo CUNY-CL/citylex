@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 #!/usr/bin/env python
+=======
+>>>>>>> 9ecdfeb193856ddecf18f20e83332e32e2fbeb80
 """X-SAMPA conversion functions for English.
 
 Table based on: https://en.wikipedia.org/wiki/X-SAMPA
 """
+
 import pynini
 from pynini.lib import rewrite, pynutil
 
