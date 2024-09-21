@@ -101,7 +101,7 @@ License
 -------
 
 The CityLex codebase are distributed under the Apache 2.0 license. Please see
-[`License.txt`](LICENSE.txt) for details.
+[`LICENSE.txt`](LICENSE.txt) for details.
 
 All other data sources bear their original licenses chosen by their creators;
 see `citylex --help` for more information.
