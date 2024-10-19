@@ -173,7 +173,7 @@ def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
                 continue
             cursor.execute(
                 """
-                INSERT INTO morphology (
+                INSERT INTO features (
                     wordform,
                     source,
                     lemma,
@@ -370,7 +370,7 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
         features = f"{tags[4]}|{tags[6]}"
         cursor.execute(
             """
-            INSERT INTO morphology (
+            INSERT INTO features (
                 wordform,
                 source,
                 lemma,
@@ -405,7 +405,7 @@ def _unimorph(conn: sqlite3.Connection) -> None:
             continue
         cursor.execute(
             """
-            INSERT INTO morphology (
+            INSERT INTO features (
                 wordform,
                 source,
                 lemma,
@@ -558,7 +558,7 @@ def main():
     conn = sqlite3.connect(args.db_path)
     cursor = conn.cursor()
     logging.info("Dropping existing tables if they exist...")
-    for table in ["frequency", "pronunciation", "morphology", "segmentation"]:
+    for table in ["frequency", "pronunciation", "features", "segmentation"]:
         cursor.execute(f"DROP TABLE IF EXISTS {table}")
     logging.info("Creating tables...")
     cursor.execute(
@@ -587,7 +587,7 @@ def main():
     )
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS morphology (
+        CREATE TABLE IF NOT EXISTS features (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             wordform TEXT NOT NULL,
             source TEXT NOT NULL,
