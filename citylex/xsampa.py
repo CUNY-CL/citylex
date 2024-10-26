@@ -114,4 +114,12 @@ _IPA_TO_XSAMPA = (
 
 
 def ipa_to_xsampa(ipa_string: str) -> str:
+    """Maps from IPA to X-SAMPA strings.
+
+    Args:
+        ipa_string: IPA string input.
+
+    Returns:
+        The correpsonding X-SAMPA string.
+    """
     return rewrite.one_top_rewrite(ipa_string, _IPA_TO_XSAMPA)
