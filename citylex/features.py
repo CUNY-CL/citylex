@@ -70,7 +70,6 @@ def _inner_dict_factory(from_index: int, to_index: int) -> Dict[str, str]:
                 result[from_tag] = to_tag[0]
         else:
             assert isinstance(to_tag, str), "unexpected many-to-many mapping"
-            result
             for tag in from_tag:
                 result[tag] = to_tag
     return result
