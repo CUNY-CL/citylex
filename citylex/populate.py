@@ -490,7 +490,7 @@ def main():
     parser = argparse.ArgumentParser(description="Creates a CityLex lexicon")
     parser.add_argument(
         "--db_path",
-        default="citylex.db",
+        default="data/citylex.db",
         help="path to database file (default: %(default)s)",
     )
     parser.add_argument(

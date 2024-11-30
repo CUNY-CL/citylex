@@ -49,11 +49,22 @@ def _request_url_zip_resource(url: str, path: str) -> Iterator[str]:
         for line in source:
             yield line.decode("utf8", "ignore")
 
+def get_args():
+    parser = argparse.ArgumentParser(description="Run the Flask app with a specified database path.")
+    parser.add_argument(
+        "--db_path",
+        default="data/citylex.db",
+        help="Path to the database file (default: %(default)s)"
+    )
+    return parser.parse_args()
+
+args = get_args()
+db_path = args.db_path
+
 app = Flask(__name__)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    db_path = "citylex.db"
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
