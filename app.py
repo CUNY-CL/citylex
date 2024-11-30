@@ -1,3 +1,5 @@
+# problem - not putting stuff into the right columns
+
 import argparse
 import csv
 import io
@@ -47,48 +49,6 @@ def _request_url_zip_resource(url: str, path: str) -> Iterator[str]:
         for line in source:
             yield line.decode("utf8", "ignore")
 
-def _subtlex_us(conn: sqlite3.Connection) -> None:
-    """Collects SUBTLEX-US frequencies."""
-    counter = 0
-    url = (
-        "https://web.archive.org/web/20211125032415/"
-        "http://crr.ugent.be/papers/"
-        "SUBTLEX-US_frequency_list_with_PoS_information_"
-        "final_text_version.zip"
-    )
-    path = "SUBTLEX-US frequency list with PoS information text version.txt"
-    source = _request_url_zip_resource(url, path)
-    cursor = conn.cursor()
-    for drow in csv.DictReader(source, delimiter="\t"):
-        wordform = _normalize(drow["Word"])
-        freq = int(drow["FREQcount"])
-        cursor.execute(
-            """
-            INSERT INTO frequency (
-                wordform,
-                source,
-                raw_frequency,
-                freq_per_million
-                ) VALUES (?, ?, ?, ?)
-            """,
-            (wordform, "SUBTLEX-US", freq, 0),
-        )
-        counter += 1
-    assert counter, "No data read"
-    cursor.execute("SELECT SUM(raw_frequency) FROM frequency")
-    total_freq = cursor.fetchone()[0]
-    assert total_freq > 0, "Total frequency must be greater than zero."
-    cursor.execute(
-        """
-        UPDATE frequency
-            SET freq_per_million =
-            ROUND(CAST(raw_frequency AS REAL) * 1000000 / ?, 2)
-        """,
-        (total_freq,),
-    )
-    logging.info(f"Collected {counter:,} SUBTLEX-US frequencies")
-    conn.commit()
-
 app = Flask(__name__)
 
 @app.route("/", methods=["GET", "POST"])
@@ -96,58 +56,6 @@ def index():
     db_path = "citylex.db"
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    logging.info("Dropping existing tables if they exist...")
-    for table in ["frequency", "pronunciation", "features", "segmentation"]:
-        cursor.execute(f"DROP TABLE IF EXISTS {table}")
-    logging.info("Creating tables...")
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS frequency (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            wordform TEXT NOT NULL,
-            source TEXT NOT NULL,
-            raw_frequency INTEGER NOT NULL,
-            freq_per_million DECIMAL(5, 2) NOT NULL
-        )
-    """
-    )
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS pronunciation (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            wordform TEXT NOT NULL,
-            dialect TEXT NOT NULL,
-            source TEXT NOT NULL,
-            standard TEXT NOT NULL,
-            pronunciation TEXT NOT NULL,
-            is_observed BOOLEAN NOT NULL
-        )
-    """
-    )
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS features (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            wordform TEXT NOT NULL,
-            source TEXT NOT NULL,
-            lemma TEXT NOT NULL,
-            features TEXT NOT NULL
-        )
-    """
-    )
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS segmentation (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            wordform TEXT NOT NULL,
-            source TEXT NOT NULL,
-            nmorph TEXT NOT NULL,
-            segmentation TEXT NOT NULL
-        )
-    """
-    )
-    conn.commit()
-
 
     if request.method == "GET":
         return render_template('index.html')
@@ -163,33 +71,78 @@ def index():
         print(output_format)
         print(licenses)
 
-        if "SUBTLEX-US" in selected_sources:
-            _subtlex_us(conn)
-            columns = ["wordform", "source"]
-            if "subtlexus_raw_frequency" in selected_fields:
-                columns.append("raw_frequency")
-            if "subtlexus_freq_per_million" in selected_fields:
-                columns.append("freq_per_million")
-            query = f"SELECT {', '.join(columns)} FROM frequency WHERE source = 'SUBTLEX-US'"
-            cursor.execute(query)
-            results = cursor.fetchall()
+        output = io.StringIO()
+        writer = csv.writer(output, delimiter='\t')
 
-            # Create a TSV file in memory
-            output = io.StringIO()
-            writer = csv.writer(output, delimiter='\t')
-            writer.writerow(columns)  # Write header
-            writer.writerows(results)  # Write data
-            
-            output.seek(0)  # Move the cursor to the beginning of the file
-            
-            return send_file(
-                io.BytesIO(output.getvalue().encode('utf-8')),
-                mimetype='text/tab-separated-values',
-                as_attachment=True,
-                download_name='subtlex_us_data.tsv'
+        columns = ["wordform", "source"]
+        if "subtlexus_raw_frequency" in selected_fields or "subtlexuk_raw_frequency" in selected_fields:
+            columns.append("raw_frequency")
+        if "subtlexus_freq_per_million" in selected_fields or "subtlexuk_freq_per_million" in selected_fields:
+            columns.append("freq_per_million")
+        if "wikipronus_IPA" in selected_fields or "wikipronuk_IPA" in selected_fields:
+            columns.append("IPA_pronunciation")
+
+        writer.writerow(columns)  # Write header
+
+        # Fetch and write SUBTLEX-US data
+        if "SUBTLEX-US" in selected_sources:
+            us_columns = ["wordform", "source"]
+            if "subtlexus_raw_frequency" in selected_fields:
+                us_columns.append("raw_frequency")
+            if "subtlexus_freq_per_million" in selected_fields:
+                us_columns.append("freq_per_million")
+            us_query = f"SELECT {', '.join(us_columns)} FROM frequency WHERE source = 'SUBTLEX-US'"
+            cursor.execute(us_query)
+            us_results = cursor.fetchall()
+            for row in us_results:
+                row_dict = dict(zip(us_columns, row))
+                writer.writerow([row_dict.get(col, '') for col in columns])  # Write US data
+
+        # Fetch and write SUBTLEX-UK data
+        if "SUBTLEX-UK" in selected_sources:
+            uk_columns = ["wordform", "source"]
+            if "subtlexuk_raw_frequency" in selected_fields:
+                uk_columns.append("raw_frequency")
+            if "subtlexuk_freq_per_million" in selected_fields:
+                uk_columns.append("freq_per_million")
+            uk_query = f"SELECT {', '.join(uk_columns)} FROM frequency WHERE source = 'SUBTLEX-UK'"
+            cursor.execute(uk_query)
+            uk_results = cursor.fetchall()
+            for row in uk_results:
+                row_dict = dict(zip(uk_columns, row))
+                writer.writerow([row_dict.get(col, '') for col in columns])  # Write UK data
+
+        # Fetch and write WikiPron-US data
+        if "WikiPron-US" in selected_sources:
+            wp_us_columns = ["wordform", "source", "pronunciation"]
+            wp_us_query = f"SELECT wordform, source, pronunciation FROM pronunciation WHERE source = 'WikiPron US' AND standard = 'IPA'"
+            cursor.execute(wp_us_query)
+            wp_us_results = cursor.fetchall()
+            for row in wp_us_results:
+                row_dict = dict(zip(wp_us_columns, row))
+                row_dict["IPA_pronunciation"] = row_dict.pop("pronunciation")
+                writer.writerow([row_dict.get(col, '') for col in columns])  # Write WikiPron-US data
+
+        # Fetch and write WikiPron-UK data
+        if "WikiPron-UK" in selected_sources:
+            wp_uk_columns = ["wordform", "source", "pronunciation"]
+            wp_uk_query = f"SELECT wordform, source, pronunciation FROM pronunciation WHERE source = 'WikiPron UK' AND standard = 'IPA'"
+            cursor.execute(wp_uk_query)
+            wp_uk_results = cursor.fetchall()
+            for row in wp_uk_results:
+                row_dict = dict(zip(wp_uk_columns, row))
+                row_dict["IPA_pronunciation"] = row_dict.pop("pronunciation")
+                writer.writerow([row_dict.get(col, '') for col in columns])  # Write WikiPron-UK data
+
+        output.seek(0)  # Move the cursor to the beginning of the file
+
+        # Send the file as a response
+        return send_file(
+            io.BytesIO(output.getvalue().encode('utf-8')),
+            mimetype='text/tab-separated-values',
+            as_attachment=True,
+            download_name='citylex_data.tsv'
             )
-        
-        return "Success! Your file has been downloaded"
 
 
 if __name__ == "__main__":

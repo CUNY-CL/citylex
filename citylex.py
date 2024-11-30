@@ -633,3 +633,6 @@ def main():
         exit(1)
     conn.close()
     logging.info("Success!")
+
+if __name__=="__main__":
+    main()
