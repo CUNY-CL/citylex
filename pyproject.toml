@@ -22,6 +22,7 @@ keywords = [
 dependencies = [
     "openpyxl >= 3.1.5",
     "pandas >= 1.2.2",
+    "pynini >= 2.1.6.post1",
     "requests >= 2.25.1",
 ]
 classifiers = [
@@ -37,11 +38,11 @@ classifiers = [
     "Topic :: Text Processing :: Linguistic",
 ]
 
-[project.scripts]
-citylex = "citylex:main"
-
 [project.urls]
 homepage = "https://github.com/kylebgorman/citylex"
 
+[project.scripts]
+citylex = "citylex.populate:main"
+
 [tool.setuptools]
-py-modules = ["citylex"]
+packages = ["citylex"]

@@ -23,9 +23,9 @@ jobs:
         type: string
     docker:
       - image: cimg/python:<< parameters.python-version >>
-        #auth:
-        #  username: $DOCKERHUB_USERNAME
-        #  password: $DOCKERHUB_PASSWORD
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
     steps:
       - checkout
       - run:
@@ -37,6 +37,10 @@ jobs:
       - run:
           name: Show installed Python packages
           command: pip list -v
+      - run:
+          name: Run Python tests
+          command: |
+              pytest -vv tests --junitxml /tmp/testxml/report.xml
 
 workflows:
   version: 2
@@ -44,11 +48,13 @@ workflows:
     jobs:
       - pre-build:
           name: flake8
-          command-run: flake8 citylex.py
+          command-run: flake8 .
       - pre-build:
           name: black
-          command-run: black --line-length=79 --check citylex.py
-      # Disabled: returns a bunch of nonsense to do with protos.
+          command-run: black --line-length=79 --check .
+      - pre-build:
+          name: mypy
+          command-run: mypy .
       - pre-build:
           name: twine
           command-run: |
@@ -57,8 +63,9 @@ workflows:
             twine check dist/`ls dist/ | grep .whl`
       - build-python:
           requires:
-            - flake8
             - black
+            - flake8
+            - mypy
             - twine
           matrix:
             parameters:
