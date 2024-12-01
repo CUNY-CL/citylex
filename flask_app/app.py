@@ -1,53 +1,10 @@
-# problem - not putting stuff into the right columns
-
 import argparse
 import csv
 import io
-import logging
-import os
 import sqlite3
-import unicodedata
-import zipfile
 
-from typing import Dict, Iterator, List
+from citylex import features
 from flask import Flask, render_template, request, send_file
-
-import pandas  # type: ignore
-import requests
-
-
-# Helper methods.
-
-
-def _normalize(field: str) -> str:
-    """Performs basic Unicode normalization and casefolding on field."""
-    return unicodedata.normalize("NFC", field).casefold()
-
-
-def _request_url_resource(url: str) -> Iterator[str]:
-    """Requests a URL and returns text."""
-    logging.info("Requesting URL: %s", url)
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
-    for line in response.iter_lines():
-        yield line.decode("utf8", "ignore")
-
-
-def _request_url_mock_file(url: str) -> io.BytesIO:
-    """Requests a URL and returns a mock file."""
-    logging.info("Requesting URL: %s", url)
-    response = requests.get(url)
-    response.raise_for_status()
-    return io.BytesIO(response.content)
-
-
-def _request_url_zip_resource(url: str, path: str) -> Iterator[str]:
-    """Requests a zip file by URL and the path to the desired file."""
-    mock_zip_file = _request_url_mock_file(url)
-    # Opens the zip file, and then the specific enclosed file.
-    with zipfile.ZipFile(mock_zip_file, "r").open(path, "r") as source:
-        for line in source:
-            yield line.decode("utf8", "ignore")
 
 def get_args():
     parser = argparse.ArgumentParser(description="Run the Flask app with a specified database path.")
@@ -92,6 +49,12 @@ def index():
             columns.append("freq_per_million")
         if "wikipronus_IPA" in selected_fields or "wikipronuk_IPA" in selected_fields:
             columns.append("IPA_pronunciation")
+        if "udlex_CELEXtags" in selected_fields or "um_CELEXtags" in selected_fields:
+            columns.append("CELEX_tags")
+        if "udlex_UDtags" in selected_fields or "um_UDtags" in selected_fields:
+            columns.append("UD_tags")
+        if "udlex_UMtags" in selected_fields or "um_UMtags" in selected_fields:
+            columns.append("UniMorph_tags")
 
         writer.writerow(columns)  # Write header
 
@@ -144,6 +107,40 @@ def index():
                 row_dict = dict(zip(wp_uk_columns, row))
                 row_dict["IPA_pronunciation"] = row_dict.pop("pronunciation")
                 writer.writerow([row_dict.get(col, '') for col in columns])  # Write WikiPron-UK data
+
+            # Fetch and write UDLexicons data
+        if "UDLexicons" in selected_sources:
+            udlex_columns = ["wordform", "source", "features"]
+            udlex_query = f"SELECT wordform, source, features FROM features WHERE source = 'UDLexicons'"
+            cursor.execute(udlex_query)
+            udlex_results = cursor.fetchall()
+            for row in udlex_results:
+                row_dict = dict(zip(udlex_columns, row))
+                combined_tag = '|'.join(row_dict["features"].split('|'))
+                if "udlex_CELEXtags" in selected_fields:
+                    row_dict["CELEX_tags"] = features.tag_to_tag("UD", "CELEX", combined_tag)
+                if "udlex_UDtags" in selected_fields:
+                    row_dict["UD_tags"] = combined_tag
+                if "udlex_UMtags" in selected_fields:
+                    row_dict["UniMorph_tags"] = features.tag_to_tag("UD", "UniMorph", combined_tag)
+                writer.writerow([row_dict.get(col, '') for col in columns])  # Write UDLexicons data
+
+        # Fetch and write UniMorph data
+        if "UniMorph" in selected_sources:
+            um_columns = ["wordform", "source", "features"]
+            um_query = f"SELECT wordform, source, features FROM features WHERE source = 'UniMorph'"
+            cursor.execute(um_query)
+            um_results = cursor.fetchall()
+            for row in um_results:
+                row_dict = dict(zip(um_columns, row))
+                combined_tag = '|'.join(row_dict["features"].split('|'))
+                if "um_CELEXtags" in selected_fields:
+                    row_dict["CELEX_tags"] = features.tag_to_tag("UniMorph", "CELEX", combined_tag)
+                if "um_UDtags" in selected_fields:
+                    row_dict["UD_tags"] = features.tag_to_tag("UniMorph", "UD", combined_tag)
+                if "um_UMtags" in selected_fields:
+                    row_dict["UniMorph_tags"] = combined_tag
+                writer.writerow([row_dict.get(col, '') for col in columns])  # Write UniMorph data
 
         output.seek(0)  # Move the cursor to the beginning of the file
 
