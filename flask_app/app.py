@@ -3,7 +3,6 @@ import csv
 import io
 import sqlite3
 
-from citylex import features
 from flask import Flask, render_template, request, send_file
 
 def get_args():
@@ -50,15 +49,19 @@ def index():
         if "wikipronus_IPA" in selected_fields or "wikipronuk_IPA" in selected_fields:
             columns.append("IPA_pronunciation")
         if "udlex_CELEXtags" in selected_fields or "um_CELEXtags" in selected_fields:
-            columns.append("CELEX_tags")
+            columns.append("celex_tags")
         if "udlex_UDtags" in selected_fields or "um_UDtags" in selected_fields:
-            columns.append("UD_tags")
+            columns.append("ud_tags")
         if "udlex_UMtags" in selected_fields or "um_UMtags" in selected_fields:
-            columns.append("UniMorph_tags")
+            columns.append("um_tags")
+        if "elp_segmentation" in selected_fields:
+            columns.append("segmentation")
+        if "elp_nmorph" in selected_fields:
+            columns.append("nmorph")
 
-        writer.writerow(columns)  # Write header
+        writer.writerow(columns)  # Writes header
 
-        # Fetch and write SUBTLEX-US data
+        # Fetches and writes SUBTLEX-US data
         if "SUBTLEX-US" in selected_sources:
             us_columns = ["wordform", "source"]
             if "subtlexus_raw_frequency" in selected_fields:
@@ -72,7 +75,7 @@ def index():
                 row_dict = dict(zip(us_columns, row))
                 writer.writerow([row_dict.get(col, '') for col in columns])  # Write US data
 
-        # Fetch and write SUBTLEX-UK data
+        # Fetches and writes SUBTLEX-UK data
         if "SUBTLEX-UK" in selected_sources:
             uk_columns = ["wordform", "source"]
             if "subtlexuk_raw_frequency" in selected_fields:
@@ -86,7 +89,7 @@ def index():
                 row_dict = dict(zip(uk_columns, row))
                 writer.writerow([row_dict.get(col, '') for col in columns])  # Write UK data
 
-        # Fetch and write WikiPron-US data
+        # Fetches and writes WikiPron-US data
         if "WikiPron-US" in selected_sources:
             wp_us_columns = ["wordform", "source", "pronunciation"]
             wp_us_query = f"SELECT wordform, source, pronunciation FROM pronunciation WHERE source = 'WikiPron US' AND standard = 'IPA'"
@@ -97,7 +100,7 @@ def index():
                 row_dict["IPA_pronunciation"] = row_dict.pop("pronunciation")
                 writer.writerow([row_dict.get(col, '') for col in columns])  # Write WikiPron-US data
 
-        # Fetch and write WikiPron-UK data
+        # Fetches and writes WikiPron-UK data
         if "WikiPron-UK" in selected_sources:
             wp_uk_columns = ["wordform", "source", "pronunciation"]
             wp_uk_query = f"SELECT wordform, source, pronunciation FROM pronunciation WHERE source = 'WikiPron UK' AND standard = 'IPA'"
@@ -108,43 +111,43 @@ def index():
                 row_dict["IPA_pronunciation"] = row_dict.pop("pronunciation")
                 writer.writerow([row_dict.get(col, '') for col in columns])  # Write WikiPron-UK data
 
-            # Fetch and write UDLexicons data
+        # Fetches and writes UDLexicons data
         if "UDLexicons" in selected_sources:
-            udlex_columns = ["wordform", "source", "features"]
-            udlex_query = f"SELECT wordform, source, features FROM features WHERE source = 'UDLexicons'"
+            udlex_columns = ["wordform", "source", "celex_tags", "ud_tags", "um_tags"]
+            udlex_query = f"SELECT {', '.join(udlex_columns)} FROM features WHERE source = 'UDLexicons'"
             cursor.execute(udlex_query)
             udlex_results = cursor.fetchall()
             for row in udlex_results:
                 row_dict = dict(zip(udlex_columns, row))
-                combined_tag = '|'.join(row_dict["features"].split('|'))
-                if "udlex_CELEXtags" in selected_fields:
-                    row_dict["CELEX_tags"] = features.tag_to_tag("UD", "CELEX", combined_tag)
-                if "udlex_UDtags" in selected_fields:
-                    row_dict["UD_tags"] = combined_tag
-                if "udlex_UMtags" in selected_fields:
-                    row_dict["UniMorph_tags"] = features.tag_to_tag("UD", "UniMorph", combined_tag)
                 writer.writerow([row_dict.get(col, '') for col in columns])  # Write UDLexicons data
 
-        # Fetch and write UniMorph data
+        # Fetches and writes UniMorph data
         if "UniMorph" in selected_sources:
-            um_columns = ["wordform", "source", "features"]
-            um_query = f"SELECT wordform, source, features FROM features WHERE source = 'UniMorph'"
+            um_columns = ["wordform", "source", "celex_tags", "ud_tags", "um_tags"]
+            um_query = f"SELECT {', '.join(um_columns)} FROM features WHERE source = 'UniMorph'"
             cursor.execute(um_query)
             um_results = cursor.fetchall()
             for row in um_results:
                 row_dict = dict(zip(um_columns, row))
-                combined_tag = '|'.join(row_dict["features"].split('|'))
-                if "um_CELEXtags" in selected_fields:
-                    row_dict["CELEX_tags"] = features.tag_to_tag("UniMorph", "CELEX", combined_tag)
-                if "um_UDtags" in selected_fields:
-                    row_dict["UD_tags"] = features.tag_to_tag("UniMorph", "UD", combined_tag)
-                if "um_UMtags" in selected_fields:
-                    row_dict["UniMorph_tags"] = combined_tag
                 writer.writerow([row_dict.get(col, '') for col in columns])  # Write UniMorph data
 
-        output.seek(0)  # Move the cursor to the beginning of the file
+        # Fetches and writes ELP segmentations
+        if "ELP" in selected_sources:
+            elp_columns = ["wordform", "source"]
+            if "elp_segmentation" in selected_fields:
+                elp_columns.append("segmentation")
+            if "elp_nmorph" in selected_fields:
+                elp_columns.append("nmorph")
+            elp_query = f"SELECT {', '.join(elp_columns)} FROM segmentation WHERE source = 'ELP'"
+            cursor.execute(elp_query)
+            elp_results = cursor.fetchall()
+            for row in elp_results:
+                row_dict = dict(zip(elp_columns, row))
+                writer.writerow([row_dict.get(col, '') for col in columns])  # Write ELP data
 
-        # Send the file as a response
+        output.seek(0)  # Moves the cursor to the beginning of the file
+
+        # Sends the file as a response
         return send_file(
             io.BytesIO(output.getvalue().encode('utf-8')),
             mimetype='text/tab-separated-values',
