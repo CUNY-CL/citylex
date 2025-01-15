@@ -14,24 +14,26 @@ document.addEventListener("DOMContentLoaded", function() {
       "ELP": "NC"
     };
   
+    // Selects all when user clicks "Select All" button
     selectAllButton.addEventListener("click", function() {
       sourceCheckboxes.forEach(checkbox => checkbox.checked = true);
       fieldCheckboxes.forEach(checkbox => checkbox.checked = true);
       licenseCheckboxes.forEach(checkbox => checkbox.checked = true);
     });
   
+    // Deselects all when user clicks "Select None" button
     selectNoneButton.addEventListener("click", function() {
       sourceCheckboxes.forEach(checkbox => checkbox.checked = false);
       fieldCheckboxes.forEach(checkbox => checkbox.checked = false);
       licenseCheckboxes.forEach(checkbox => checkbox.checked = false);
     });
   
+    // Updates the source and license checkboxes based on the field checkboxes
     sourceCheckboxes.forEach(sourceCheckbox => {
       sourceCheckbox.addEventListener("change", function() {
         const licenseValue = sourceLicenseMap[sourceCheckbox.value];
         const licenseCheckbox = document.querySelector(`input[name='licenses'][value='${licenseValue}']`);
         const relatedFieldCheckboxes = sourceCheckbox.closest('li').querySelectorAll("input[name='fields[]']");
-        
         if (sourceCheckbox.checked) {
           licenseCheckbox.checked = true;
           relatedFieldCheckboxes.forEach(fieldCheckbox => fieldCheckbox.checked = true);
@@ -42,7 +44,7 @@ document.addEventListener("DOMContentLoaded", function() {
       
       const relatedFieldCheckboxes = sourceCheckbox.closest('li').querySelectorAll("input[name='fields[]']");
       
-      // Function to update the source checkbox based on the field checkboxes
+      // Updates the source checkbox based on the field checkboxes
       function updateSourceCheckbox() {
         const anyFieldChecked = Array.from(relatedFieldCheckboxes).some(field => field.checked);
         sourceCheckbox.checked = anyFieldChecked;
@@ -52,16 +54,15 @@ document.addEventListener("DOMContentLoaded", function() {
           licenseCheckbox.checked = true;
         }
       }
-      
-      // Call the update function initially
       updateSourceCheckbox();
       
-      // Update the source checkbox whenever a field checkbox changes
+      // Updates the source checkbox whenever a field checkbox changes
       relatedFieldCheckboxes.forEach(fieldCheckbox => {
         fieldCheckbox.addEventListener("change", updateSourceCheckbox);
       });
     });
   
+    // Checks the source checkbox when a field checkbox is checked
     fieldCheckboxes.forEach(fieldCheckbox => {
       fieldCheckbox.addEventListener("change", function() {
         const sourceCheckbox = fieldCheckbox.closest('li').querySelector("input[name='sources[]']");
@@ -71,6 +72,7 @@ document.addEventListener("DOMContentLoaded", function() {
       });
     });
   
+    // Unchecks the source checkbox when a license checkbox is unchecked
     licenseCheckboxes.forEach(licenseCheckbox => {
       licenseCheckbox.addEventListener("change", function() {
         if (!licenseCheckbox.checked) {
