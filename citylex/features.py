@@ -101,30 +101,4 @@ def tag_to_tag(from_name: str, to_name: str, tag: str) -> Optional[str]:
         The tag in the target system, or None if not found.
     """
     assert from_name != to_name, "no-op mapping"
-    print(f"Mapping {tag} from {from_name} to {to_name}")
-
-    if from_name in _map_dict and to_name in _map_dict[from_name]:
-        # Try to map the entire tag first
-        mapped_tag = _map_dict[from_name][to_name].get(tag, None)
-        if mapped_tag:
-            print(f"Mapped tag: {mapped_tag}")
-            return mapped_tag
-
-        # If the entire tag is not found, try to map each part individually
-        parts = tag.split('|')
-        mapped_parts = []
-        for part in parts:
-            mapped_part = _map_dict[from_name][to_name].get(part, None)
-            if mapped_part:
-                mapped_parts.append(mapped_part)
-            else:
-                print(f"Mapping not found for part {part} from {from_name} to {to_name}")
-                return None
-
-        # Combine the mapped parts
-        mapped_tag = '|'.join(mapped_parts)
-        print(f"Mapped tag from parts: {mapped_tag}")
-        return mapped_tag
-    else:
-        print(f"Mapping not found for {tag} from {from_name} to {to_name}")
-        return None
+    return _map_dict[from_name][to_name].get(tag)
