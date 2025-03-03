@@ -14,11 +14,11 @@ from typing import Dict, Iterator, List
 import pandas  # type: ignore
 import requests
 
-from citylex.features import tag_to_tag
+from citylex import features
 
+DB_PATH = "citylex.db"
 
 # Helper methods.
-
 
 def _normalize(field: str) -> str:
     """Performs basic Unicode normalization and casefolding on field."""
@@ -158,8 +158,8 @@ def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
                 )
                 continue
             celex_tag = row[4]
-            ud_tag = tag_to_tag("CELEX", "UD", celex_tag)
-            um_tag = tag_to_tag("CELEX", "UniMorph", celex_tag)
+            ud_tag = features.tag_to_tag("CELEX", "UD", celex_tag)
+            um_tag = features.tag_to_tag("CELEX", "UniMorph", celex_tag)
             cursor.execute(
                 """
                 INSERT INTO features (
@@ -359,8 +359,8 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
         if lemma == "_":
             continue
         ud_tag = f"{tags[4]}|{tags[6]}"
-        celex_tag = tag_to_tag("UD", "CELEX", ud_tag)
-        um_tag = tag_to_tag("UD", "UniMorph", ud_tag)
+        celex_tag = features.tag_to_tag("UD", "CELEX", ud_tag)
+        um_tag = features.tag_to_tag("UD", "UniMorph", ud_tag)
         cursor.execute(
             """
             INSERT INTO features (
@@ -398,8 +398,8 @@ def _unimorph(conn: sqlite3.Connection) -> None:
         # Skips lines without features.
         if not um_tag or um_tag == "NULL":
             continue
-        celex_tag = tag_to_tag("UniMorph", "CELEX", um_tag)
-        ud_tag = tag_to_tag("UniMorph", "UD", um_tag)
+        celex_tag = features.tag_to_tag("UniMorph", "CELEX", um_tag)
+        ud_tag = features.tag_to_tag("UniMorph", "UD", um_tag)
         cursor.execute(
             """
             INSERT INTO features (
@@ -494,11 +494,6 @@ def main():
     logging.basicConfig(format="%(levelname)s: %(message)s", level="INFO")
     parser = argparse.ArgumentParser(description="Creates a CityLex lexicon")
     parser.add_argument(
-        "--db_path",
-        default="data/citylex.db",
-        help="path to database file (default: %(default)s)",
-    )
-    parser.add_argument(
         "--all-free", action="store_true", help="extract all free data sources"
     )
     parser.add_argument(
@@ -554,7 +549,7 @@ def main():
         "http://creativecommons.org/licenses/by-sa/3.0/",
     )
     args = parser.parse_args()
-    conn = sqlite3.connect(args.db_path)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     logging.info("Dropping existing tables if they exist...")
     for table in ["frequency", "pronunciation", "features", "segmentation"]:
@@ -634,3 +629,5 @@ def main():
         exit(1)
     conn.close()
     logging.info("Success!")
+
+main()

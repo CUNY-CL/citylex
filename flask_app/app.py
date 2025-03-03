@@ -1,27 +1,16 @@
-import argparse
 import csv
 import io
 import sqlite3
 
 from flask import Flask, render_template, request, send_file
 
-def get_args():
-    parser = argparse.ArgumentParser(description="Run the Flask app with a specified database path.")
-    parser.add_argument(
-        "--db_path",
-        default="data/citylex.db",
-        help="Path to the database file (default: %(default)s)"
-    )
-    return parser.parse_args()
-
-args = get_args()
-db_path = args.db_path
+DB_PATH = "citylex.db"
 
 app = Flask(__name__)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     if request.method == "GET":
