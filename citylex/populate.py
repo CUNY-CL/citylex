@@ -629,5 +629,3 @@ def main():
         exit(1)
     conn.close()
     logging.info("Success!")
-
-main()
