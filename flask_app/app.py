@@ -62,8 +62,7 @@ def post():
             us_columns.append("freq_per_million")
         us_query = f"SELECT {', '.join(us_columns)} FROM frequency WHERE source = 'SUBTLEX-US'"
         cursor.execute(us_query)
-        us_results = cursor.fetchall()
-        for row in us_results:
+        for row in cursor:
             row_dict = dict(zip(us_columns, row))
             writer.writerow([row_dict.get(col, '') for col in columns])
 
@@ -76,8 +75,7 @@ def post():
             uk_columns.append("freq_per_million")
         uk_query = f"SELECT {', '.join(uk_columns)} FROM frequency WHERE source = 'SUBTLEX-UK'"
         cursor.execute(uk_query)
-        uk_results = cursor.fetchall()
-        for row in uk_results:
+        for row in cursor:
             row_dict = dict(zip(uk_columns, row))
             writer.writerow([row_dict.get(col, '') for col in columns])
 
@@ -86,8 +84,7 @@ def post():
         wp_us_columns = ["wordform", "source", "pronunciation"]
         wp_us_query = f"SELECT wordform, source, pronunciation FROM pronunciation WHERE source = 'WikiPron US' AND standard = 'IPA'"
         cursor.execute(wp_us_query)
-        wp_us_results = cursor.fetchall()
-        for row in wp_us_results:
+        for row in cursor:
             row_dict = dict(zip(wp_us_columns, row))
             row_dict["IPA_pronunciation"] = row_dict.pop("pronunciation")
             writer.writerow([row_dict.get(col, '') for col in columns])
@@ -97,8 +94,7 @@ def post():
         wp_uk_columns = ["wordform", "source", "pronunciation"]
         wp_uk_query = f"SELECT wordform, source, pronunciation FROM pronunciation WHERE source = 'WikiPron UK' AND standard = 'IPA'"
         cursor.execute(wp_uk_query)
-        wp_uk_results = cursor.fetchall()
-        for row in wp_uk_results:
+        for row in cursor:
             row_dict = dict(zip(wp_uk_columns, row))
             row_dict["IPA_pronunciation"] = row_dict.pop("pronunciation")
             writer.writerow([row_dict.get(col, '') for col in columns])
@@ -108,8 +104,7 @@ def post():
         udlex_columns = ["wordform", "source", "celex_tags", "ud_tags", "um_tags"]
         udlex_query = f"SELECT {', '.join(udlex_columns)} FROM features WHERE source = 'UDLexicons'"
         cursor.execute(udlex_query)
-        udlex_results = cursor.fetchall()
-        for row in udlex_results:
+        for row in cursor:
             row_dict = dict(zip(udlex_columns, row))
             writer.writerow([row_dict.get(col, '') for col in columns])
 
@@ -118,8 +113,7 @@ def post():
         um_columns = ["wordform", "source", "celex_tags", "ud_tags", "um_tags"]
         um_query = f"SELECT {', '.join(um_columns)} FROM features WHERE source = 'UniMorph'"
         cursor.execute(um_query)
-        um_results = cursor.fetchall()
-        for row in um_results:
+        for row in cursor:
             row_dict = dict(zip(um_columns, row))
             writer.writerow([row_dict.get(col, '') for col in columns])
 
@@ -132,8 +126,7 @@ def post():
             elp_columns.append("nmorph")
         elp_query = f"SELECT {', '.join(elp_columns)} FROM segmentation WHERE source = 'ELP'"
         cursor.execute(elp_query)
-        elp_results = cursor.fetchall()
-        for row in elp_results:
+        for row in cursor:
             row_dict = dict(zip(elp_columns, row))
             writer.writerow([row_dict.get(col, '') for col in columns])
 
