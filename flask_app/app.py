@@ -9,9 +9,11 @@ DB_PATH = "citylex.db"
 
 app = Flask(__name__)
 
+
 @app.route("/", methods=["GET"])
 def get():
     return render_template("index.html")
+
 
 @app.route("/", methods=["POST"])
 def post():
@@ -22,21 +24,28 @@ def post():
     selected_fields = request.form.getlist("fields[]")
     output_format = request.form["output_format"]
     licenses = request.form.getlist("licenses")
+    # TODO: add client-side validation in script.js to deactivate "Generate and Download" button if no sources are selected
     if not selected_sources or not selected_fields:
-        return "Please select at least one data source and field.", 400
-    
+        return render_template("400.html"), 400
+
     logging.info(f"Selected sources: {selected_sources}")
     logging.info(f"Selected fields: {selected_fields}")
     logging.info(f"Output format: {output_format}")
     logging.info(f"Licenses: {licenses}")
 
     output = io.StringIO()
-    writer = csv.writer(output, delimiter='\t')
+    writer = csv.writer(output, delimiter="\t")
 
     columns = ["wordform", "source"]
-    if "subtlexus_raw_frequency" in selected_fields or "subtlexuk_raw_frequency" in selected_fields:
+    if (
+        "subtlexus_raw_frequency" in selected_fields
+        or "subtlexuk_raw_frequency" in selected_fields
+    ):
         columns.append("raw_frequency")
-    if "subtlexus_freq_per_million" in selected_fields or "subtlexuk_freq_per_million" in selected_fields:
+    if (
+        "subtlexus_freq_per_million" in selected_fields
+        or "subtlexuk_freq_per_million" in selected_fields
+    ):
         columns.append("freq_per_million")
     if "wikipronus_IPA" in selected_fields or "wikipronuk_IPA" in selected_fields:
         columns.append("IPA_pronunciation")
@@ -60,11 +69,13 @@ def post():
             us_columns.append("raw_frequency")
         if "subtlexus_freq_per_million" in selected_fields:
             us_columns.append("freq_per_million")
-        us_query = f"SELECT {', '.join(us_columns)} FROM frequency WHERE source = 'SUBTLEX-US'"
+        us_query = (
+            f"SELECT {', '.join(us_columns)} FROM frequency WHERE source = 'SUBTLEX-US'"
+        )
         cursor.execute(us_query)
         for row in cursor:
             row_dict = dict(zip(us_columns, row))
-            writer.writerow([row_dict.get(col, '') for col in columns])
+            writer.writerow([row_dict.get(col, "") for col in columns])
 
     # Fetches and writes SUBTLEX-UK data
     if "SUBTLEX-UK" in selected_sources:
@@ -73,11 +84,13 @@ def post():
             uk_columns.append("raw_frequency")
         if "subtlexuk_freq_per_million" in selected_fields:
             uk_columns.append("freq_per_million")
-        uk_query = f"SELECT {', '.join(uk_columns)} FROM frequency WHERE source = 'SUBTLEX-UK'"
+        uk_query = (
+            f"SELECT {', '.join(uk_columns)} FROM frequency WHERE source = 'SUBTLEX-UK'"
+        )
         cursor.execute(uk_query)
         for row in cursor:
             row_dict = dict(zip(uk_columns, row))
-            writer.writerow([row_dict.get(col, '') for col in columns])
+            writer.writerow([row_dict.get(col, "") for col in columns])
 
     # Fetches and writes WikiPron-US data
     if "WikiPron-US" in selected_sources:
@@ -87,7 +100,7 @@ def post():
         for row in cursor:
             row_dict = dict(zip(wp_us_columns, row))
             row_dict["IPA_pronunciation"] = row_dict.pop("pronunciation")
-            writer.writerow([row_dict.get(col, '') for col in columns])
+            writer.writerow([row_dict.get(col, "") for col in columns])
 
     # Fetches and writes WikiPron-UK data
     if "WikiPron-UK" in selected_sources:
@@ -97,7 +110,7 @@ def post():
         for row in cursor:
             row_dict = dict(zip(wp_uk_columns, row))
             row_dict["IPA_pronunciation"] = row_dict.pop("pronunciation")
-            writer.writerow([row_dict.get(col, '') for col in columns])
+            writer.writerow([row_dict.get(col, "") for col in columns])
 
     # Fetches and writes UDLexicons data
     if "UDLexicons" in selected_sources:
@@ -106,16 +119,18 @@ def post():
         cursor.execute(udlex_query)
         for row in cursor:
             row_dict = dict(zip(udlex_columns, row))
-            writer.writerow([row_dict.get(col, '') for col in columns])
+            writer.writerow([row_dict.get(col, "") for col in columns])
 
     # Fetches and writes UniMorph data
     if "UniMorph" in selected_sources:
         um_columns = ["wordform", "source", "celex_tags", "ud_tags", "um_tags"]
-        um_query = f"SELECT {', '.join(um_columns)} FROM features WHERE source = 'UniMorph'"
+        um_query = (
+            f"SELECT {', '.join(um_columns)} FROM features WHERE source = 'UniMorph'"
+        )
         cursor.execute(um_query)
         for row in cursor:
             row_dict = dict(zip(um_columns, row))
-            writer.writerow([row_dict.get(col, '') for col in columns])
+            writer.writerow([row_dict.get(col, "") for col in columns])
 
     # Fetches and writes ELP segmentations
     if "ELP" in selected_sources:
@@ -124,19 +139,21 @@ def post():
             elp_columns.append("segmentation")
         if "elp_nmorph" in selected_fields:
             elp_columns.append("nmorph")
-        elp_query = f"SELECT {', '.join(elp_columns)} FROM segmentation WHERE source = 'ELP'"
+        elp_query = (
+            f"SELECT {', '.join(elp_columns)} FROM segmentation WHERE source = 'ELP'"
+        )
         cursor.execute(elp_query)
         for row in cursor:
             row_dict = dict(zip(elp_columns, row))
-            writer.writerow([row_dict.get(col, '') for col in columns])
+            writer.writerow([row_dict.get(col, "") for col in columns])
 
     # Sends the file as a response
     return send_file(
-        io.BytesIO(output.getvalue().encode('utf-8')),
-        mimetype='text/tab-separated-values',
+        io.BytesIO(output.getvalue().encode("utf-8")),
+        mimetype="text/tab-separated-values",
         as_attachment=True,
-        download_name='citylex_data.tsv'
-        )
+        download_name="citylex_data.tsv",
+    )
 
 
 if __name__ == "__main__":
