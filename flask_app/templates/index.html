@@ -178,15 +178,18 @@
         <input type="radio" name="output_format" value="long" checked> Long TSV [one record per line]
         <!-- <input type="radio" name="output_format" value="wide"> Wide TSV [join on word] -->
     
-        <h2>Licenses</h2>
-        <ul>
+        <!-- <h2>Licenses</h2> -->
+        <!-- Hidden because it's required by the script to generate the license notice -->
+        <ul style="display: none">
             <li><input type="checkbox" name="licenses" value="BY"> CC BY 4.0</li>
             <li><input type="checkbox" name="licenses" value="NC"> CC BY-NC 4.0</li>
             <li><input type="checkbox" name="licenses" value="GNU"> GNU GPL v3</li>
             <li><input type="checkbox" name="licenses" value="apache"> Apache 2.0</li>
         </ul>
 
-            <button type="submit">Generate and Download</button>
+        <div id="license-notice"></div>
+        <button type="submit">Generate and Download</button>
+
         </form>
     
         <!-- Replace this with boilerplate from Kyle -->

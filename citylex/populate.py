@@ -14,8 +14,6 @@ from typing import Dict, Iterator, List
 import pandas  # type: ignore
 import requests
 
-from citylex import features
-
 DB_PATH = "citylex.db"
 
 # Helper methods.
@@ -158,8 +156,6 @@ def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
                 )
                 continue
             celex_tag = row[4]
-            ud_tag = features.tag_to_tag("CELEX", "UD", celex_tag)
-            um_tag = features.tag_to_tag("CELEX", "UniMorph", celex_tag)
             cursor.execute(
                 """
                 INSERT INTO features (
@@ -171,7 +167,7 @@ def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
                     um_tags
                     ) VALUES (?, ?, ?, ?, ?, ?)
                     """,
-                (wordform, "CELEX", lemma, celex_tag, ud_tag, um_tag),
+                (wordform, "CELEX", lemma, celex_tag, "", ""),
             )
             counter += 1
     assert counter, "No data read"
@@ -359,8 +355,6 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
         if lemma == "_":
             continue
         ud_tag = f"{tags[4]}|{tags[6]}"
-        celex_tag = features.tag_to_tag("UD", "CELEX", ud_tag)
-        um_tag = features.tag_to_tag("UD", "UniMorph", ud_tag)
         cursor.execute(
             """
             INSERT INTO features (
@@ -372,7 +366,7 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
                 um_tags
                 ) VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (wordform, "UDLexicons", lemma, celex_tag, ud_tag, um_tag),
+            (wordform, "UDLexicons", lemma, "", ud_tag, ""),
         )
         counter += 1
     assert counter, "No data read"
@@ -395,11 +389,6 @@ def _unimorph(conn: sqlite3.Connection) -> None:
         wordform = _normalize(drow["wordform"])
         lemma = _normalize(drow["lemma"])
         um_tag = drow["features"]
-        # Skips lines without features.
-        if not um_tag or um_tag == "NULL":
-            continue
-        celex_tag = features.tag_to_tag("UniMorph", "CELEX", um_tag)
-        ud_tag = features.tag_to_tag("UniMorph", "UD", um_tag)
         cursor.execute(
             """
             INSERT INTO features (
@@ -411,7 +400,7 @@ def _unimorph(conn: sqlite3.Connection) -> None:
                 um_tags
                 ) VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (wordform, "UniMorph", lemma, celex_tag, ud_tag, um_tag),
+            (wordform, "UniMorph", lemma, "", "", um_tag),
         )
         counter += 1
     assert counter, "No data read"
@@ -629,3 +618,6 @@ def main():
         exit(1)
     conn.close()
     logging.info("Success!")
+
+if __name__ == "__main__":
+    main()

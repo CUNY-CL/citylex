@@ -5,6 +5,8 @@ import logging
 
 from flask import Flask, render_template, request, send_file
 
+from citylex import features
+
 DB_PATH = "citylex.db"
 
 app = Flask(__name__)
@@ -24,6 +26,7 @@ def post():
     selected_fields = request.form.getlist("fields[]")
     output_format = request.form["output_format"]
     licenses = request.form.getlist("licenses")
+
     # TODO: add client-side validation in script.js to deactivate "Generate and Download" button if no sources are selected
     if not selected_sources or not selected_fields:
         return render_template("400.html"), 400
@@ -37,6 +40,7 @@ def post():
     writer = csv.writer(output, delimiter="\t")
 
     columns = ["wordform", "source"]
+
     if (
         "subtlexus_raw_frequency" in selected_fields
         or "subtlexuk_raw_frequency" in selected_fields
@@ -119,6 +123,12 @@ def post():
         cursor.execute(udlex_query)
         for row in cursor:
             row_dict = dict(zip(udlex_columns, row))
+
+            if "udlex_CELEXtags" in selected_fields:
+                row_dict["celex_tags"] = features.tag_to_tag("UD", "CELEX", row_dict["ud_tags"])
+            if "udlex_UMtags" in selected_fields:
+                row_dict["um_tags"] = features.tag_to_tag("UD", "UniMorph", row_dict["ud_tags"])
+
             writer.writerow([row_dict.get(col, "") for col in columns])
 
     # Fetches and writes UniMorph data
@@ -130,6 +140,12 @@ def post():
         cursor.execute(um_query)
         for row in cursor:
             row_dict = dict(zip(um_columns, row))
+
+            if "um_CELEXtags" in selected_fields:
+                row_dict["celex_tags"] = features.tag_to_tag("UniMorph", "CELEX", row_dict["um_tags"])
+            if "um_UDtags" in selected_fields:
+                row_dict["ud_tags"] = features.tag_to_tag("UniMorph", "UD", row_dict["um_tags"])
+
             writer.writerow([row_dict.get(col, "") for col in columns])
 
     # Fetches and writes ELP segmentations

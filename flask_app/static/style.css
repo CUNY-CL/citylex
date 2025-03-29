@@ -121,3 +121,11 @@ li {
     font-weight: 900;
     font-style: italic;
   }
+
+  #license-notice {
+    min-height: 2em;
+    margin: 1em 0;
+    font-size: 0.7em;
+    max-width: 300px;
+    line-height: 1.4;
+  }

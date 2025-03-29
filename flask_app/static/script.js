@@ -4,6 +4,12 @@ document.addEventListener("DOMContentLoaded", function() {
     const sourceCheckboxes = document.querySelectorAll("input[name='sources[]']");
     const fieldCheckboxes = document.querySelectorAll("input[name='fields[]']");
     const licenseCheckboxes = document.querySelectorAll("input[name='licenses']");
+    const licenseNames = {
+      "BY": "CC BY 4.0",
+      "NC": "CC BY-NC 4.0",
+      "GNU": "GNU GPL v3",
+      "apache": "Apache 2.0"
+    };
     const sourceLicenseMap = {
       "SUBTLEX-UK": "NC",
       "SUBTLEX-US": "NC",
@@ -13,12 +19,28 @@ document.addEventListener("DOMContentLoaded", function() {
       "WikiPron-UK": "apache",
       "ELP": "NC"
     };
-  
+
+    function updateLicenseNotice() {
+      const selectedSources = Array.from(sourceCheckboxes).filter(cb => cb.checked);
+      const requiredLicenses = new Set(selectedSources.map(cb => sourceLicenseMap[cb.value]));
+      const licenseNotice = document.getElementById("license-notice");
+      
+      if (requiredLicenses.size > 0) {
+          const licenseList = Array.from(requiredLicenses)
+              .map(license => licenseNames[license])
+              .join(", ");
+          licenseNotice.textContent = `By clicking "Generate and Download," you agree to the terms of the following licenses: ${licenseList}`;
+      } else {
+          licenseNotice.textContent = "";
+      }
+    }
+
     // Selects all when user clicks "Select All" button
     selectAllButton.addEventListener("click", function() {
       sourceCheckboxes.forEach(checkbox => checkbox.checked = true);
       fieldCheckboxes.forEach(checkbox => checkbox.checked = true);
       licenseCheckboxes.forEach(checkbox => checkbox.checked = true);
+      updateLicenseNotice();
     });
   
     // Deselects all when user clicks "Select None" button
@@ -26,6 +48,7 @@ document.addEventListener("DOMContentLoaded", function() {
       sourceCheckboxes.forEach(checkbox => checkbox.checked = false);
       fieldCheckboxes.forEach(checkbox => checkbox.checked = false);
       licenseCheckboxes.forEach(checkbox => checkbox.checked = false);
+      updateLicenseNotice(); 
     });
   
     // Updates the source and license checkboxes based on the field checkboxes
@@ -40,6 +63,7 @@ document.addEventListener("DOMContentLoaded", function() {
         } else {
           relatedFieldCheckboxes.forEach(fieldCheckbox => fieldCheckbox.checked = false);
         }
+        updateLicenseNotice();
       });
       
       const relatedFieldCheckboxes = sourceCheckbox.closest('li').querySelectorAll("input[name='fields[]']");
