@@ -162,12 +162,10 @@ def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
                     wordform,
                     source,
                     lemma,
-                    celex_tags,
-                    ud_tags,
-                    um_tags
-                    ) VALUES (?, ?, ?, ?, ?, ?)
-                    """,
-                (wordform, "CELEX", lemma, celex_tag, "", ""),
+                    tags
+                    ) VALUES (?, ?, ?, ?)
+                """,
+                (wordform, "CELEX", lemma, celex_tag),
             )
             counter += 1
     assert counter, "No data read"
@@ -361,12 +359,10 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
                 wordform,
                 source,
                 lemma,
-                celex_tags,
-                ud_tags,
-                um_tags
-                ) VALUES (?, ?, ?, ?, ?, ?)
+                tags
+                ) VALUES (?, ?, ?, ?)
             """,
-            (wordform, "UDLexicons", lemma, "", ud_tag, ""),
+            (wordform, "UDLexicons", lemma, ud_tag),
         )
         counter += 1
     assert counter, "No data read"
@@ -395,12 +391,10 @@ def _unimorph(conn: sqlite3.Connection) -> None:
                 wordform,
                 source,
                 lemma,
-                celex_tags,
-                ud_tags,
-                um_tags
-                ) VALUES (?, ?, ?, ?, ?, ?)
+                tags
+                ) VALUES (?, ?, ?, ?)
             """,
-            (wordform, "UniMorph", lemma, "", "", um_tag),
+            (wordform, "UniMorph", lemma, um_tag),
         )
         counter += 1
     assert counter, "No data read"
@@ -575,9 +569,7 @@ def main():
             wordform TEXT NOT NULL,
             source TEXT NOT NULL,
             lemma TEXT NOT NULL,
-            celex_tags TEXT,
-            ud_tags TEXT,
-            um_tags TEXT
+            tags TEXT
         )
     """
     )

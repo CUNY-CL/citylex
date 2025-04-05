@@ -37,10 +37,8 @@ def post():
     logging.info(f"Licenses: {licenses}")
 
     output = io.StringIO()
-    writer = csv.writer(output, delimiter="\t")
 
     columns = ["wordform", "source"]
-
     if (
         "subtlexus_raw_frequency" in selected_fields
         or "subtlexuk_raw_frequency" in selected_fields
@@ -53,8 +51,8 @@ def post():
         columns.append("freq_per_million")
     if "wikipronus_IPA" in selected_fields or "wikipronuk_IPA" in selected_fields:
         columns.append("IPA_pronunciation")
-    if "udlex_CELEXtags" in selected_fields or "um_CELEXtags" in selected_fields:
-        columns.append("celex_tags")
+    # if "udlex_CELEXtags" in selected_fields or "um_CELEXtags" in selected_fields:
+    #     columns.append("celex_tags")
     if "udlex_UDtags" in selected_fields or "um_UDtags" in selected_fields:
         columns.append("ud_tags")
     if "udlex_UMtags" in selected_fields or "um_UMtags" in selected_fields:
@@ -64,8 +62,10 @@ def post():
     if "elp_nmorph" in selected_fields:
         columns.append("nmorph")
 
-    writer.writerow(columns)
+    writer = csv.DictWriter(output, fieldnames=columns, delimiter="\t")
+    writer.writeheader()
 
+    # TODO: Refactor to use a single query per SQL table using WHERE source IN (...)
     # Fetches and writes SUBTLEX-US data
     if "SUBTLEX-US" in selected_sources:
         us_columns = ["wordform", "source"]
@@ -79,7 +79,7 @@ def post():
         cursor.execute(us_query)
         for row in cursor:
             row_dict = dict(zip(us_columns, row))
-            writer.writerow([row_dict.get(col, "") for col in columns])
+            writer.writerow(row_dict)
 
     # Fetches and writes SUBTLEX-UK data
     if "SUBTLEX-UK" in selected_sources:
@@ -94,7 +94,7 @@ def post():
         cursor.execute(uk_query)
         for row in cursor:
             row_dict = dict(zip(uk_columns, row))
-            writer.writerow([row_dict.get(col, "") for col in columns])
+            writer.writerow(row_dict)  
 
     # Fetches and writes WikiPron-US data
     if "WikiPron-US" in selected_sources:
@@ -104,7 +104,7 @@ def post():
         for row in cursor:
             row_dict = dict(zip(wp_us_columns, row))
             row_dict["IPA_pronunciation"] = row_dict.pop("pronunciation")
-            writer.writerow([row_dict.get(col, "") for col in columns])
+            writer.writerow(row_dict)
 
     # Fetches and writes WikiPron-UK data
     if "WikiPron-UK" in selected_sources:
@@ -114,39 +114,41 @@ def post():
         for row in cursor:
             row_dict = dict(zip(wp_uk_columns, row))
             row_dict["IPA_pronunciation"] = row_dict.pop("pronunciation")
-            writer.writerow([row_dict.get(col, "") for col in columns])
+            writer.writerow(row_dict)
 
     # Fetches and writes UDLexicons data
     if "UDLexicons" in selected_sources:
-        udlex_columns = ["wordform", "source", "celex_tags", "ud_tags", "um_tags"]
-        udlex_query = f"SELECT {', '.join(udlex_columns)} FROM features WHERE source = 'UDLexicons'"
+        udlex_query = "SELECT wordform, source, tags FROM features WHERE source = 'UDLexicons'"
         cursor.execute(udlex_query)
         for row in cursor:
-            row_dict = dict(zip(udlex_columns, row))
-
-            if "udlex_CELEXtags" in selected_fields:
-                row_dict["celex_tags"] = features.tag_to_tag("UD", "CELEX", row_dict["ud_tags"])
+            wordform, source, ud_tags = row
+            row_dict = {"wordform": wordform, "source": source}
+            
+            if "udlex_UDtags" in selected_fields:
+                row_dict["ud_tags"] = ud_tags
             if "udlex_UMtags" in selected_fields:
-                row_dict["um_tags"] = features.tag_to_tag("UD", "UniMorph", row_dict["ud_tags"])
-
-            writer.writerow([row_dict.get(col, "") for col in columns])
+                row_dict["um_tags"] = features.tag_to_tag("UD", "UniMorph", ud_tags)
+            # if "udlex_CELEXtags" in selected_fields:
+            #     row_dict["celex_tags"] = features.tag_to_tag("UD", "CELEX", ud_tags)
+            
+            writer.writerow(row_dict)
 
     # Fetches and writes UniMorph data
     if "UniMorph" in selected_sources:
-        um_columns = ["wordform", "source", "celex_tags", "ud_tags", "um_tags"]
-        um_query = (
-            f"SELECT {', '.join(um_columns)} FROM features WHERE source = 'UniMorph'"
-        )
+        um_query = "SELECT wordform, source, tags FROM features WHERE source = 'UniMorph'"
         cursor.execute(um_query)
         for row in cursor:
-            row_dict = dict(zip(um_columns, row))
-
-            if "um_CELEXtags" in selected_fields:
-                row_dict["celex_tags"] = features.tag_to_tag("UniMorph", "CELEX", row_dict["um_tags"])
+            wordform, source, um_tags = row
+            row_dict = {"wordform": wordform, "source": source}
+            
             if "um_UDtags" in selected_fields:
-                row_dict["ud_tags"] = features.tag_to_tag("UniMorph", "UD", row_dict["um_tags"])
-
-            writer.writerow([row_dict.get(col, "") for col in columns])
+                row_dict["ud_tags"] = features.tag_to_tag("UniMorph", "UD", um_tags)
+            if "um_UMtags" in selected_fields:
+                row_dict["um_tags"] = um_tags
+            # if "um_CELEXtags" in selected_fields:
+            #     row_dict["celex_tags"] = features.tag_to_tag("UniMorph", "CELEX", um_tags)
+            
+            writer.writerow(row_dict)
 
     # Fetches and writes ELP segmentations
     if "ELP" in selected_sources:
@@ -161,7 +163,7 @@ def post():
         cursor.execute(elp_query)
         for row in cursor:
             row_dict = dict(zip(elp_columns, row))
-            writer.writerow([row_dict.get(col, "") for col in columns])
+            writer.writerow(row_dict)
 
     # Sends the file as a response
     return send_file(
