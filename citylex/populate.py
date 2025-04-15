@@ -569,7 +569,7 @@ def main():
             wordform TEXT NOT NULL,
             source TEXT NOT NULL,
             lemma TEXT NOT NULL,
-            tags TEXT
+            tags TEXT NOT NULL
         )
     """
     )
