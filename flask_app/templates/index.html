@@ -1,50 +1,81 @@
 <html>
+  <head>
+    <title>CityLex: A Free English Lexical Database</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" type="text/css" href={{ url_for('static',
+    filename='style.css') }}/>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </head>
 
-    <head>
-        <title>CityLex: A Free English Lexical Database</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href={{ url_for('static', filename='style.css') }}/>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-        <script src="{{ url_for('static', filename='script.js') }}"></script>
-    </head>
+  <body class="content-body poppins-regular">
+    <h1>
+      CityLex: A Free English Lexical Database
+      <span class="material-symbols-outlined"> location_city </span>
+    </h1>
+    <p>
+      A comprehensive tool for exploring English words and their properties.
+    </p>
 
-    <body class="content-body poppins-regular">
-        <h1>CityLex: A Free English Lexical Database  <span class="material-symbols-outlined">
-            location_city
-            </span></h1>
-        <p>A comprehensive tool for exploring English words and their properties.</p>
-    
-        <h2>Data Sources</h2>
+    <h2>Data Sources</h2>
 
-        <form method="post" action="/">
+    <form method="post" action="/">
+      <li>
+        <h3 class="table-type">Frequencies:</h3>
+        <ul>
           <li>
-              <h3 class="table-type">Frequencies:</h3>
-              <ul>
-                  <li>
-                      <input type="checkbox" name="sources[]" value="SUBTLEX-UK"> SUBTLEX-UK (CC BY-NC 4.0)
-                      <ul>
-                          <li>
-                              <input type="checkbox" name="fields[]" value="subtlexuk_raw_frequency"> Raw Frequency
-                          </li>
-                          <li>
-                              <input type="checkbox" name="fields[]" value="subtlexuk_freq_per_million"> Freq per Million
-                          </li>
-                      </ul>
-                  </li>
-                  <li>
-                      <input type="checkbox" name="sources[]" value="SUBTLEX-US"> SUBTLEX-US (CC BY-NC 4.0)
-                      <ul>
-                          <li>
-                              <input type="checkbox" name="fields[]" value="subtlexus_raw_frequency"> Raw Frequency
-                          </li>
-                          <li>
-                              <input type="checkbox" name="fields[]" value="subtlexus_freq_per_million"> Freq per Million
-                          </li>
-                      </ul>
-                  </li>
-                  <!-- <li>
+            <input type="checkbox" name="sources[]" value="SUBTLEX-UK" />
+            SUBTLEX-UK (CC BY-NC 4.0)
+            <ul>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="subtlexuk_raw_frequency"
+                />
+                Raw Frequency
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="subtlexuk_freq_per_million"
+                />
+                Freq per Million
+              </li>
+            </ul>
+          </li>
+          <li>
+            <input type="checkbox" name="sources[]" value="SUBTLEX-US" />
+            SUBTLEX-US (CC BY-NC 4.0)
+            <ul>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="subtlexus_raw_frequency"
+                />
+                Raw Frequency
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="subtlexus_freq_per_million"
+                />
+                Freq per Million
+              </li>
+            </ul>
+          </li>
+          <!-- <li>
                       TODO : insert license
                       <input type="checkbox" name="sources[]" value="CELEX"> CELEX
                       <ul>
@@ -59,40 +90,46 @@
                           </li>
                       </ul>
                   </li> -->
-              </ul>
-          </li>
+        </ul>
+      </li>
+      <li>
+        <h3>Morphological features:</h3>
+        <ul>
           <li>
-              <h3>Morphological features:</h3>
-              <ul>
-                  <li>
-                      <input type="checkbox" name="sources[]" value="UDLexicons"> UDLexicons (Apertium) (GNU GPL v3)
-                      <ul>
-                        <!-- <li>
+            <input type="checkbox" name="sources[]" value="UDLexicons" />
+            UDLexicons (Apertium) (GNU GPL v3)
+            <ul>
+              <!-- <li>
                             <input type="checkbox" name="fields[]" value="udlex_CELEXtags"> CELEX tags
                         </li> -->
-                        <li>
-                            <input type="checkbox" name="fields[]" value="udlex_UDtags"> Universal Dependency tags
-                        </li>
-                        <li>
-                            <input type="checkbox" name="fields[]" value="udlex_UMtags"> UniMorph tags
-                        </li>
-                      </ul>
-                  </li>
-                  <li>
-                      <input type="checkbox" name="sources[]" value="UniMorph"> UniMorph (CC BY 4.0)
-                      <ul>
-                        <!-- <li>
+              <li>
+                <input type="checkbox" name="fields[]" value="udlex_UDtags" />
+                Universal Dependency tags
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="udlex_UMtags" />
+                UniMorph tags
+              </li>
+            </ul>
+          </li>
+          <li>
+            <input type="checkbox" name="sources[]" value="UniMorph" /> UniMorph
+            (CC BY 4.0)
+            <ul>
+              <!-- <li>
                             <input type="checkbox" name="fields[]" value="um_CELEXtags"> CELEX tags
                         </li> -->
-                        <li>
-                            <input type="checkbox" name="fields[]" value="um_UDtags"> Universal Dependency tags
-                        </li>
-                        <li>
-                            <input type="checkbox" name="fields[]" value="um_UMtags"> UniMorph tags
-                        </li>
-                      </ul>
-                  </li>
-                  <!-- <li>
+              <li>
+                <input type="checkbox" name="fields[]" value="um_UDtags" />
+                Universal Dependency tags
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="um_UMtags" />
+                UniMorph tags
+              </li>
+            </ul>
+          </li>
+          <!-- <li>
                       <input type="checkbox" name="sources[]" value="CELEX"> SUBTLEX-US (CC BY-NC 4.0)
                       <ul>
                           <li>
@@ -103,55 +140,67 @@
                           </li>
                       </ul>
                   </li> -->
-              </ul>
-          </li>
+        </ul>
+      </li>
+      <li>
+        <h3>Morphological Segmentations:</h3>
+        <ul>
           <li>
-              <h3>Morphological Segmentations:</h3>
-              <ul>
-                  <li>
-                      <input type="checkbox" name="sources[]" value="ELP"> ELP (CC BY-NC 4.0)
-                      <ul>
-                          <li>
-                              <input type="checkbox" name="fields[]" value="elp_segmentation"> Segmentation
-                          </li>
-                          <li>
-                              <input type="checkbox" name="fields[]" value="elp_nmorph"> Number of morphs
-                          </li>
-                      </ul>
-                  </li>
-              </ul>
-          </li>
-          <li>
-            <h3>Pronunciations:</h3>
+            <input type="checkbox" name="sources[]" value="ELP" /> ELP (CC BY-NC
+            4.0)
             <ul>
               <li>
-                  <input type="checkbox" name="sources[]" value="WikiPron-US"> WikiPron-US (Apache 2.0)
-                  <ul>
-                      <!-- <li>
-                          <input type="checkbox" name="fields[]" value="wikipronus_ARPAbet"> ARPAbet
-                      </li> -->
-                      <li>
-                          <input type="checkbox" name="fields[]" value="wikipronus_IPA"> IPA
-                      </li>
-                      <!-- <li>
-                          <input type="checkbox" name="fields[]" value="wikipronus_X-SAMPA"> X-SAMPA
-                      </li> -->
-                  </ul>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="elp_segmentation"
+                />
+                Segmentation
               </li>
               <li>
-                  <input type="checkbox" name="sources[]" value="WikiPron-UK"> WikiPron-UK (Apache 2.0)
-                  <ul>
-                    <!-- <li>
-                        <input type="checkbox" name="fields[]" value="wikipronuk_ARPAbet"> ARPAbet
-                    </li> -->
-                    <li>
-                        <input type="checkbox" name="fields[]" value="wikipronuk_IPA"> IPA
-                    </li>
-                    <!-- <li>
-                        <input type="checkbox" name="fields[]" value="wikipronuk_X-SAMPA"> X-SAMPA
-                    </li> -->
+                <input type="checkbox" name="fields[]" value="elp_nmorph" />
+                Number of morphs
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <h3>Pronunciations:</h3>
+        <ul>
+          <li>
+            <input type="checkbox" name="sources[]" value="WikiPron-US" />
+            WikiPron-US (Apache 2.0)
+            <ul>
+              <!-- <li>
+                          <input type="checkbox" name="fields[]" value="wikipronus_ARPAbet"> ARPAbet
+                      </li> -->
+              <li>
+                <input type="checkbox" name="fields[]" value="wikipronus_IPA" />
+                IPA
               </li>
               <!-- <li>
+                          <input type="checkbox" name="fields[]" value="wikipronus_X-SAMPA"> X-SAMPA
+                      </li> -->
+            </ul>
+          </li>
+          <li>
+            <input type="checkbox" name="sources[]" value="WikiPron-UK" />
+            WikiPron-UK (Apache 2.0)
+            <ul>
+              <!-- <li>
+                        <input type="checkbox" name="fields[]" value="wikipronuk_ARPAbet"> ARPAbet
+                    </li> -->
+              <li>
+                <input type="checkbox" name="fields[]" value="wikipronuk_IPA" />
+                IPA
+              </li>
+              <!-- <li>
+                        <input type="checkbox" name="fields[]" value="wikipronuk_X-SAMPA"> X-SAMPA
+                    </li> -->
+            </ul>
+          </li>
+          <!-- <li>
                   TODO : insert license
                   <input type="checkbox" name="sources[]" value="CELEX"> CELEX
                   <ul>
@@ -165,37 +214,38 @@
                         <input type="checkbox" name="fields[]" value="celex_X-SAMPA"> X-SAMPA
                     </li>
               </li> -->
-            </ul>
-          </li>
         </ul>
-       
-        <div class="buttons">
-            <button type="button" id="selectAll">Select All</button>
-            <button type="button" id="selectNone">Select None</button>
-        </div>
-    
-        <h2>Output Format</h2>
-        <input type="radio" name="output_format" value="long" checked> Long TSV [one record per line]
-        <!-- <input type="radio" name="output_format" value="wide"> Wide TSV [join on word] -->
-    
-        <!-- <h2>Licenses</h2> -->
-        <!-- Hidden because it's required by the script to generate the license notice -->
-        <ul style="display: none">
-            <li><input type="checkbox" name="licenses" value="BY"> CC BY 4.0</li>
-            <li><input type="checkbox" name="licenses" value="NC"> CC BY-NC 4.0</li>
-            <li><input type="checkbox" name="licenses" value="GNU"> GNU GPL v3</li>
-            <li><input type="checkbox" name="licenses" value="apache"> Apache 2.0</li>
-        </ul>
+      </li>
 
-        <div id="license-notice"></div>
-        <button type="submit">Generate and Download</button>
+      <div class="buttons">
+        <button type="button" id="selectAll">Select All</button>
+        <button type="button" id="selectNone">Select None</button>
+      </div>
 
-        </form>
-    
-        <!-- Replace this with boilerplate from Kyle -->
-        <p>Authors: [List of authors]</p>
-        <p>Email: [Email address]</p>
-        <p>Thank you to the PSC and CUNY for their support.</p>
-    </body>
+      <!-- <h2>Output Format</h2>
+      <input type="radio" name="output_format" value="long" checked /> Long TSV
+      [one record per line] -->
+      <!-- <input type="radio" name="output_format" value="wide"> Wide TSV [join on word] -->
 
+      <button type="submit">Generate and Download</button>
+    </form>
+  </body>
+
+  <!-- <h2>Licenses</h2> -->
+  <!-- Hidden because it's required by the script to generate the license notice -->
+  <ul style="display: none">
+    <li><input type="checkbox" name="licenses" value="BY" /> CC BY 4.0</li>
+    <li><input type="checkbox" name="licenses" value="NC" /> CC BY-NC 4.0</li>
+    <li><input type="checkbox" name="licenses" value="GNU" /> GNU GPL v3</li>
+    <li><input type="checkbox" name="licenses" value="apache" /> Apache 2.0</li>
+  </ul>
+  <div id="license-notice"></div>
+
+  <p class="footer-text">
+    CityLex was created by
+    <a href="mailto:kgorman@gc.cuny.edu">K. Gorman</a> and
+    <a href="mailto:fhallee@gradcenter.cuny.edu">F. Hallee</a>. Support for this
+    project was provided by a PSC-CUNY Award, jointly funded by The Professional
+    Staff Congress and The City University of New York.
+  </p>
 </html>
