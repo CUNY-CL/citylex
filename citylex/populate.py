@@ -14,9 +14,9 @@ from typing import Dict, Iterator, List
 import pandas  # type: ignore
 import requests
 
+DB_PATH = "citylex.db"
 
 # Helper methods.
-
 
 def _normalize(field: str) -> str:
     """Performs basic Unicode normalization and casefolding on field."""
@@ -155,26 +155,17 @@ def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
                     "Ignoring wordform missing lemma ID: %s (%d)", wordform, li
                 )
                 continue
-            features = row[4]
-            try:
-                features = CELEX_FEATURE_MAP[row[4]]
-            except KeyError:
-                logging.debug(
-                    "Ignoring wordform feature bundle: %s (%s)",
-                    wordform,
-                    features,
-                )
-                continue
+            celex_tag = row[4]
             cursor.execute(
                 """
-                INSERT INTO morphology (
+                INSERT INTO features (
                     wordform,
                     source,
                     lemma,
-                    features
+                    tags
                     ) VALUES (?, ?, ?, ?)
-                    """,
-                (wordform, "CELEX", lemma, features),
+                """,
+                (wordform, "CELEX", lemma, celex_tag),
             )
             counter += 1
     assert counter, "No data read"
@@ -361,17 +352,17 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
         lemma = _normalize(tags[3])
         if lemma == "_":
             continue
-        features = f"{tags[4]}|{tags[6]}"
+        ud_tag = f"{tags[4]}|{tags[6]}"
         cursor.execute(
             """
-            INSERT INTO morphology (
+            INSERT INTO features (
                 wordform,
                 source,
                 lemma,
-                features
+                tags
                 ) VALUES (?, ?, ?, ?)
             """,
-            (wordform, "UDLexicons", lemma, features),
+            (wordform, "UDLexicons", lemma, ud_tag),
         )
         counter += 1
     assert counter, "No data read"
@@ -393,20 +384,17 @@ def _unimorph(conn: sqlite3.Connection) -> None:
     ):
         wordform = _normalize(drow["wordform"])
         lemma = _normalize(drow["lemma"])
-        features = drow["features"]
-        # Skips lines without features.
-        if not features or features == "NULL":
-            continue
+        um_tag = drow["features"]
         cursor.execute(
             """
-            INSERT INTO morphology (
+            INSERT INTO features (
                 wordform,
                 source,
                 lemma,
-                features
+                tags
                 ) VALUES (?, ?, ?, ?)
             """,
-            (wordform, "UniMorph", lemma, features),
+            (wordform, "UniMorph", lemma, um_tag),
         )
         counter += 1
     assert counter, "No data read"
@@ -489,11 +477,6 @@ def main():
     logging.basicConfig(format="%(levelname)s: %(message)s", level="INFO")
     parser = argparse.ArgumentParser(description="Creates a CityLex lexicon")
     parser.add_argument(
-        "--db_path",
-        default="citylex.db",
-        help="path to database file (default: %(default)s)",
-    )
-    parser.add_argument(
         "--all-free", action="store_true", help="extract all free data sources"
     )
     parser.add_argument(
@@ -549,10 +532,10 @@ def main():
         "http://creativecommons.org/licenses/by-sa/3.0/",
     )
     args = parser.parse_args()
-    conn = sqlite3.connect(args.db_path)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     logging.info("Dropping existing tables if they exist...")
-    for table in ["frequency", "pronunciation", "morphology", "segmentation"]:
+    for table in ["frequency", "pronunciation", "features", "segmentation"]:
         cursor.execute(f"DROP TABLE IF EXISTS {table}")
     logging.info("Creating tables...")
     cursor.execute(
@@ -581,12 +564,12 @@ def main():
     )
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS morphology (
+        CREATE TABLE IF NOT EXISTS features (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             wordform TEXT NOT NULL,
             source TEXT NOT NULL,
             lemma TEXT NOT NULL,
-            features TEXT NOT NULL
+            tags TEXT NOT NULL
         )
     """
     )
@@ -627,3 +610,6 @@ def main():
         exit(1)
     conn.close()
     logging.info("Success!")
+
+if __name__ == "__main__":
+    main()
