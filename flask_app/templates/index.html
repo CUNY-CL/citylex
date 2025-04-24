@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>CityLex: A Free English Lexical Database</title>
+    <title>CityLex: a free English lexical database</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -18,14 +18,14 @@
 
   <body class="content-body poppins-regular">
     <h1>
-      CityLex: A Free English Lexical Database
+      CityLex: a free English lexical database
       <span class="material-symbols-outlined"> location_city </span>
     </h1>
     <p>
       A comprehensive tool for exploring English words and their properties.
     </p>
 
-    <h2>Data Sources</h2>
+    <h2>Data sources</h2>
 
     <form method="post" action="/">
       <li>
@@ -33,7 +33,10 @@
         <ul>
           <li>
             <input type="checkbox" name="sources[]" value="SUBTLEX-UK" />
-            SUBTLEX-UK (CC BY-NC 4.0)
+            SUBTLEX-UK
+            <a href="https://creativecommons.org/licenses/by-nc/4.0/"
+              >(CC BY-NC 4.0)</a
+            >
             <ul>
               <li>
                 <input
@@ -41,7 +44,7 @@
                   name="fields[]"
                   value="subtlexuk_raw_frequency"
                 />
-                Raw Frequency
+                Raw frequency
               </li>
               <li>
                 <input
@@ -49,13 +52,16 @@
                   name="fields[]"
                   value="subtlexuk_freq_per_million"
                 />
-                Freq per Million
+                Freq per million
               </li>
             </ul>
           </li>
           <li>
             <input type="checkbox" name="sources[]" value="SUBTLEX-US" />
-            SUBTLEX-US (CC BY-NC 4.0)
+            SUBTLEX-US
+            <a href="https://creativecommons.org/licenses/by-nc/4.0/"
+              >(CC BY-NC 4.0)</a
+            >
             <ul>
               <li>
                 <input
@@ -63,7 +69,7 @@
                   name="fields[]"
                   value="subtlexus_raw_frequency"
                 />
-                Raw Frequency
+                Raw frequency
               </li>
               <li>
                 <input
@@ -71,7 +77,7 @@
                   name="fields[]"
                   value="subtlexus_freq_per_million"
                 />
-                Freq per Million
+                Freq per million
               </li>
             </ul>
           </li>
@@ -97,7 +103,10 @@
         <ul>
           <li>
             <input type="checkbox" name="sources[]" value="UDLexicons" />
-            UDLexicons (Apertium) (GNU GPL v3)
+            UDLexicons [Apertium]
+            <a href="https://www.gnu.org/licenses/gpl-3.0.en.html"
+              >(GNU GPL v3)</a
+            >
             <ul>
               <!-- <li>
                             <input type="checkbox" name="fields[]" value="udlex_CELEXtags"> CELEX tags
@@ -114,7 +123,9 @@
           </li>
           <li>
             <input type="checkbox" name="sources[]" value="UniMorph" /> UniMorph
-            (CC BY 4.0)
+            <a href="https://creativecommons.org/licenses/by/4.0/"
+              >(CC BY 4.0)</a
+            >
             <ul>
               <!-- <li>
                             <input type="checkbox" name="fields[]" value="um_CELEXtags"> CELEX tags
@@ -143,11 +154,13 @@
         </ul>
       </li>
       <li>
-        <h3>Morphological Segmentations:</h3>
+        <h3>Morphological segmentations:</h3>
         <ul>
           <li>
-            <input type="checkbox" name="sources[]" value="ELP" /> ELP (CC BY-NC
-            4.0)
+            <input type="checkbox" name="sources[]" value="ELP" /> ELP
+            <a href="https://creativecommons.org/licenses/by-nc/4.0/"
+              >(CC BY-NC 4.0)</a
+            >
             <ul>
               <li>
                 <input
@@ -170,7 +183,10 @@
         <ul>
           <li>
             <input type="checkbox" name="sources[]" value="WikiPron-US" />
-            WikiPron-US (Apache 2.0)
+            WikiPron-US
+            <a href="https://www.apache.org/licenses/LICENSE-2.0.html"
+              >(Apache 2.0)</a
+            >
             <ul>
               <!-- <li>
                           <input type="checkbox" name="fields[]" value="wikipronus_ARPAbet"> ARPAbet
@@ -186,7 +202,10 @@
           </li>
           <li>
             <input type="checkbox" name="sources[]" value="WikiPron-UK" />
-            WikiPron-UK (Apache 2.0)
+            WikiPron-UK
+            <a href="https://www.apache.org/licenses/LICENSE-2.0.html"
+              >(Apache 2.0)</a
+            >
             <ul>
               <!-- <li>
                         <input type="checkbox" name="fields[]" value="wikipronuk_ARPAbet"> ARPAbet
@@ -218,8 +237,8 @@
       </li>
 
       <div class="buttons">
-        <button type="button" id="selectAll">Select All</button>
-        <button type="button" id="selectNone">Select None</button>
+        <button type="button" id="selectAll">Select all</button>
+        <button type="button" id="selectNone">Select none</button>
       </div>
 
       <!-- <h2>Output Format</h2>
@@ -227,7 +246,7 @@
       [one record per line] -->
       <!-- <input type="radio" name="output_format" value="wide"> Wide TSV [join on word] -->
 
-      <button type="submit">Generate and Download</button>
+      <button type="submit">Generate and download</button>
     </form>
   </body>
 
