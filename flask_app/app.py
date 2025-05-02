@@ -1,4 +1,5 @@
 import csv
+import datetime
 import io
 import sqlite3
 import logging
@@ -24,7 +25,7 @@ def post():
 
     selected_sources = request.form.getlist("sources[]")
     selected_fields = request.form.getlist("fields[]")
-    output_format = request.form["output_format"]
+    # output_format = request.form["output_format"]
     licenses = request.form.getlist("licenses")
 
     # TODO: add client-side validation in script.js to deactivate "Generate and Download" button if no sources are selected
@@ -33,7 +34,7 @@ def post():
 
     logging.info(f"Selected sources: {selected_sources}")
     logging.info(f"Selected fields: {selected_fields}")
-    logging.info(f"Output format: {output_format}")
+    # logging.info(f"Output format: {output_format}")
     logging.info(f"Licenses: {licenses}")
 
     output = io.StringIO()
@@ -170,7 +171,7 @@ def post():
         io.BytesIO(output.getvalue().encode("utf-8")),
         mimetype="text/tab-separated-values",
         as_attachment=True,
-        download_name="citylex_data.tsv",
+        download_name=f"citylex-{datetime.date.today().isoformat()}.tsv",
     )
 
 

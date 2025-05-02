@@ -19,6 +19,15 @@ document.addEventListener("DOMContentLoaded", function () {
     "WikiPron-UK": "apache",
     ELP: "NC",
   };
+  const defaultFieldMap = {
+    "SUBTLEX-UK": "subtlexuk_raw_frequency",
+    "SUBTLEX-US": "subtlexus_raw_frequency",
+    UDLexicons: "udlex_UDtags",
+    UniMorph: "um_UMtags",
+    "WikiPron-US": "wikipronus_IPA",
+    "WikiPron-UK": "wikipronuk_IPA",
+    ELP: "elp_segmentation",
+  };
 
   function updateLicenseNotice() {
     const selectedSources = Array.from(sourceCheckboxes).filter(
@@ -92,11 +101,16 @@ document.addEventListener("DOMContentLoaded", function () {
         .closest("li")
         .querySelectorAll("input[name='fields[]']");
       if (sourceCheckbox.checked) {
-        licenseCheckbox.checked = true;
-        relatedFieldCheckboxes.forEach(
-          (fieldCheckbox) => (fieldCheckbox.checked = true)
-        );
+        // Check corresponding license checkbox and default subfield when a source is checked
+        if (licenseCheckbox) {
+          licenseCheckbox.checked = true;
+        }
+        const defaultFieldValue = defaultFieldMap[sourceCheckbox.value];
+        relatedFieldCheckboxes.forEach((fieldCheckbox) => {
+          fieldCheckbox.checked = fieldCheckbox.value === defaultFieldValue;
+        });
       } else {
+        // Uncheck all subfields when source is unchecked
         relatedFieldCheckboxes.forEach(
           (fieldCheckbox) => (fieldCheckbox.checked = false)
         );
