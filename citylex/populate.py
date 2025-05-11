@@ -106,7 +106,7 @@ def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
             )
             counter += 1
     assert counter, "No data read"
-    cursor.execute("SELECT SUM(raw_frequency) FROM frequency")
+    cursor.execute("SELECT SUM(raw_frequency) FROM frequency WHERE source = 'CELEX'")
     total_freq = cursor.fetchone()[0]
     assert total_freq > 0, "Total frequency must be greater than zero."
     # Updates freq_per_million for all entries.
@@ -115,6 +115,7 @@ def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
         UPDATE frequency
             SET freq_per_million =
             ROUND(CAST(raw_frequency AS REAL) * 1000000 / ?, 2)
+            WHERE source = 'CELEX'
         """,
         (total_freq,),
     )
@@ -272,7 +273,7 @@ def _subtlex_uk(conn: sqlite3.Connection) -> None:
             )
             counter += 1
     assert counter, "No data read"
-    cursor.execute("SELECT SUM(raw_frequency) FROM frequency")
+    cursor.execute("SELECT SUM(raw_frequency) FROM frequency WHERE source='SUBTLEX-UK'")
     total_freq = cursor.fetchone()[0]
     assert total_freq > 0, "Total frequency must be greater than zero."
     cursor.execute(
@@ -280,6 +281,7 @@ def _subtlex_uk(conn: sqlite3.Connection) -> None:
         UPDATE frequency
             SET freq_per_million =
             ROUND(CAST(raw_frequency AS REAL) * 1000000 / ?, 2)
+            WHERE source = 'SUBTLEX-UK'
         """,
         (total_freq,),
     )
@@ -318,7 +320,7 @@ def _subtlex_us(conn: sqlite3.Connection) -> None:
         )
         counter += 1
     assert counter, "No data read"
-    cursor.execute("SELECT SUM(raw_frequency) FROM frequency")
+    cursor.execute("SELECT SUM(raw_frequency) FROM frequency WHERE source='SUBTLEX-US'")
     total_freq = cursor.fetchone()[0]
     assert total_freq > 0, "Total frequency must be greater than zero."
     cursor.execute(
@@ -326,6 +328,7 @@ def _subtlex_us(conn: sqlite3.Connection) -> None:
         UPDATE frequency
             SET freq_per_million =
             ROUND(CAST(raw_frequency AS REAL) * 1000000 / ?, 2)
+            WHERE source = 'SUBTLEX-US'
         """,
         (total_freq,),
     )
