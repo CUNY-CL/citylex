@@ -1,8 +1,9 @@
 import csv
 import datetime
 import io
-import sqlite3
 import logging
+import math
+import sqlite3
 
 from flask import Flask, render_template, request, send_file
 
@@ -12,6 +13,8 @@ DB_PATH = "citylex.db"
 
 app = Flask(__name__)
 
+# TODO: add error handling if user didn't properly populate the database or
+# didn't add a specific source to the database that they're then requesting in the form
 
 @app.route("/", methods=["GET"])
 def get():
@@ -50,6 +53,11 @@ def post():
         or "subtlexuk_freq_per_million" in selected_fields
     ):
         columns.append("freq_per_million")
+    # if (
+    #     "subtlexuk_logprob" in selected_fields
+    #     or "subtlexus_logprob" in selected_fields
+    # ):
+    #     columns.append("logprob")
     if "wikipronus_IPA" in selected_fields or "wikipronuk_IPA" in selected_fields:
         columns.append("IPA_pronunciation")
     # if "udlex_CELEXtags" in selected_fields or "um_CELEXtags" in selected_fields:
