@@ -142,9 +142,6 @@
               >(GNU GPL v3)</a
             >
             <ul>
-              <!-- <li>
-                            <input type="checkbox" name="fields[]" value="udlex_CELEXtags"> CELEX tags
-                        </li> -->
               <li>
                 <input type="checkbox" name="fields[]" value="udlex_UDtags" />
                 <a href="https://universaldependencies.org/u/feat/all.html"
@@ -157,6 +154,18 @@
                   >UniMorph-style tags</a
                 >
               </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="udlex_CELEXtags"
+                />
+                <a
+                  href="{{ url_for('static', filename='CELEX_features.pdf') }}"
+                  target="_blank"
+                  >CELEX tags</a
+                >
+              </li>
             </ul>
           </li>
           <li>
@@ -165,9 +174,6 @@
               >(CC BY 4.0)</a
             >
             <ul>
-              <!-- <li>
-                            <input type="checkbox" name="fields[]" value="um_CELEXtags"> CELEX tags
-                        </li> -->
               <li>
                 <input type="checkbox" name="fields[]" value="um_UDtags" />
                 <a href="https://universaldependencies.org/u/feat/all.html"
@@ -178,6 +184,14 @@
                 <input type="checkbox" name="fields[]" value="um_UMtags" />
                 <a href="https://unimorph.github.io/schema/"
                   >UniMorph-style tags</a
+                >
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="um_CELEXtags" />
+                <a
+                  href="{{ url_for('static', filename='CELEX_features.pdf') }}"
+                  target="_blank"
+                  >CELEX tags</a
                 >
               </li>
             </ul>

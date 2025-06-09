@@ -11,9 +11,11 @@ from citylex import features, zipf
 
 DB_PATH = "citylex.db"
 
+
 def _fetch_and_write_data(cursor, writer, source_table, columns, where=""):
     """
-    Fetches and writes data from a specified table with given columns and an optional WHERE clause.
+    Fetches and writes data from the specified SQL table for
+    given columns and WHERE criteria.
 
     Args:
         cursor: The SQLite cursor object.
@@ -31,8 +33,6 @@ def _fetch_and_write_data(cursor, writer, source_table, columns, where=""):
         row_dict = dict(zip(columns, row))
         writer.writerow(row_dict)
 
-app = Flask(__name__)
-
 
 def _fetch_and_write_subtlex_data(cursor, writer, uk_or_us, selected_fields):
     """
@@ -42,20 +42,24 @@ def _fetch_and_write_subtlex_data(cursor, writer, uk_or_us, selected_fields):
         cursor: The SQLite cursor object.
         writer: The CSV DictWriter object.
         uk_or_us (str): Either "uk" or "us" depending on the desired source.
-        selected_fields (list): The list of fields selected by the user on the form.
+        selected_fields (list): The list of fields selected by the user
+            on the form.
     """
-    if f"subtlex{uk_or_us}_logprob" in selected_fields or f"subtlex{uk_or_us}_zipf" in selected_fields:
-            cursor.execute(f"SELECT SUM(raw_frequency) FROM frequency WHERE source = 'SUBTLEX-{uk_or_us.upper()}'")
-            total_words = cursor.fetchone()[0]
+    if (
+        f"subtlex{uk_or_us}_logprob" in selected_fields
+        or f"subtlex{uk_or_us}_zipf" in selected_fields
+    ):
+        cursor.execute(
+            f"SELECT SUM(raw_frequency) FROM frequency WHERE source ='SUBTLEX-{uk_or_us.upper()}'"
+        )
+        total_words = cursor.fetchone()[0]
 
     columns = ["wordform", "source"]
     if f"subtlex{uk_or_us}_raw_frequency" in selected_fields:
         columns.append("raw_frequency")
     if f"subtlex{uk_or_us}_freq_per_million" in selected_fields:
         columns.append("freq_per_million")
-    query = (
-        f"SELECT {', '.join(columns)} FROM frequency WHERE source = 'SUBTLEX-{uk_or_us.upper()}'"
-    )
+    query = f"SELECT {', '.join(columns)} FROM frequency WHERE source = 'SUBTLEX-{uk_or_us.upper()}'"
     cursor.execute(query)
     for row in cursor:
         wordform, source, raw_frequency, freq_per_million = row
@@ -66,11 +70,22 @@ def _fetch_and_write_subtlex_data(cursor, writer, uk_or_us, selected_fields):
         if f"subtlex{uk_or_us}_freq_per_million" in selected_fields:
             row_dict["freq_per_million"] = freq_per_million
         if f"subtlex{uk_or_us}_logprob" in selected_fields:
-            row_dict["logprob"] = math.log10(raw_frequency / total_words) if raw_frequency > 0 and total_words > 0 else float('-inf')
+            row_dict["logprob"] = (
+                math.log10(raw_frequency / total_words)
+                if raw_frequency > 0 and total_words > 0
+                else float("-inf")
+            )
         if f"subtlex{uk_or_us}_zipf" in selected_fields:
-            row_dict["zipf"] = zipf.zipf_scale(raw_frequency, total_words) if total_words > 0 else None
+            row_dict["zipf"] = (
+                zipf.zipf_scale(raw_frequency, total_words)
+                if total_words > 0
+                else None
+            )
 
         writer.writerow(row_dict)
+
+
+app = Flask(__name__)
 
 
 @app.route("/", methods=["GET"])
@@ -119,10 +134,13 @@ def post():
         or "subtlexus_zipf" in selected_fields
     ):
         columns.append("zipf")
-    if "wikipronus_IPA" in selected_fields or "wikipronuk_IPA" in selected_fields:
+    if (
+        "wikipronus_IPA" in selected_fields
+        or "wikipronuk_IPA" in selected_fields
+    ):
         columns.append("pronunciation")
-    # if "udlex_CELEXtags" in selected_fields or "um_CELEXtags" in selected_fields:
-    #     columns.append("celex_tags")
+    if "udlex_CELEXtags" in selected_fields or "um_CELEXtags" in selected_fields:
+        columns.append("celex_tags")
     if "udlex_UDtags" in selected_fields or "um_UDtags" in selected_fields:
         columns.append("ud_tags")
     if "udlex_UMtags" in selected_fields or "um_UMtags" in selected_fields:
@@ -146,28 +164,44 @@ def post():
     # Fetches and writes WikiPron-US data
     if "WikiPron-US" in selected_sources:
         wp_us_columns = ["wordform", "source", "pronunciation"]
-        _fetch_and_write_data(cursor, writer, "pronunciation", wp_us_columns, "source = 'WikiPron US' AND standard = 'IPA'")
+        _fetch_and_write_data(
+            cursor,
+            writer,
+            "pronunciation",
+            wp_us_columns,
+            "source = 'WikiPron US' AND standard = 'IPA'",
+        )
 
     # Fetches and writes WikiPron-UK data
     if "WikiPron-UK" in selected_sources:
         wp_uk_columns = ["wordform", "source", "pronunciation"]
-        _fetch_and_write_data(cursor, writer, "pronunciation", wp_uk_columns, "source = 'WikiPron UK' AND standard = 'IPA'")
+        _fetch_and_write_data(
+            cursor,
+            writer,
+            "pronunciation",
+            wp_uk_columns,
+            "source = 'WikiPron UK' AND standard = 'IPA'",
+        )
 
     # Fetches and writes UDLexicons data
     if "UDLexicons" in selected_sources:
-        udlex_query = "SELECT wordform, source, tags FROM features WHERE source = 'UDLexicons'"
+        udlex_query = """SELECT wordform, source, tags FROM features WHERE source = 'UDLexicons'"""
         cursor.execute(udlex_query)
         for row in cursor:
             wordform, source, ud_tags = row
             row_dict = {"wordform": wordform, "source": source}
-            
+
             if "udlex_UDtags" in selected_fields:
                 row_dict["ud_tags"] = ud_tags
             if "udlex_UMtags" in selected_fields:
-                row_dict["um_tags"] = features.tag_to_tag("UD", "UniMorph", ud_tags)
-            # if "udlex_CELEXtags" in selected_fields:
-            #     row_dict["celex_tags"] = features.tag_to_tag("UD", "CELEX", ud_tags)
-            
+                row_dict["um_tags"] = features.tag_to_tag(
+                    "UD", "UniMorph", ud_tags
+                )
+            if "udlex_CELEXtags" in selected_fields:
+                row_dict["celex_tags"] = features.tag_to_tag(
+                    "UD", "CELEX", ud_tags
+                )
+
             writer.writerow(row_dict)
 
     # Fetches and writes UniMorph data
@@ -177,14 +211,18 @@ def post():
         for row in cursor:
             wordform, source, um_tags = row
             row_dict = {"wordform": wordform, "source": source}
-            
+
             if "um_UDtags" in selected_fields:
-                row_dict["ud_tags"] = features.tag_to_tag("UniMorph", "UD", um_tags)
+                row_dict["ud_tags"] = features.tag_to_tag(
+                    "UniMorph", "UD", um_tags
+                )
             if "um_UMtags" in selected_fields:
                 row_dict["um_tags"] = um_tags
-            # if "um_CELEXtags" in selected_fields:
-            #     row_dict["celex_tags"] = features.tag_to_tag("UniMorph", "CELEX", um_tags)
-            
+            if "um_CELEXtags" in selected_fields:
+                row_dict["celex_tags"] = features.tag_to_tag(
+                    "UniMorph", "CELEX", um_tags
+                )
+
             writer.writerow(row_dict)
 
     # Fetches and writes ELP segmentations
@@ -194,7 +232,9 @@ def post():
             elp_columns.append("segmentation")
         if "elp_nmorph" in selected_fields:
             elp_columns.append("nmorph")
-        _fetch_and_write_data(cursor, writer, "segmentation", elp_columns, "source = 'ELP'")
+        _fetch_and_write_data(
+            cursor, writer, "segmentation", elp_columns, "source = 'ELP'"
+        )
 
     # Sends the file as a response
     return send_file(
