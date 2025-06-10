@@ -15,8 +15,8 @@ document.addEventListener("DOMContentLoaded", function () {
     "SUBTLEX-US": "NC",
     UDLexicons: "GNU",
     UniMorph: "BY",
-    "WikiPron-US": "apache",
-    "WikiPron-UK": "apache",
+    "WikiPron US": "apache",
+    "WikiPron UK": "apache",
     ELP: "NC",
   };
   const defaultFieldMap = {
@@ -24,8 +24,8 @@ document.addEventListener("DOMContentLoaded", function () {
     "SUBTLEX-US": "subtlexus_raw_frequency",
     UDLexicons: "udlex_UDtags",
     UniMorph: "um_UMtags",
-    "WikiPron-US": "wikipronus_IPA",
-    "WikiPron-UK": "wikipronuk_IPA",
+    "WikiPron US": "wikipronus_IPA",
+    "WikiPron UK": "wikipronuk_IPA",
     ELP: "elp_segmentation",
   };
 
