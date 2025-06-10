@@ -20,10 +20,19 @@ keywords = [
     "language",
 ]
 dependencies = [
-    "openpyxl >= 3.1.5",
-    "pandas >= 1.2.2",
-    "pynini >= 2.1.6.post1",
-    "requests >= 2.25.1",
+    "black>=24.8.0",
+    "build>=0.9.0",
+    "flake8>=7.1.1",
+    "flask>=3.0.3",
+    "mypy>=1.11.2",
+    "openpyxl>=3.1.5",
+    "pandas>=1.2.2",
+    "pynini>=2.1.6.post1",
+    "pytest>=7.4.4",
+    "requests>=2.25.1",
+    "setuptools>=65.5.0",
+    "twine>=3.7.1",
+    "types-requests>=2.32.0.20240905",
 ]
 classifiers = [
     "Programming Language :: Python :: 3.8",
@@ -40,9 +49,6 @@ classifiers = [
 
 [project.urls]
 homepage = "https://github.com/kylebgorman/citylex"
-
-[project.scripts]
-citylex = "citylex.populate:main"
 
 [tool.setuptools]
 packages = ["citylex"]
