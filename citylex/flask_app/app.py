@@ -35,51 +35,52 @@ def _data_to_csv(cursor, writer, source_table, columns, where=""):
         writer.writerow(row_dict)
 
 
-def _subtlex_to_csv(cursor, writer, uk_or_us, selected_fields):
+def freq_data_to_csv(cursor, writer, source_name, selected_fields, field_prefix):
     """
-    Fetches and writes data for SUBTLEX-US and SUBTLEX-UK.
+    Fetches and writes frequency data for a given frequency source,
+    calculating logprob and zipf if requested.
 
     Args:
         cursor: The SQLite cursor object.
         writer: The CSV DictWriter object.
-        uk_or_us (str): Either "uk" or "us" depending on the desired source.
-        selected_fields (list): The list of fields selected by the user
-            on the form.
+        source_name (str): The value in the 'source' column (e.g., 'SUBTLEX-UK', 'CELEX').
+        selected_fields (list): The list of fields selected by the user.
+        field_prefix (str): Prefix for field names (e.g., 'subtlexuk', 'subtlexus', 'celexfreq').
     """
+    columns = ["wordform", "source"]
+    if f"{field_prefix}_raw_frequency" in selected_fields:
+        columns.append("raw_frequency")
+    if f"{field_prefix}_freq_per_million" in selected_fields:
+        columns.append("freq_per_million")
+
+    # Get total words for logprob/zipf if needed
     if (
-        f"subtlex{uk_or_us}_logprob" in selected_fields
-        or f"subtlex{uk_or_us}_zipf" in selected_fields
+        f"{field_prefix}_logprob" in selected_fields
+        or f"{field_prefix}_zipf" in selected_fields
     ):
         cursor.execute(
-            f"SELECT SUM(raw_frequency) FROM frequency WHERE source ='SUBTLEX-{uk_or_us.upper()}'"
+            f"SELECT SUM(raw_frequency) FROM frequency WHERE source = '{source_name}'"
         )
-        total_words = cursor.fetchone()[0]
+        total_words = cursor.fetchone()[0] or 0
+    else:
+        total_words = None
 
-    columns = ["wordform", "source"]
-    if f"subtlex{uk_or_us}_raw_frequency" in selected_fields:
-        columns.append("raw_frequency")
-    if f"subtlex{uk_or_us}_freq_per_million" in selected_fields:
-        columns.append("freq_per_million")
-    query = f"SELECT {', '.join(columns)} FROM frequency WHERE source = 'SUBTLEX-{uk_or_us.upper()}'"
+    query = f"SELECT {', '.join(columns)} FROM frequency WHERE source = '{source_name}'"
     cursor.execute(query)
     for row in cursor:
-        wordform, source, raw_frequency, freq_per_million = row
-        row_dict = {"wordform": wordform, "source": source}
+        row_dict = dict(zip(columns, row))
+        raw_frequency = row_dict.get("raw_frequency", 0)
 
-        if f"subtlex{uk_or_us}_raw_frequency" in selected_fields:
-            row_dict["raw_frequency"] = raw_frequency
-        if f"subtlex{uk_or_us}_freq_per_million" in selected_fields:
-            row_dict["freq_per_million"] = freq_per_million
-        if f"subtlex{uk_or_us}_logprob" in selected_fields:
+        if f"{field_prefix}_logprob" in selected_fields:
             row_dict["logprob"] = (
                 math.log10(raw_frequency / total_words)
-                if raw_frequency > 0 and total_words > 0
+                if raw_frequency > 0 and total_words and total_words > 0
                 else float("-inf")
             )
-        if f"subtlex{uk_or_us}_zipf" in selected_fields:
+        if f"{field_prefix}_zipf" in selected_fields:
             row_dict["zipf"] = (
                 zipf.zipf_scale(raw_frequency, total_words)
-                if total_words > 0
+                if total_words and total_words > 0
                 else None
             )
 
@@ -91,7 +92,18 @@ app = Flask(__name__)
 
 @app.route("/", methods=["GET"])
 def get():
-    return render_template("index.html")
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            "SELECT * FROM frequency WHERE source = 'CELEX' LIMIT 1"
+        )
+        celex_present = cursor.fetchone() is not None
+    except Exception as e:
+        logging.error(f"Error querying CELEX data: {e}")
+        celex_present = 0
+    return render_template("index.html", celex_present=celex_present)
 
 
 @app.route("/", methods=["POST"])
@@ -116,36 +128,50 @@ def post():
     if (
         "subtlexus_raw_frequency" in selected_fields
         or "subtlexuk_raw_frequency" in selected_fields
+        or "celexfreq_raw_frequency" in selected_fields
     ):
         columns.append("raw_frequency")
     if (
         "subtlexus_freq_per_million" in selected_fields
         or "subtlexuk_freq_per_million" in selected_fields
+        or "celexfreq_freq_per_million" in selected_fields
     ):
         columns.append("freq_per_million")
     if (
         "subtlexuk_logprob" in selected_fields
         or "subtlexus_logprob" in selected_fields
+        or "celexfreq_logprob" in selected_fields
     ):
         columns.append("logprob")
     if (
         "subtlexuk_zipf" in selected_fields
         or "subtlexus_zipf" in selected_fields
+        or "celexfreq_zipf" in selected_fields
     ):
         columns.append("zipf")
     if (
         "wikipronus_IPA" in selected_fields
         or "wikipronuk_IPA" in selected_fields
+        or "celex_DISC" in selected_fields
     ):
         columns.append("pronunciation")
     if (
         "udlex_CELEXtags" in selected_fields
         or "um_CELEXtags" in selected_fields
+        or "celex_CELEXtags" in selected_fields
     ):
         columns.append("celex_tags")
-    if "udlex_UDtags" in selected_fields or "um_UDtags" in selected_fields:
+    if (
+        "udlex_UDtags" in selected_fields
+        or "um_UDtags" in selected_fields
+        or "celex_UDtags" in selected_fields
+    ):
         columns.append("ud_tags")
-    if "udlex_UMtags" in selected_fields or "um_UMtags" in selected_fields:
+    if (
+        "udlex_UMtags" in selected_fields
+        or "um_UMtags" in selected_fields
+        or "celex_UMtags" in selected_fields
+    ):
         columns.append("um_tags")
     if "elp_segmentation" in selected_fields:
         columns.append("segmentation")
@@ -158,12 +184,16 @@ def post():
         writer.writeheader()
 
         # Fetches and writes SUBTLEX-US data
-        if "SUBTLEX-US" in selected_sources:
-            _subtlex_to_csv(cursor, writer, "us", selected_fields)
+        if "subtlexuk" in selected_sources:
+            freq_data_to_csv(cursor, writer, "SUBTLEX-UK", selected_fields, "subtlexuk")
 
         # Fetches and writes SUBTLEX-UK data
-        if "SUBTLEX-UK" in selected_sources:
-            _subtlex_to_csv(cursor, writer, "uk", selected_fields)
+        if "subtlexus" in selected_sources:
+            freq_data_to_csv(cursor, writer, "SUBTLEX-US", selected_fields, "subtlexus")
+       
+        # Feteches and writes CELEX frequency data
+        if "celexfreq" in selected_sources:
+            freq_data_to_csv(cursor, writer, "CELEX", selected_fields, "celexfreq")
 
         # Fetches and writes WikiPron-US data
         if "WikiPron US" in selected_sources:
@@ -185,6 +215,16 @@ def post():
                 "pronunciation",
                 wp_uk_columns,
                 "source = 'WikiPron UK' AND standard = 'IPA'",
+            )
+
+        if "CELEX_pron" in selected_sources:
+            celex_pron_columns = ["wordform", "source", "pronunciation"]
+            _data_to_csv(
+                cursor,
+                writer,
+                "pronunciation",
+                celex_pron_columns,
+                "source = 'CELEX' and standard = 'DISC'",
             )
 
         # Fetches and writes UDLexicons data
@@ -229,6 +269,27 @@ def post():
 
                 writer.writerow(row_dict)
 
+        # Fetches and writes CELEX features data
+        if "CELEX_feat" in selected_sources:
+            celex_feat_query = "SELECT wordform, source, tags FROM features WHERE source = 'CELEX'"
+            cursor.execute(celex_feat_query)
+            for row in cursor:
+                wordform, source, celex_tags = row
+                row_dict = {"wordform": wordform, "source": source}
+
+                if "celex_UDtags" in selected_fields:
+                    row_dict["ud_tags"] = features.tag_to_tag(
+                        "CELEX", "UD", celex_tags
+                    )
+                if "celex_UMtags" in selected_fields:
+                    row_dict["um_tags"] = features.tag_to_tag(
+                        "CELEX", "UniMorph", celex_tags
+                    )
+                if "celex_CELEXtags" in selected_fields:
+                    row_dict["celex_tags"] = celex_tags
+
+                writer.writerow(row_dict)
+
         # Fetches and writes ELP segmentations
         if "ELP" in selected_sources:
             elp_columns = ["wordform", "source"]
@@ -259,53 +320,53 @@ def post():
             if value is not None:
                 aggregated_data[wordform][key].append(value)
 
-        # Process SUBTLEX-US and SUBTLEX-UK data
-        for uk_or_us in ["us", "uk"]:
-            source_name = f"SUBTLEX-{uk_or_us.upper()}"
-            if source_name in selected_sources:
+        # Process frequency data
+        for source, source_fieldname in [
+            ("SUBTLEX-UK", "subtlexuk"),
+            ("SUBTLEX-US", "subtlexus"),
+            ("CELEX", "celexfreq"),
+        ]:
+            if source_fieldname in selected_sources:
                 # Total words for logprob and Zipf scale calculation
                 cursor.execute(
-                    f"SELECT SUM(raw_frequency) FROM frequency WHERE source ='{source_name}'"
+                    f"SELECT SUM(raw_frequency) FROM frequency WHERE source ='{source}'"
                 )
                 total_words = cursor.fetchone()[0]
 
-                query = f"SELECT wordform, raw_frequency, freq_per_million FROM frequency WHERE source = '{source_name}'"
+                query = f"SELECT wordform, raw_frequency, freq_per_million FROM frequency WHERE source = '{source}'"
                 cursor.execute(query)
                 for wordform, raw_frequency, freq_per_million in cursor:
-                    if f"subtlex{uk_or_us}_raw_frequency" in selected_fields:
+                    if f"{source_fieldname}_raw_frequency" in selected_fields:
                         add_to_aggregated_data(
                             wordform,
-                            f"{source_name} (Raw frequency)",
+                            f"{source} (Raw frequency)",
                             raw_frequency,
                         )
-                    if (
-                        f"subtlex{uk_or_us}_freq_per_million"
-                        in selected_fields
-                    ):
+                    if f"{source_fieldname}_freq_per_million" in selected_fields:
                         add_to_aggregated_data(
                             wordform,
-                            f"{source_name} (Frequency per million words)",
+                            f"{source} (Frequency per million words)",
                             freq_per_million,
                         )
-                    if f"subtlex{uk_or_us}_logprob" in selected_fields:
+                    if f"{source_fieldname}_logprob" in selected_fields:
                         logprob = (
                             math.log10(raw_frequency / total_words)
-                            if raw_frequency > 0 and total_words > 0
+                            if raw_frequency > 0 and total_words and total_words > 0
                             else float("-inf")
                         )
                         add_to_aggregated_data(
                             wordform,
-                            f"{source_name} (log10 probability)",
+                            f"{source} (log10 probability)",
                             logprob,
                         )
-                    if f"subtlex{uk_or_us}_zipf" in selected_fields:
+                    if f"{source_fieldname}_zipf" in selected_fields:
                         zipf_val = (
                             zipf.zipf_scale(raw_frequency, total_words)
-                            if total_words > 0
+                            if total_words and total_words > 0
                             else None
                         )
                         add_to_aggregated_data(
-                            wordform, f"{source_name} (Zipf scale)", zipf_val
+                            wordform, f"{source} (Zipf scale)", zipf_val
                         )
 
         # Process UDLexicons data
@@ -356,6 +417,26 @@ def post():
                         wordform, "UniMorph (CELEX tags)", celex_tags
                     )
 
+        # Process CELEX features data
+        if "CELEX_feat" in selected_sources:
+            celex_feat_query = "SELECT wordform, tags FROM features WHERE source = 'CELEX'"
+            cursor.execute(celex_feat_query)
+            for wordform, celex_tags in cursor:
+                if "celex_UDtags" in selected_fields:
+                    ud_tags = features.tag_to_tag("CELEX", "UD", celex_tags)
+                    add_to_aggregated_data(
+                        wordform, "CELEX (Universal Dependency-style tags)", ud_tags
+                    )
+                if "celex_UMtags" in selected_fields:
+                    um_tags = features.tag_to_tag("CELEX", "UniMorph", celex_tags)
+                    add_to_aggregated_data(
+                        wordform, "CELEX (UniMorph-style tags)", um_tags
+                    )
+                if "celex_CELEXtags" in selected_fields:
+                    add_to_aggregated_data(
+                        wordform, "CELEX (CELEX tags)", celex_tags
+                    )
+
         # Process ELP segmentations
         if "ELP" in selected_sources:
             query = "SELECT wordform, segmentation, nmorph FROM segmentation WHERE source = 'ELP'"
@@ -370,24 +451,28 @@ def post():
                         wordform, "ELP (Number of morphs)", nmorph
                     )
 
-        # Process WikiPron-US and WikiPron-UK data
-        for country, source_key in [
-            ("US", "WikiPron US"),
-            ("UK", "WikiPron UK"),
+        # Process pronunciation data
+        for source_key, field_prefix, display_name in [
+            ("WikiPron US", "wikipronus", "WikiPron US (IPA)"),
+            ("WikiPron UK", "wikipronuk", "WikiPron UK (IPA)"),
+            ("CELEX_pron", "celex_DISC", "CELEX (DISC)"),
         ]:
             if source_key in selected_sources:
-                query = f"SELECT wordform, pronunciation FROM pronunciation WHERE source = '{source_key}' AND standard = 'IPA'"
+                # For CELEX, filter by standard = 'DISC'
+                where_clause = "standard = 'IPA'" if source_key.startswith("WikiPron") else "standard = 'DISC'"
+                query = f"SELECT wordform, pronunciation FROM pronunciation WHERE source = '{source_key.split('_')[0]}' AND {where_clause}"
                 cursor.execute(query)
                 for wordform, pronunciation in cursor:
-                    if f"wikipron{country.lower()}_IPA" in selected_fields:
+                    # Check if the specific field for this pronunciation type was selected
+                    if (field_prefix == "wikipronus" and "wikipronus_IPA" in selected_fields) or \
+                        (field_prefix == "wikipronuk" and "wikipronuk_IPA" in selected_fields) or \
+                        (field_prefix == "celex_DISC" and "celex_DISC" in selected_fields):
                         add_to_aggregated_data(
-                            wordform, f"{source_key} (IPA)", pronunciation
+                            wordform, display_name, pronunciation
                         )
 
         json_output = io.StringIO()
-        json.dump(
-            aggregated_data, json_output, indent=4
-        )
+        json.dump(aggregated_data, json_output, indent=4)
         json_output.seek(0)
 
         return send_file(

@@ -32,7 +32,7 @@
         <h3 class="table-type">Frequencies:</h3>
         <ul>
           <li>
-            <input type="checkbox" name="sources[]" value="SUBTLEX-UK" />
+            <input type="checkbox" name="sources[]" value="subtlexuk" />
             SUBTLEX-UK
             <a href="https://creativecommons.org/licenses/by-nc/4.0/"
               >(CC BY-NC 4.0)</a
@@ -74,7 +74,7 @@
             </ul>
           </li>
           <li>
-            <input type="checkbox" name="sources[]" value="SUBTLEX-US" />
+            <input type="checkbox" name="sources[]" value="subtlexus" />
             SUBTLEX-US
             <a href="https://creativecommons.org/licenses/by-nc/4.0/"
               >(CC BY-NC 4.0)</a
@@ -115,21 +115,50 @@
               </li>
             </ul>
           </li>
-          <!-- <li>
-                      TODO : insert license
-                      <input type="checkbox" name="sources[]" value="CELEX"> CELEX
-                      <ul>
-                          <li>
-                              <input type="checkbox" name="fields[]" value="celex_wordform"> Word Form
-                          </li>
-                          <li>
-                              <input type="checkbox" name="fields[]" value="celex_raw_frequency"> Raw Frequency
-                          </li>
-                          <li>
-                              <input type="checkbox" name="fields[]" value="celex_freq_per_million"> Freq per Million
-                          </li>
-                      </ul>
-                  </li> -->
+          {% if celex_present %}
+          <li>
+            <input type="checkbox" name="sources[]" value="celexfreq" /> CELEX
+            <a
+              href="https://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf"
+              >(CELEX 2 User Agreement)</a
+            >
+            <ul>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="celexfreq_raw_frequency"
+                />
+                Raw frequency
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="celexfreq_freq_per_million"
+                />
+                Frequency per million words
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="celexfreq_logprob"
+                />
+                log<sub>10</sub> probability
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="celexfreq_zipf" />
+                <a
+                  href="https://pubmed.ncbi.nlm.nih.gov/24417251/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Zipf scale</a
+                >
+              </li>
+            </ul>
+          </li>
+          {% endif %}
         </ul>
       </li>
       <li>
@@ -196,17 +225,41 @@
               </li>
             </ul>
           </li>
-          <!-- <li>
-                      <input type="checkbox" name="sources[]" value="CELEX"> SUBTLEX-US (CC BY-NC 4.0)
-                      <ul>
-                          <li>
-                              <input type="checkbox" name="fields[]" value="subtlexus_UDtags"> Universal Dependency tags
-                          </li>
-                          <li>
-                              <input type="checkbox" name="fields[]" value="subtlexus_UMtags"> UniMorph tags
-                          </li>
-                      </ul>
-                  </li> -->
+          {% if celex_present %}
+          <li>
+            <input type="checkbox" name="sources[]" value="CELEX_feat" /> CELEX
+            <a
+              href="https://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf"
+              >(CELEX 2 User Agreement)</a
+            >
+            <ul>
+              <li>
+                <input type="checkbox" name="fields[]" value="celex_UDtags" />
+                <a href="https://universaldependencies.org/u/feat/all.html"
+                  >Universal Dependency-style tags</a
+                >
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="celex_UMtags" />
+                <a href="https://unimorph.github.io/schema/"
+                  >UniMorph-style tags</a
+                >
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="celex_CELEXtags"
+                />
+                <a
+                  href="{{ url_for('static', filename='CELEX_features.pdf') }}"
+                  target="_blank"
+                  >CELEX tags</a
+                >
+              </li>
+            </ul>
+          </li>
+          {% endif %}
         </ul>
       </li>
       <li>
@@ -263,14 +316,21 @@
               </li>
             </ul>
           </li>
-          <!-- <li>
-                  TODO : insert license
-                  <input type="checkbox" name="sources[]" value="CELEX"> CELEX
-                  <ul>
-                      <li>
-                        <input type="checkbox" name="fields[]" value="celex_IPA"> IPA
-                    </li>
-              </li> -->
+          {% if celex_present %}
+          <li>
+            <input type="checkbox" name="sources[]" value="CELEX_pron" /> CELEX
+            <a
+              href="https://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf"
+              >(CELEX 2 User Agreement)</a
+            >
+            <ul>
+              <li>
+                <input type="checkbox" name="fields[]" value="celex_DISC" />
+                DISC
+              </li>
+            </ul>
+          </li>
+          {% endif %}
         </ul>
       </li>
 

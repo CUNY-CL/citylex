@@ -9,24 +9,31 @@ document.addEventListener("DOMContentLoaded", function () {
     NC: "CC BY-NC 4.0",
     GNU: "GNU GPL v3",
     apache: "Apache 2.0",
+    celex: "CELEX 2 User Agreement",
   };
   const sourceLicenseMap = {
-    "SUBTLEX-UK": "NC",
-    "SUBTLEX-US": "NC",
+    subtlexus: "NC",
+    subtlexuk: "NC",
     UDLexicons: "GNU",
     UniMorph: "BY",
     "WikiPron US": "apache",
     "WikiPron UK": "apache",
     ELP: "NC",
+    celexfreq: "celex",
+    CELEX_feat: "celex",
+    CELEX_pron: "celex",
   };
   const defaultFieldMap = {
-    "SUBTLEX-UK": "subtlexuk_raw_frequency",
-    "SUBTLEX-US": "subtlexus_raw_frequency",
+    subtlexuk: "subtlexuk_raw_frequency",
+    subtlexus: "subtlexus_raw_frequency",
     UDLexicons: "udlex_UDtags",
     UniMorph: "um_UMtags",
     "WikiPron US": "wikipronus_IPA",
     "WikiPron UK": "wikipronuk_IPA",
     ELP: "elp_segmentation",
+    celexfreq: "celexfreq_raw_frequency",
+    CELEX_feat: "celex_CELEXtags",
+    CELEX_pron: "celex_DISC",
   };
 
   function updateLicenseNotice() {
@@ -55,6 +62,10 @@ document.addEventListener("DOMContentLoaded", function () {
               break;
             case "apache":
               url = "https://www.apache.org/licenses/LICENSE-2.0";
+              break;
+            case "celex":
+              url =
+                "https://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf";
               break;
             default:
               break;
