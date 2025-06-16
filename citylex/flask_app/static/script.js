@@ -85,6 +85,24 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // Show/hide CELEX password box based on CELEX source selection
+  function updateCelexPasswordBox() {
+    const celexSources = ["celexfreq", "CELEX_feat", "CELEX_pron"];
+    const anyCelexChecked = Array.from(
+      document.querySelectorAll("input[name='sources[]']")
+    ).some((cb) => celexSources.includes(cb.value) && cb.checked);
+    const celexSection = document.getElementById("celex-password-section");
+    if (celexSection) {
+      celexSection.style.display = anyCelexChecked ? "block" : "none";
+    }
+  }
+
+  // Call on load and whenever a source is changed
+  updateCelexPasswordBox();
+  sourceCheckboxes.forEach((cb) => {
+    cb.addEventListener("change", updateCelexPasswordBox);
+  });
+
   // Selects all when user clicks "Select All" button
   selectAllButton.addEventListener("click", function () {
     sourceCheckboxes.forEach((checkbox) => (checkbox.checked = true));
