@@ -87,13 +87,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Show/hide CELEX password box based on CELEX source selection
   function updateCelexPasswordBox() {
-    const celexSources = ["celexfreq", "CELEX_feat", "CELEX_pron"];
-    const anyCelexChecked = Array.from(
-      document.querySelectorAll("input[name='sources[]']")
-    ).some((cb) => celexSources.includes(cb.value) && cb.checked);
-    const celexSection = document.getElementById("celex-password-section");
-    if (celexSection) {
-      celexSection.style.display = anyCelexChecked ? "block" : "none";
+    if (typeof PASSWORD_SET !== "undefined" && PASSWORD_SET) {
+      const celexSources = ["celexfreq", "CELEX_feat", "CELEX_pron"];
+      const anyCelexChecked = Array.from(
+        document.querySelectorAll("input[name='sources[]']")
+      ).some((cb) => celexSources.includes(cb.value) && cb.checked);
+      const celexSection = document.getElementById("celex-password-section");
+      if (celexSection) {
+        celexSection.style.display = anyCelexChecked ? "block" : "none";
+      }
     }
   }
 

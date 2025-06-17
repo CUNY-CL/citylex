@@ -4,6 +4,7 @@ import io
 import json
 import logging
 import math
+import os
 import sqlite3
 
 from flask import Flask, render_template, request, send_file
@@ -59,14 +60,13 @@ def freq_data_to_csv(cursor, writer, source_name, selected_fields, field_prefix)
         or f"{field_prefix}_zipf" in selected_fields
     ):
         cursor.execute(
-            f"SELECT SUM(raw_frequency) FROM frequency WHERE source = '{source_name}'"
+            "SELECT SUM(raw_frequency) FROM frequency WHERE source = ?", (source_name,)
         )
         total_words = cursor.fetchone()[0] or 0
     else:
         total_words = None
 
-    query = f"SELECT {', '.join(columns)} FROM frequency WHERE source = '{source_name}'"
-    cursor.execute(query)
+    cursor.execute(f"SELECT {', '.join(columns)} FROM frequency WHERE source = '{source_name}'")
     for row in cursor:
         row_dict = dict(zip(columns, row))
         raw_frequency = row_dict.get("raw_frequency", 0)
@@ -103,7 +103,10 @@ def get():
     except Exception as e:
         logging.error(f"Error querying CELEX data: {e}")
         celex_present = 0
-    return render_template("index.html", celex_present=celex_present)
+
+    password_set = "CELEX_PASSWORD" in os.environ
+
+    return render_template("index.html", celex_present=celex_present, password_set=password_set)
 
 
 @app.route("/", methods=["POST"])
@@ -123,6 +126,15 @@ def post():
     logging.info(f"Selected fields: {selected_fields}")
     logging.info(f"Output format: {output_format}")
     logging.info(f"Licenses: {licenses}")
+
+    if os.environ.get("CELEX_PASSWORD"):
+        celex_sources_selected = any(s in selected_sources for s in ["celexfreq", "CELEX_feat", "CELEX_pron"])
+        if celex_sources_selected:
+            celex_password_env = os.environ.get("CELEX_PASSWORD")
+            celex_password_form = request.form.get("celex_password")
+
+            if not celex_password_form or celex_password_form != celex_password_env:
+                return render_template("401.html"), 401
 
     columns = ["wordform", "source"]
     if (
@@ -229,8 +241,7 @@ def post():
 
         # Fetches and writes UDLexicons data
         if "UDLexicons" in selected_sources:
-            udlex_query = """SELECT wordform, source, tags FROM features WHERE source = 'UDLexicons'"""
-            cursor.execute(udlex_query)
+            cursor.execute("SELECT wordform, source, tags FROM features WHERE source = 'UDLexicons'")
             for row in cursor:
                 wordform, source, ud_tags = row
                 row_dict = {"wordform": wordform, "source": source}
@@ -250,8 +261,7 @@ def post():
 
         # Fetches and writes UniMorph data
         if "UniMorph" in selected_sources:
-            um_query = "SELECT wordform, source, tags FROM features WHERE source = 'UniMorph'"
-            cursor.execute(um_query)
+            cursor.execute("SELECT wordform, source, tags FROM features WHERE source = 'UniMorph'")
             for row in cursor:
                 wordform, source, um_tags = row
                 row_dict = {"wordform": wordform, "source": source}
@@ -271,8 +281,7 @@ def post():
 
         # Fetches and writes CELEX features data
         if "CELEX_feat" in selected_sources:
-            celex_feat_query = "SELECT wordform, source, tags FROM features WHERE source = 'CELEX'"
-            cursor.execute(celex_feat_query)
+            cursor.execute("SELECT wordform, source, tags FROM features WHERE source = 'CELEX'")
             for row in cursor:
                 wordform, source, celex_tags = row
                 row_dict = {"wordform": wordform, "source": source}
@@ -329,12 +338,11 @@ def post():
             if source_fieldname in selected_sources:
                 # Total words for logprob and Zipf scale calculation
                 cursor.execute(
-                    f"SELECT SUM(raw_frequency) FROM frequency WHERE source ='{source}'"
+                    "SELECT SUM(raw_frequency) FROM frequency WHERE source = ?", (source, )
                 )
                 total_words = cursor.fetchone()[0]
 
-                query = f"SELECT wordform, raw_frequency, freq_per_million FROM frequency WHERE source = '{source}'"
-                cursor.execute(query)
+                cursor.execute("SELECT wordform, raw_frequency, freq_per_million FROM frequency WHERE source = ?", (source, ))
                 for wordform, raw_frequency, freq_per_million in cursor:
                     if f"{source_fieldname}_raw_frequency" in selected_fields:
                         add_to_aggregated_data(
@@ -371,8 +379,7 @@ def post():
 
         # Process UDLexicons data
         if "UDLexicons" in selected_sources:
-            udlex_query = """SELECT wordform, tags FROM features WHERE source = 'UDLexicons'"""
-            cursor.execute(udlex_query)
+            cursor.execute("SELECT wordform, tags FROM features WHERE source = 'UDLexicons'")
             for wordform, ud_tags in cursor:
                 if "udlex_UDtags" in selected_fields:
                     add_to_aggregated_data(
@@ -393,10 +400,7 @@ def post():
 
         # Process UniMorph data
         if "UniMorph" in selected_sources:
-            um_query = (
-                "SELECT wordform, tags FROM features WHERE source = 'UniMorph'"
-            )
-            cursor.execute(um_query)
+            cursor.execute("SELECT wordform, tags FROM features WHERE source = 'UniMorph'")
             for wordform, um_tags in cursor:
                 if "um_UDtags" in selected_fields:
                     ud_tags = features.tag_to_tag("UniMorph", "UD", um_tags)
@@ -419,8 +423,7 @@ def post():
 
         # Process CELEX features data
         if "CELEX_feat" in selected_sources:
-            celex_feat_query = "SELECT wordform, tags FROM features WHERE source = 'CELEX'"
-            cursor.execute(celex_feat_query)
+            cursor.execute("SELECT wordform, tags FROM features WHERE source = 'CELEX'")
             for wordform, celex_tags in cursor:
                 if "celex_UDtags" in selected_fields:
                     ud_tags = features.tag_to_tag("CELEX", "UD", celex_tags)
@@ -439,8 +442,7 @@ def post():
 
         # Process ELP segmentations
         if "ELP" in selected_sources:
-            query = "SELECT wordform, segmentation, nmorph FROM segmentation WHERE source = 'ELP'"
-            cursor.execute(query)
+            cursor.execute("SELECT wordform, segmentation, nmorph FROM segmentation WHERE source = 'ELP'")
             for wordform, segmentation, nmorph in cursor:
                 if "elp_segmentation" in selected_fields:
                     add_to_aggregated_data(
@@ -460,8 +462,7 @@ def post():
             if source_key in selected_sources:
                 # For CELEX, filter by standard = 'DISC'
                 where_clause = "standard = 'IPA'" if source_key.startswith("WikiPron") else "standard = 'DISC'"
-                query = f"SELECT wordform, pronunciation FROM pronunciation WHERE source = '{source_key.split('_')[0]}' AND {where_clause}"
-                cursor.execute(query)
+                cursor.execute(f"SELECT wordform, pronunciation FROM pronunciation WHERE source = '{source_key.split('_')[0]}' AND {where_clause}")
                 for wordform, pronunciation in cursor:
                     # Check if the specific field for this pronunciation type was selected
                     if (field_prefix == "wikipronus" and "wikipronus_IPA" in selected_fields) or \
