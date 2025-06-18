@@ -1,5 +1,4 @@
-🗽 CityLex: a free English lexical database
-===========================================
+# 🗽 CityLex: a free English lexical database
 
 [![PyPI
 version](https://badge.fury.io/py/citylex.svg)](https://pypi.org/project/citylex)
@@ -15,8 +14,7 @@ proprietary, others restrict redistribution), we do not provide the database as
 is. Rather the user must generate a personal copy by executing a Python script,
 enabling whatever sources they wish to use.
 
-Building your own CityLex
--------------------------
+## Building your own CityLex
 
 To install CityLex execute
 
@@ -24,9 +22,9 @@ To install CityLex execute
 pip install citylex
 ```
 
-To see the available data sources and options, execute `citylex --help`.
+To see the available data sources and options, execute `python -m citylex.populate --help`.
 
-To generate the lexicon, execute `citylex` with at least one source enabled
+To generate the lexicon, execute `python -m citylex.populate` with at least one source enabled
 using command-line flags. As most of the data is downloaded from outline
 sources, an internet connection is normally required. The process takes roughly
 four minutes with all sources enabled; much of the time is spent downloading
@@ -36,36 +34,28 @@ To generate a lexicon with all the sources that don't require manual downloads,
 execute
 
 ```bash
-citylex --all-free
+python -m citylex.populate --all-free
 ```
 
-File formats
-------------
+If you plan to use the web application, ensure that you populate the database with at least the `--all-free` flag and optionally with the `--celex` and `--celex-path` flags (see below for more info on including CELEX data).
 
-Two files are produced. The first, by default `citylex.tsv`, is a standard
-wide-format "tab separated values" (TSV) file, of the sort that can be read into
-Excel or R. Some fields (particularly pronunciations and morphological analyses)
-can have multiple entries per wordform. In this case, they are separated using
-the `^` character.
+## Launching the web application
 
-Advanced users may wish to make use of the second file, by default
-`citylex.textproto`, a
-[text-format](https://developers.google.com/protocol-buffers/docs/reference/python/google.protobuf.text_format-module)
-[protocol buffer](https://developers.google.com/protocol-buffers/) which
-provides a better representation of the repeated fields. To parse this file in
-Python, use the following snippet:
+Once the database (`citylex.db`) is populated, you can launch the Flask web application. First, set the `FLASK_APP` environment variable:
 
-```python
-import citylex
-
-lexicon = citylex.read_textproto("citylex.textproto")
+```bash
+export FLASK_APP=citylex.flask_app.app
 ```
 
-This will parse the text-format data and populate `lexicon`. One can then
-iterate over `lexicon.entry` like a Python dictionary.
+Then, run the Flask application:
 
-Non-redistributable data sources
---------------------------------
+```bash
+flask run
+```
+
+This will start the web server locally, making the CityLex application accessible. The application allows you to access the data in tsv and json formats.
+
+## Non-redistributable data sources
 
 Not all CityLex data can be obtained automatically from online sources. If you
 wish to enable CELEX features, follow the instructions below.
@@ -82,23 +72,17 @@ This will produce a directory named `celex2`. To enable CELEX2 features, use
 `--celex` and pass the local path of this directory as an argument to
 `--celex_path`.
 
-For more information
---------------------
+Optionally, to password protect access to CELEX data within the web application, set the `CELEX_PASSWORD` environment variable:
 
--   [`citylex.proto`](citylex.proto) for the protocol buffer data structure
--   [`citylex.bib`](citylex.bib) for references to the data sources used
+```bash
+export CELEX_PASSWORD="your_desired_password"
+```
 
-For contributors
-----------------
+## For more information
 
-To regenerate [`citylex_pb2.py`](citylex_pb2.py) you will need to install the
-[Protocol Buffers C++ runtime](https://github.com/protocolbuffers/protobuf)
-for your platform, making sure the version number (e.g., the one returned by
-`protoc --version` matches that of `protobuf` in `requirements.txt`. Then, run
-`protoc --python_out=. citylex.proto`.
+- [`citylex.bib`](citylex.bib) for references to the data sources used
 
-License
--------
+## License
 
 The CityLex codebase are distributed under the Apache 2.0 license. Please see
 [`LICENSE.txt`](LICENSE.txt) for details.
@@ -106,8 +90,7 @@ The CityLex codebase are distributed under the Apache 2.0 license. Please see
 All other data sources bear their original licenses chosen by their creators;
 see `citylex --help` for more information.
 
-Author
-------
+## Author
 
 CityLex was created by [Kyle Gorman](http://wellformedness.com) with help from
 [contributors](https://github.com/CUNY-CL/citylex/graphs/contributors).
