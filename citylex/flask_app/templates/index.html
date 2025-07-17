@@ -63,7 +63,7 @@
                   name="fields[]"
                   value="subtlexuk_logprob"
                 />
-                log<sub>10</sub> probability
+                -log<sub>10</sub> probability
               </li>
               <li>
                 <input type="checkbox" name="fields[]" value="subtlexuk_zipf" />
@@ -105,7 +105,7 @@
                   name="fields[]"
                   value="subtlexus_logprob"
                 />
-                log<sub>10</sub> probability
+                -log<sub>10</sub> probability
               </li>
               <li>
                 <input type="checkbox" name="fields[]" value="subtlexus_zipf" />
@@ -148,7 +148,7 @@
                   name="fields[]"
                   value="celexfreq_logprob"
                 />
-                log<sub>10</sub> probability
+                -log<sub>10</sub> probability
               </li>
               <li>
                 <input type="checkbox" name="fields[]" value="celexfreq_zipf" />
@@ -342,11 +342,11 @@
         <button type="button" id="selectNone">Select none</button>
       </div>
 
-      <h2>Output Format</h2>
+      <h2>Output format</h2>
       <input type="radio" name="output_format" value="long" checked /> Long TSV
       [one record per line]
-      <input type="radio" name="output_format" value="wide" /> Wide JSON [join
-      on word]
+      <input type="radio" name="output_format" value="wide" /> Wide JSON [one
+      record per word]
 
       <div id="celex-password-section" style="display: none">
         <input type="password" id="celex_password" name="celex_password" />
