@@ -582,7 +582,7 @@ def main():
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             wordform TEXT NOT NULL,
             source TEXT NOT NULL,
-            nmorph TEXT NOT NULL,
+            nmorph INTEGER NOT NULL,
             segmentation TEXT NOT NULL
         )
     """

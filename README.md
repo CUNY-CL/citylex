@@ -41,16 +41,10 @@ If you plan to use the web application, ensure that you populate the database wi
 
 ## Launching the web application
 
-Once the database (`citylex.db`) is populated, you can launch the Flask web application. First, set the `FLASK_APP` environment variable:
+Once the database (`citylex.db`) is populated, you can launch the Flask web application:
 
 ```bash
-export FLASK_APP=citylex.flask_app.app
-```
-
-Then, run the Flask application:
-
-```bash
-flask run
+python flask_app/app.py
 ```
 
 This will start the web server locally, making the CityLex application accessible. The application allows you to access the data in tsv and json formats.

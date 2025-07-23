@@ -13,7 +13,7 @@ from citylex import features, zipf
 
 DB_PATH = "citylex.db"
 
-def neg_logprob(raw_freq, total_words):
+def _neg_logprob(raw_freq, total_words):
     if raw_freq > 0 and total_words and total_words > 0:
         neg_logprob = round(-math.log10(raw_freq / total_words), 6)
     else:
@@ -42,7 +42,7 @@ def _data_to_csv(cursor, writer, source_table, columns, where=""):
         writer.writerow(row_dict)
 
 
-def subtlex_data_to_csv(cursor, writer, source_name, selected_fields, field_prefix):
+def _subtlex_data_to_csv(cursor, writer, source_name, selected_fields, field_prefix):
     """
     Fetches and writes frequency data for a given frequency source,
     calculating logprob and zipf if requested.
@@ -80,14 +80,15 @@ def subtlex_data_to_csv(cursor, writer, source_name, selected_fields, field_pref
         row_dict = dict(zip(columns, row))
 
         if f"{field_prefix}_logprob" in selected_fields:
-            row_dict["-logprob"] = neg_logprob(raw_freq, total_words)
+            row_dict["-logprob"] = _neg_logprob(raw_freq, total_words)
 
         if f"{field_prefix}_zipf" in selected_fields:
-            row_dict["zipf"] = (
+            zipf_value = (
                 zipf.zipf_scale(raw_freq, total_words)
                 if total_words and total_words > 0
                 else None
             )
+            row_dict["zipf"] = round(zipf_value, 6) if zipf_value is not None else None
 
         writer.writerow(row_dict)
 
@@ -202,11 +203,11 @@ def post():
 
         # Fetches and writes SUBTLEX-US data
         if "subtlexuk" in selected_sources:
-            subtlex_data_to_csv(cursor, writer, "SUBTLEX-UK", selected_fields, "subtlexuk")
+            _subtlex_data_to_csv(cursor, writer, "SUBTLEX-UK", selected_fields, "subtlexuk")
 
         # Fetches and writes SUBTLEX-UK data
         if "subtlexus" in selected_sources:
-            subtlex_data_to_csv(cursor, writer, "SUBTLEX-US", selected_fields, "subtlexus")
+            _subtlex_data_to_csv(cursor, writer, "SUBTLEX-US", selected_fields, "subtlexus")
 
         # Fetches and writes WikiPron-US data
         if "WikiPron US" in selected_sources:
@@ -251,13 +252,14 @@ def post():
                     if "celexfreq_freq_per_million" in selected_fields:
                         celex_wordforms_data[wordform]["freq_per_million"] = freq_per_million
                     if "celexfreq_logprob" in selected_fields:
-                        celex_wordforms_data[wordform]["-logprob"] = neg_logprob(raw_frequency, celex_total_words)
+                        celex_wordforms_data[wordform]["-logprob"] = _neg_logprob(raw_frequency, celex_total_words)
                     if "celexfreq_zipf" in selected_fields:
-                        celex_wordforms_data[wordform]["zipf"] = (
+                        zipf_value = (
                             zipf.zipf_scale(raw_frequency, celex_total_words)
                             if celex_total_words > 0
                             else None
                         )
+                        celex_wordforms_data[wordform]["zipf"] = round(zipf_value, 6) if zipf_value is not None else None
 
             # Fetch CELEX features if selected
             if "CELEX_feat" in selected_sources:
@@ -406,7 +408,7 @@ def post():
                             freq_per_million,
                         )
                     if f"{source_fieldname}_logprob" in selected_fields:
-                        logprob = neg_logprob(raw_frequency, total_words)
+                        logprob = _neg_logprob(raw_frequency, total_words)
                         add_to_aggregated_data(
                             wordform,
                             f"{source} (-log10 probability)",
@@ -419,7 +421,7 @@ def post():
                             else None
                         )
                         add_to_aggregated_data(
-                            wordform, f"{source} (Zipf scale)", zipf_val
+                            wordform, f"{source} (Zipf scale)", round(zipf_val, 6) if zipf_val is not None else None
                         )
 
         # Process UDLexicons data
@@ -518,7 +520,7 @@ def post():
                         )
 
         json_output = io.StringIO()
-        json.dump(aggregated_data, json_output, indent=4)
+        json.dump(aggregated_data, json_output, ensure_ascii=False, separators=(',', ':'))
         json_output.seek(0)
 
         return send_file(
