@@ -3,7 +3,7 @@
 set -eou pipefail
 
 # Populates the DB.
-citylex --all-free 
+python -m citylex.populate --all-free 
 
 # Starts the webapp in the background, catching its ID.
 gunicorn flask_app.app:app & 

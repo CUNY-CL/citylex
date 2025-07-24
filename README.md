@@ -16,10 +16,12 @@ enabling whatever sources they wish to use.
 
 ## Building your own CityLex
 
-To install CityLex execute
+To set up CityLex execute
 
 ```bash
-pip install citylex
+git clone <url>
+cd citylex
+pip install -r requirements.txt
 ```
 
 To see the available data sources and options, execute `python -m citylex.populate --help`.
@@ -44,7 +46,7 @@ If you plan to use the web application, ensure that you populate the database wi
 Once the database (`citylex.db`) is populated, you can launch the Flask web application:
 
 ```bash
-python flask_app/app.py
+python -m flask_app.app
 ```
 
 This will start the web server locally, making the CityLex application accessible. The application allows you to access the data in tsv and json formats.
@@ -64,7 +66,7 @@ tar -xzf LDC96L14.tgz
 
 This will produce a directory named `celex2`. To enable CELEX2 features, use
 `--celex` and pass the local path of this directory as an argument to
-`--celex_path`.
+`--celex-path`.
 
 Optionally, to password protect access to CELEX data within the web application, set the `CELEX_PASSWORD` environment variable:
 
@@ -82,7 +84,7 @@ The CityLex codebase are distributed under the Apache 2.0 license. Please see
 [`LICENSE.txt`](LICENSE.txt) for details.
 
 All other data sources bear their original licenses chosen by their creators;
-see `citylex --help` for more information.
+see `python -m citylex.populate --help` for more information.
 
 ## Author
 
