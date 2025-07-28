@@ -58,10 +58,10 @@ document.addEventListener("DOMContentLoaded", function () {
               url = "https://creativecommons.org/licenses/by-nc/4.0/";
               break;
             case "GNU":
-              url = "https://www.gnu.org/licenses/gpl-3.0.html";
+              url = "https://www.gnu.org/licenses/gpl-3.0.en.html";
               break;
             case "apache":
-              url = "https://www.apache.org/licenses/LICENSE-2.0";
+              url = "https://www.apache.org/licenses/LICENSE-2.0.html";
               break;
             case "celex":
               url =

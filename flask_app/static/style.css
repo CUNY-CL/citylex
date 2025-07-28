@@ -14,8 +14,8 @@ li {
 }
 
 form > li > ul {
-  padding-left: 0; /* Removes default padding */
-  margin-left: 0; /* Removes default margin */
+  padding-left: 0;
+  margin-left: 0;
 }
 
 form button[type="submit"] {
