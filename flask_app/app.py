@@ -6,9 +6,11 @@ import logging
 import math
 import os
 import sqlite3
+import sys
 
 from flask import Flask, render_template, request, send_file
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from citylex import features, zipf
 
 DB_PATH = "citylex.db"
