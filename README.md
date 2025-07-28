@@ -49,7 +49,7 @@ Once the database (`citylex.db`) is populated, you can launch the Flask web appl
 python -m flask_app.app
 ```
 
-This will start the web server locally, making the CityLex application accessible. The application allows you to access the data in tsv and json formats.
+This will start the web server locally, making the CityLex application accessible. The application allows you to access the data in TSV and JSON formats.
 
 ## Non-redistributable data sources
 
