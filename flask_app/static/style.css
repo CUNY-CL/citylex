@@ -13,6 +13,11 @@ li {
   list-style-type: none;
 }
 
+form > li > ul {
+  padding-left: 0; /* Removes default padding */
+  margin-left: 0; /* Removes default margin */
+}
+
 form button[type="submit"] {
   display: block;
   margin: 1em 0;
