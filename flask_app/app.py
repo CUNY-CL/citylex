@@ -318,7 +318,7 @@ def post():
             for wordform, data in celex_wordforms_data.items():
                 row_to_write = {
                     "wordform": wordform,
-                    "source": data.get("source", "CELEX"),
+                    "source": data["source"],
                 }
                 # Populates fields.
                 if (

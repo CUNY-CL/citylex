@@ -51,6 +51,12 @@ python -m flask_app.app
 
 This will start the web server locally, making the CityLex application accessible. The application allows you to access the data in TSV and JSON formats.
 
+Flask's built-in development server is suitable only for testing and local use. For production deployment, use a WSGI server like Gunicorn:
+
+```bash
+gunicorn flask_app.app:app
+```
+
 ## Non-redistributable data sources
 
 Not all CityLex data can be obtained automatically from online sources. If you

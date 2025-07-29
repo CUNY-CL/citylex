@@ -35,6 +35,16 @@ document.addEventListener("DOMContentLoaded", function () {
     CELEX_feat: "celex_CELEXtags",
     CELEX_pron: "celex_DISC",
   };
+  const celexFields = [
+    "celexfreq_raw_frequency",
+    "celexfreq_freq_per_million",
+    "celexfreq_logprob",
+    "celexfreq_zipf",
+    "celex_UDtags",
+    "celex_UMtags",
+    "celex_CELEXtags",
+    "celex_DISC",
+  ];
 
   function updateLicenseNotice() {
     const selectedSources = Array.from(sourceCheckboxes).filter(
@@ -88,13 +98,12 @@ document.addEventListener("DOMContentLoaded", function () {
   // Show/hide CELEX password box based on CELEX source selection
   function updateCelexPasswordBox() {
     if (typeof PASSWORD_SET !== "undefined" && PASSWORD_SET) {
-      const celexSources = ["celexfreq", "CELEX_feat", "CELEX_pron"];
-      const anyCelexChecked = Array.from(
-        document.querySelectorAll("input[name='sources[]']")
-      ).some((cb) => celexSources.includes(cb.value) && cb.checked);
+      const anyCelexFieldChecked = Array.from(fieldCheckboxes).some(
+        (cb) => celexFields.includes(cb.value) && cb.checked
+      );
       const celexSection = document.getElementById("celex-password-section");
       if (celexSection) {
-        celexSection.style.display = anyCelexChecked ? "block" : "none";
+        celexSection.style.display = anyCelexFieldChecked ? "block" : "none";
       }
     }
   }
@@ -111,6 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fieldCheckboxes.forEach((checkbox) => (checkbox.checked = true));
     licenseCheckboxes.forEach((checkbox) => (checkbox.checked = true));
     updateLicenseNotice();
+    updateCelexPasswordBox();
   });
 
   // Deselects all when user clicks "Select None" button
@@ -119,6 +129,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fieldCheckboxes.forEach((checkbox) => (checkbox.checked = false));
     licenseCheckboxes.forEach((checkbox) => (checkbox.checked = false));
     updateLicenseNotice();
+    updateCelexPasswordBox();
   });
 
   // Updates the source and license checkboxes based on the field checkboxes
@@ -147,6 +158,7 @@ document.addEventListener("DOMContentLoaded", function () {
         );
       }
       updateLicenseNotice();
+      updateCelexPasswordBox();
     });
 
     const relatedFieldCheckboxes = sourceCheckbox
@@ -166,12 +178,14 @@ document.addEventListener("DOMContentLoaded", function () {
         );
         licenseCheckbox.checked = true;
       }
+      updateCelexPasswordBox();
     }
     updateSourceCheckbox();
 
     // Updates the source checkbox whenever a field checkbox changes
     relatedFieldCheckboxes.forEach((fieldCheckbox) => {
       fieldCheckbox.addEventListener("change", updateSourceCheckbox);
+      fieldCheckbox.addEventListener("change", updateCelexPasswordBox);
     });
   });
 
@@ -184,6 +198,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (fieldCheckbox.checked) {
         sourceCheckbox.checked = true;
       }
+      updateCelexPasswordBox();
     });
   });
 
@@ -206,6 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
       }
+      updateCelexPasswordBox();
     });
   });
 });

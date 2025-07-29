@@ -2,6 +2,8 @@
 
 set -eou pipefail
 
+pip install -r requirements.txt
+
 # Populates the DB.
 python -m citylex.populate --all-free 
 
