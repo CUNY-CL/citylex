@@ -1,227 +1,159 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const selectAllButton = document.getElementById("selectAll");
-  const selectNoneButton = document.getElementById("selectNone");
-  const sourceCheckboxes = document.querySelectorAll("input[name='sources[]']");
-  const fieldCheckboxes = document.querySelectorAll("input[name='fields[]']");
-  const licenseCheckboxes = document.querySelectorAll("input[name='licenses']");
-  const licenseNames = {
-    BY: "CC BY 4.0",
-    NC: "CC BY-NC 4.0",
-    GNU: "GNU GPL v3",
-    apache: "Apache 2.0",
-    celex: "CELEX 2 User Agreement",
-  };
-  const sourceLicenseMap = {
-    subtlexus: "NC",
-    subtlexuk: "NC",
-    UDLexicons: "GNU",
-    UniMorph: "BY",
-    "WikiPron US": "apache",
-    "WikiPron UK": "apache",
-    ELP: "NC",
-    celexfreq: "celex",
-    celexfeat: "celex",
-    celexpron: "celex",
-  };
-  const defaultFieldMap = {
-    subtlexuk: "subtlexuk_raw_frequency",
-    subtlexus: "subtlexus_raw_frequency",
-    UDLexicons: "udlex_UDtags",
-    UniMorph: "um_UMtags",
-    "WikiPron US": "wikipronus_IPA",
-    "WikiPron UK": "wikipronuk_IPA",
-    ELP: "elp_segmentation",
-    celexfreq: "celexfreq_raw_frequency",
-    celexfeat: "celex_CELEXtags",
-    celexpron: "celex_DISC",
-  };
-  const celexFields = [
-    "celexfreq_raw_frequency",
-    "celexfreq_freq_per_million",
-    "celexfreq_logprob",
-    "celexfreq_zipf",
-    "celex_UDtags",
-    "celex_UMtags",
-    "celex_CELEXtags",
-    "celex_DISC",
-  ];
-
-  function updateLicenseNotice() {
-    const selectedSources = Array.from(sourceCheckboxes).filter(
-      (cb) => cb.checked
-    );
-    const requiredLicenses = new Set(
-      selectedSources.map((cb) => sourceLicenseMap[cb.value])
-    );
-    const licenseNotice = document.getElementById("license-notice");
-    if (requiredLicenses.size > 0) {
-      const licenseList = Array.from(requiredLicenses)
-        .map((license) => {
-          const name = licenseNames[license];
-          // Set the URL for each license using a switch statement.
-          let url = "";
-          switch (license) {
+  const e = document.getElementById("selectAll"),
+    c = document.getElementById("selectNone"),
+    n = document.querySelectorAll("input[name='sources[]']"),
+    t = document.querySelectorAll("input[name='fields[]']"),
+    r = document.querySelectorAll("input[name='licenses']"),
+    l = {
+      BY: "CC BY 4.0",
+      NC: "CC BY-NC 4.0",
+      GNU: "GNU GPL v3",
+      apache: "Apache 2.0",
+      celex: "CELEX 2 User Agreement",
+    },
+    o = {
+      subtlexus: "NC",
+      subtlexuk: "NC",
+      UDLexicons: "GNU",
+      UniMorph: "BY",
+      "WikiPron US": "apache",
+      "WikiPron UK": "apache",
+      ELP: "NC",
+      celexfreq: "celex",
+      celexfeat: "celex",
+      celexpron: "celex",
+    },
+    s = {
+      subtlexuk: "subtlexuk_raw_frequency",
+      subtlexus: "subtlexus_raw_frequency",
+      UDLexicons: "udlex_UDtags",
+      UniMorph: "um_UMtags",
+      "WikiPron US": "wikipronus_IPA",
+      "WikiPron UK": "wikipronuk_IPA",
+      ELP: "elp_segmentation",
+      celexfreq: "celexfreq_raw_frequency",
+      celexfeat: "celex_CELEXtags",
+      celexpron: "celex_DISC",
+    },
+    a = [
+      "celexfreq_raw_frequency",
+      "celexfreq_freq_per_million",
+      "celexfreq_logprob",
+      "celexfreq_zipf",
+      "celex_UDtags",
+      "celex_UMtags",
+      "celex_CELEXtags",
+      "celex_DISC",
+    ];
+  function i() {
+    const e = Array.from(n).filter((e) => e.checked),
+      c = new Set(e.map((e) => o[e.value])),
+      t = document.getElementById("license-notice");
+    if (c.size > 0) {
+      const e = Array.from(c)
+        .map((e) => {
+          const c = l[e];
+          let n = "";
+          switch (e) {
             case "BY":
-              url = "https://creativecommons.org/licenses/by/4.0/";
+              n = "https://creativecommons.org/licenses/by/4.0/";
               break;
             case "NC":
-              url = "https://creativecommons.org/licenses/by-nc/4.0/";
+              n = "https://creativecommons.org/licenses/by-nc/4.0/";
               break;
             case "GNU":
-              url = "https://www.gnu.org/licenses/gpl-3.0.en.html";
+              n = "https://www.gnu.org/licenses/gpl-3.0.en.html";
               break;
             case "apache":
-              url = "https://www.apache.org/licenses/LICENSE-2.0.html";
+              n = "https://www.apache.org/licenses/LICENSE-2.0.html";
               break;
             case "celex":
-              url =
+              n =
                 "https://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf";
-              break;
-            default:
-              break;
           }
-          // If a URL is set, return the license name wrapped as a hyperlink.
-          if (url) {
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${name}</a>`;
-          } else {
-            return name;
-          }
+          return n
+            ? `<a href="${n}" target="_blank" rel="noopener noreferrer">${c}</a>`
+            : c;
         })
         .join(", ");
-
-      licenseNotice.innerHTML = `By clicking "Generate and Download," you agree to the terms of the following licenses: ${licenseList}`;
-    } else {
-      licenseNotice.innerHTML = "";
+      t.innerHTML = `By clicking "Generate and Download," you agree to the terms of the following licenses: ${e}`;
+    } else t.innerHTML = "";
+  }
+  function u() {
+    if ("undefined" != typeof PASSWORD_SET && PASSWORD_SET) {
+      const e = Array.from(t).some((e) => a.includes(e.value) && e.checked),
+        c = document.getElementById("celex-password-section");
+      c && (c.style.display = e ? "block" : "none");
     }
   }
-
-  // Show/hide CELEX password box based on CELEX source selection
-  function updateCelexPasswordBox() {
-    if (typeof PASSWORD_SET !== "undefined" && PASSWORD_SET) {
-      const anyCelexFieldChecked = Array.from(fieldCheckboxes).some(
-        (cb) => celexFields.includes(cb.value) && cb.checked
-      );
-      const celexSection = document.getElementById("celex-password-section");
-      if (celexSection) {
-        celexSection.style.display = anyCelexFieldChecked ? "block" : "none";
-      }
-    }
-  }
-
-  // Call on load and whenever a source is changed
-  updateCelexPasswordBox();
-  sourceCheckboxes.forEach((cb) => {
-    cb.addEventListener("change", updateCelexPasswordBox);
-  });
-
-  // Selects all when user clicks "Select All" button
-  selectAllButton.addEventListener("click", function () {
-    sourceCheckboxes.forEach((checkbox) => (checkbox.checked = true));
-    fieldCheckboxes.forEach((checkbox) => (checkbox.checked = true));
-    licenseCheckboxes.forEach((checkbox) => (checkbox.checked = true));
-    updateLicenseNotice();
-    updateCelexPasswordBox();
-  });
-
-  // Deselects all when user clicks "Select None" button
-  selectNoneButton.addEventListener("click", function () {
-    sourceCheckboxes.forEach((checkbox) => (checkbox.checked = false));
-    fieldCheckboxes.forEach((checkbox) => (checkbox.checked = false));
-    licenseCheckboxes.forEach((checkbox) => (checkbox.checked = false));
-    updateLicenseNotice();
-    updateCelexPasswordBox();
-  });
-
-  // Updates the source and license checkboxes based on the field checkboxes
-  sourceCheckboxes.forEach((sourceCheckbox) => {
-    sourceCheckbox.addEventListener("change", function () {
-      const licenseValue = sourceLicenseMap[sourceCheckbox.value];
-      const licenseCheckbox = document.querySelector(
-        `input[name='licenses'][value='${licenseValue}']`
-      );
-      const relatedFieldCheckboxes = sourceCheckbox
-        .closest("li")
-        .querySelectorAll("input[name='fields[]']");
-      if (sourceCheckbox.checked) {
-        // Check corresponding license checkbox and default subfield when a source is checked
-        if (licenseCheckbox) {
-          licenseCheckbox.checked = true;
+  u(),
+    n.forEach((e) => {
+      e.addEventListener("change", u);
+    }),
+    e.addEventListener("click", function () {
+      n.forEach((e) => (e.checked = !0)),
+        t.forEach((e) => (e.checked = !0)),
+        r.forEach((e) => (e.checked = !0)),
+        i(),
+        u();
+    }),
+    c.addEventListener("click", function () {
+      n.forEach((e) => (e.checked = !1)),
+        t.forEach((e) => (e.checked = !1)),
+        r.forEach((e) => (e.checked = !1)),
+        i(),
+        u();
+    }),
+    n.forEach((e) => {
+      e.addEventListener("change", function () {
+        const c = o[e.value],
+          n = document.querySelector(`input[name='licenses'][value='${c}']`),
+          t = e.closest("li").querySelectorAll("input[name='fields[]']");
+        if (e.checked) {
+          n && (n.checked = !0);
+          const c = s[e.value];
+          t.forEach((e) => {
+            e.checked = e.value === c;
+          });
+        } else t.forEach((e) => (e.checked = !1));
+        i(), u();
+      });
+      const c = e.closest("li").querySelectorAll("input[name='fields[]']");
+      function n() {
+        const n = Array.from(c).some((e) => e.checked);
+        if (((e.checked = n), n)) {
+          const c = o[e.value];
+          document.querySelector(
+            `input[name='licenses'][value='${c}']`
+          ).checked = !0;
         }
-        const defaultFieldValue = defaultFieldMap[sourceCheckbox.value];
-        relatedFieldCheckboxes.forEach((fieldCheckbox) => {
-          fieldCheckbox.checked = fieldCheckbox.value === defaultFieldValue;
+        u();
+      }
+      n(),
+        c.forEach((e) => {
+          e.addEventListener("change", n), e.addEventListener("change", u);
         });
-      } else {
-        // Uncheck all subfields when source is unchecked
-        relatedFieldCheckboxes.forEach(
-          (fieldCheckbox) => (fieldCheckbox.checked = false)
-        );
-      }
-      updateLicenseNotice();
-      updateCelexPasswordBox();
+    }),
+    t.forEach((e) => {
+      e.addEventListener("change", function () {
+        const c = e.closest("li").querySelector("input[name='sources[]']");
+        e.checked && (c.checked = !0), u();
+      });
+    }),
+    r.forEach((e) => {
+      e.addEventListener("change", function () {
+        if (!e.checked)
+          for (const [c, n] of Object.entries(o))
+            if (n === e.value) {
+              const e = document.querySelector(
+                `input[name='sources[]'][value='${c}']`
+              );
+              e.checked = !1;
+              e.closest("li")
+                .querySelectorAll("input[name='fields[]']")
+                .forEach((e) => (e.checked = !1));
+            }
+        u();
+      });
     });
-
-    const relatedFieldCheckboxes = sourceCheckbox
-      .closest("li")
-      .querySelectorAll("input[name='fields[]']");
-
-    // Updates the source checkbox based on the field checkboxes
-    function updateSourceCheckbox() {
-      const anyFieldChecked = Array.from(relatedFieldCheckboxes).some(
-        (field) => field.checked
-      );
-      sourceCheckbox.checked = anyFieldChecked;
-      if (anyFieldChecked) {
-        const licenseValue = sourceLicenseMap[sourceCheckbox.value];
-        const licenseCheckbox = document.querySelector(
-          `input[name='licenses'][value='${licenseValue}']`
-        );
-        licenseCheckbox.checked = true;
-      }
-      updateCelexPasswordBox();
-    }
-    updateSourceCheckbox();
-
-    // Updates the source checkbox whenever a field checkbox changes
-    relatedFieldCheckboxes.forEach((fieldCheckbox) => {
-      fieldCheckbox.addEventListener("change", updateSourceCheckbox);
-      fieldCheckbox.addEventListener("change", updateCelexPasswordBox);
-    });
-  });
-
-  // Checks the source checkbox when a field checkbox is checked
-  fieldCheckboxes.forEach((fieldCheckbox) => {
-    fieldCheckbox.addEventListener("change", function () {
-      const sourceCheckbox = fieldCheckbox
-        .closest("li")
-        .querySelector("input[name='sources[]']");
-      if (fieldCheckbox.checked) {
-        sourceCheckbox.checked = true;
-      }
-      updateCelexPasswordBox();
-    });
-  });
-
-  // Unchecks the source checkbox when a license checkbox is unchecked
-  licenseCheckboxes.forEach((licenseCheckbox) => {
-    licenseCheckbox.addEventListener("change", function () {
-      if (!licenseCheckbox.checked) {
-        for (const [source, license] of Object.entries(sourceLicenseMap)) {
-          if (license === licenseCheckbox.value) {
-            const sourceCheckbox = document.querySelector(
-              `input[name='sources[]'][value='${source}']`
-            );
-            sourceCheckbox.checked = false;
-            const fieldCheckboxes = sourceCheckbox
-              .closest("li")
-              .querySelectorAll("input[name='fields[]']");
-            fieldCheckboxes.forEach(
-              (fieldCheckbox) => (fieldCheckbox.checked = false)
-            );
-          }
-        }
-      }
-      updateCelexPasswordBox();
-    });
-  });
 });
