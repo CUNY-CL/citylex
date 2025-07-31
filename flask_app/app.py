@@ -12,11 +12,12 @@ from flask import Flask, render_template, request, send_file
 from citylex import features, zipf
 
 DB_PATH = "citylex.db"
+FREQUENCY_PRECISION = 6
 
 
 def _neg_logprob(raw_freq, total_words):
     if raw_freq > 0:
-        return round(-math.log10(raw_freq / total_words), 6)
+        return -math.log10(raw_freq / total_words)
     else:
         return math.inf
 
@@ -82,16 +83,16 @@ def _subtlex_data_to_csv(
         raw_freq = row[-1]
         row_dict = dict(zip(columns, row))
         if f"{field_prefix}_logprob" in selected_fields:
-            row_dict["-logprob"] = _neg_logprob(raw_freq, total_words)
+            neg_logprob = _neg_logprob(raw_freq, total_words)
+            row_dict["-logprob"] = round(neg_logprob, FREQUENCY_PRECISION)
         if f"{field_prefix}_zipf" in selected_fields:
             zipf_value = (
                 zipf.zipf_scale(raw_freq, total_words)
                 if total_words and total_words > 0
                 else None
             )
-            row_dict["zipf"] = (
-                round(zipf_value, 6) if zipf_value is not None else None
-            )
+            if zipf_value is not None:
+                row_dict["zipf"] = round(zipf_value, FREQUENCY_PRECISION)
         writer.writerow(row_dict)
 
 
@@ -130,7 +131,7 @@ def post():
     if os.environ.get("CELEX_PASSWORD"):
         celex_sources_selected = any(
             s in selected_sources
-            for s in ["celexfreq", "CELEX_feat", "CELEX_pron"]
+            for s in ["celexfreq", "celexfeat", "celexpron"]
         )
         if celex_sources_selected:
             celex_password_env = os.environ.get("CELEX_PASSWORD")
@@ -232,7 +233,7 @@ def post():
         # Fetches and writes CELEX data.
         if any(
             s in selected_sources
-            for s in ["celexfreq", "CELEX_feat", "CELEX_pron"]
+            for s in ["celexfreq", "celexfeat", "celexpron"]
         ):
             celex_wordforms_data = {}
             # Fetches CELEX frequencies if selected.
@@ -263,22 +264,18 @@ def post():
                             "freq_per_million"
                         ] = freq_per_million
                     if "celexfreq_logprob" in selected_fields:
-                        celex_wordforms_data[wordform]["-logprob"] = (
-                            _neg_logprob(raw_frequency, celex_total_words)
-                        )
+                        neg_logprob = _neg_logprob(raw_frequency, celex_total_words)
+                        celex_wordforms_data[wordform]["-logprob"] = round(neg_logprob, FREQUENCY_PRECISION)
                     if "celexfreq_zipf" in selected_fields:
                         zipf_value = (
                             zipf.zipf_scale(raw_frequency, celex_total_words)
                             if celex_total_words > 0
                             else None
                         )
-                        celex_wordforms_data[wordform]["zipf"] = (
-                            round(zipf_value, 6)
-                            if zipf_value is not None
-                            else None
-                        )
+                        if zipf_value is not None:
+                            celex_wordforms_data[wordform]["zipf"] = round(zipf_value, FREQUENCY_PRECISION)
             # Fetches CELEX features if selected.
-            if "CELEX_feat" in selected_sources:
+            if "celexfeat" in selected_sources:
                 cursor.execute(
                     "SELECT wordform, tags FROM features WHERE source = 'CELEX'"
                 )
@@ -302,7 +299,7 @@ def post():
                             )
                         )
             # Fetches CELEX pronunciations if selected.
-            if "CELEX_pron" in selected_sources:
+            if "celexpron" in selected_sources:
                 cursor.execute(
                     "SELECT wordform, pronunciation FROM pronunciation WHERE source = 'CELEX' AND standard = 'DISC'"
                 )
@@ -455,7 +452,7 @@ def post():
                         add_to_aggregated_data(
                             wordform,
                             f"{source} (-log10 probability)",
-                            logprob,
+                            round(logprob, FREQUENCY_PRECISION),
                         )
                     if f"{source_fieldname}_zipf" in selected_fields:
                         zipf_val = (
@@ -467,7 +464,7 @@ def post():
                             wordform,
                             f"{source} (Zipf scale)",
                             (
-                                round(zipf_val, 6)
+                                round(zipf_val, FREQUENCY_PRECISION)
                                 if zipf_val is not None
                                 else None
                             ),
@@ -519,7 +516,7 @@ def post():
                         wordform, "UniMorph (CELEX tags)", celex_tags
                     )
         # Processes CELEX features data.
-        if "CELEX_feat" in selected_sources:
+        if "celexfeat" in selected_sources:
             cursor.execute(
                 "SELECT wordform, tags FROM features WHERE source = 'CELEX'"
             )
@@ -560,7 +557,7 @@ def post():
         for source_key, field_prefix, display_name in [
             ("WikiPron US", "wikipronus", "WikiPron US (IPA)"),
             ("WikiPron UK", "wikipronuk", "WikiPron UK (IPA)"),
-            ("CELEX_pron", "celex_DISC", "CELEX (DISC)"),
+            ("celexpron", "celex_DISC", "CELEX (DISC)"),
         ]:
             if source_key in selected_sources:
                 # For CELEX, filters by standard = 'DISC'.

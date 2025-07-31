@@ -20,8 +20,8 @@ document.addEventListener("DOMContentLoaded", function () {
     "WikiPron UK": "apache",
     ELP: "NC",
     celexfreq: "celex",
-    CELEX_feat: "celex",
-    CELEX_pron: "celex",
+    celexfeat: "celex",
+    celexpron: "celex",
   };
   const defaultFieldMap = {
     subtlexuk: "subtlexuk_raw_frequency",
@@ -32,8 +32,8 @@ document.addEventListener("DOMContentLoaded", function () {
     "WikiPron UK": "wikipronuk_IPA",
     ELP: "elp_segmentation",
     celexfreq: "celexfreq_raw_frequency",
-    CELEX_feat: "celex_CELEXtags",
-    CELEX_pron: "celex_DISC",
+    celexfeat: "celex_CELEXtags",
+    celexpron: "celex_DISC",
   };
   const celexFields = [
     "celexfreq_raw_frequency",
