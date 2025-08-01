@@ -86,13 +86,7 @@ def _subtlex_data_to_csv(
             neg_logprob = _neg_logprob(raw_freq, total_words)
             row_dict["-logprob"] = round(neg_logprob, FREQUENCY_PRECISION)
         if f"{field_prefix}_zipf" in selected_fields:
-            zipf_value = (
-                zipf.zipf_scale(raw_freq, total_words)
-                if total_words and total_words > 0
-                else None
-            )
-            if zipf_value is not None:
-                row_dict["zipf"] = round(zipf_value, FREQUENCY_PRECISION)
+            row_dict["zipf"] = round(zipf.zipf_scale(raw_freq, total_words), FREQUENCY_PRECISION)
         writer.writerow(row_dict)
 
 
