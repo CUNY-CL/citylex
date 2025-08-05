@@ -27,4 +27,4 @@ def zipf_scale(count: int, total: int) -> float:
     Returns:
         Zipf scale.
     """
-    return math.log10(count + 1) - math.log10(total) + 9.0
+    return math.log10(count) - math.log10(total) + 9.0 if count > 0 else 0

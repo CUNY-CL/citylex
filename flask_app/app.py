@@ -73,8 +73,6 @@ def _subtlex_data_to_csv(
             (source_name,),
         )
         total_words = cursor.fetchone()[0] or 0
-    else:
-        total_words = None
     # Fetches frequency data and writes rows.
     cursor.execute(
         f"SELECT {', '.join(columns)}, raw_frequency FROM frequency WHERE source = '{source_name}'"
@@ -261,11 +259,7 @@ def post():
                         neg_logprob = _neg_logprob(raw_frequency, celex_total_words)
                         celex_wordforms_data[wordform]["-logprob"] = round(neg_logprob, FREQUENCY_PRECISION)
                     if "celexfreq_zipf" in selected_fields:
-                        zipf_value = (
-                            zipf.zipf_scale(raw_frequency, celex_total_words)
-                            if celex_total_words > 0
-                            else None
-                        )
+                        zipf_value = zipf.zipf_scale(raw_frequency, celex_total_words)
                         if zipf_value is not None:
                             celex_wordforms_data[wordform]["zipf"] = round(zipf_value, FREQUENCY_PRECISION)
             # Fetches CELEX features if selected.
@@ -449,11 +443,7 @@ def post():
                             round(logprob, FREQUENCY_PRECISION),
                         )
                     if f"{source_fieldname}_zipf" in selected_fields:
-                        zipf_val = (
-                            zipf.zipf_scale(raw_frequency, total_words)
-                            if total_words and total_words > 0
-                            else None
-                        )
+                        zipf_val = zipf.zipf_scale(raw_frequency, total_words)
                         add_to_aggregated_data(
                             wordform,
                             f"{source} (Zipf scale)",

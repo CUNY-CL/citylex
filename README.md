@@ -80,6 +80,16 @@ Optionally, to password protect access to CELEX data within the web application,
 export CELEX_PASSWORD="your_desired_password"
 ```
 
+## Testing
+
+To execute the unit tests, run:
+
+     pytest -vvv tests
+
+To run an integration test for the web app, run:
+
+    tests/startup_test.sh
+
 ## For more information
 
 - [`citylex.bib`](citylex.bib) for references to the data sources used
