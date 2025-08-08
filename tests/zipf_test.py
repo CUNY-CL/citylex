@@ -7,7 +7,7 @@ from citylex import zipf
     "count,total,expected",
     [
         # Threshold values per million words.
-        (0, 1_000_000, 0.0),
+        (0.0, 1_000_000, 0.0),
         (0.01, 1_000_000, 1.0),
         (0.1, 1_000_000, 2.0),
         (1, 1_000_000, 3.0),
