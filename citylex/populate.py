@@ -6,6 +6,7 @@ import io
 import logging
 import os
 import sqlite3
+import tarfile
 import unicodedata
 import zipfile
 
@@ -32,10 +33,19 @@ def _request_url_resource(url: str) -> Iterator[str]:
         yield line.decode("utf8", "ignore")
 
 
-def _request_url_mock_file(url: str) -> io.BytesIO:
+def _request_url_mock_file(url: str, use_headers: bool = False) -> io.BytesIO:
     """Requests a URL and returns a mock file."""
     logging.info("Requesting URL: %s", url)
-    response = requests.get(url)
+    headers = None
+    if use_headers:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15 Ddg/17.6',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+        }
+    response = requests.get(url, headers=headers)
     response.raise_for_status()
     return io.BytesIO(response.content)
 
@@ -47,6 +57,15 @@ def _request_url_zip_resource(url: str, path: str) -> Iterator[str]:
     with zipfile.ZipFile(mock_zip_file, "r").open(path, "r") as source:
         for line in source:
             yield line.decode("utf8", "ignore")
+
+
+def _request_url_tar_resource(url: str, path: str) -> Iterator[str]:
+    """Requests a tar.gz file by URL and the path to the desired file."""
+    mock_tar_file = _request_url_mock_file(url, use_headers=True)
+    with tarfile.open(fileobj=mock_tar_file, mode="r:") as tar:
+        with tar.extractfile(path) as source:
+            for line in source:
+                yield line.decode("utf8", "ignore")
 
 
 # CELEX.
@@ -78,33 +97,33 @@ CELEX_FEATURE_MAP = {
 # * "a2S" and "a3S": no need to distinguish between this and "a1S".
 
 
-def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
+def _celex(conn: sqlite3.Connection) -> None:
     """Collects CELEX data and inserts it into database."""
     cursor = conn.cursor()
     # Frequencies.
     counter = 0
-    path = os.path.join(celex_path, "english/efw/efw.cd")
-    with open(path, "r") as source:
-        for line in source:
-            row = _parse_celex_row(line)
-            wordform = _normalize(row[1])
-            # Skips multiword entries.
-            if " " in wordform:
-                continue
-            freq = int(row[3])
-            # Inserts data with a placeholder for freq_per_million.
-            cursor.execute(
-                """
-                INSERT INTO frequency (
-                    wordform,
-                    source,
-                    raw_frequency,
-                    freq_per_million
-                    ) VALUES (?, ?, ?, ?)
-                """,
-                (wordform, "CELEX", freq, 0),
-            )
-            counter += 1
+    url = "https://wellformedness.com/data/celex2-for-citylex.tar.gz"
+    source = _request_url_tar_resource(url, "celex2/english/efw/efw.cd")
+    for line in source:
+        row = _parse_celex_row(line)
+        wordform = _normalize(row[1])
+        # Skips multiword entries.
+        if " " in wordform:
+            continue
+        freq = int(row[3])
+        # Inserts data with a placeholder for freq_per_million.
+        cursor.execute(
+            """
+            INSERT INTO frequency (
+                wordform,
+                source,
+                raw_frequency,
+                freq_per_million
+                ) VALUES (?, ?, ?, ?)
+            """,
+            (wordform, "CELEX", freq, 0),
+        )
+        counter += 1
     assert counter, "No data read"
     cursor.execute("SELECT SUM(raw_frequency) FROM frequency WHERE source = 'CELEX'")
     total_freq = cursor.fetchone()[0]
@@ -122,81 +141,78 @@ def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
     logging.info(f"Collected {counter:,} CELEX frequencies")
     # Morphology.
     # Reads lemma information.
-    path = os.path.join(celex_path, "english/eml/eml.cd")
     lemma_info: Dict[int, str] = {}
     counter = 0
-    with open(path, "r") as source:
-        for line in source:
-            row = _parse_celex_row(line)
-            li = int(row[0])
-            lemma = _normalize(row[1])
-            if " " in lemma:
-                continue
-            # Previous attempts to insert partial rows resulted in slow
-            # performance, so lemmas are loaded into Python memory
-            # for efficiency.
-            lemma_info[li] = lemma
-            counter += 1
+    source = _request_url_tar_resource(url, "celex2/english/eml/eml.cd")
+    for line in source:
+        row = _parse_celex_row(line)
+        li = int(row[0])
+        lemma = _normalize(row[1])
+        if " " in lemma:
+            continue
+        # Previous attempts to insert partial rows resulted in slow
+        # performance, so lemmas are loaded into Python memory
+        # for efficiency.
+        lemma_info[li] = lemma
+        counter += 1
     # Reads wordform information.
     counter = 0
-    path = os.path.join(celex_path, "english/emw/emw.cd")
-    with open(path, "r") as source:
-        for line in source:
-            row = _parse_celex_row(line)
-            wordform = _normalize(row[1])
-            if " " in wordform:
-                continue
-            li = int(row[3])
-            # There are a few wordforms whose lemma IDs point to nothing. This
-            # catches it.
-            try:
-                lemma = lemma_info[li]
-            except KeyError:
-                logging.debug(
-                    "Ignoring wordform missing lemma ID: %s (%d)", wordform, li
-                )
-                continue
-            celex_tag = row[4]
-            cursor.execute(
-                """
-                INSERT INTO features (
-                    wordform,
-                    source,
-                    lemma,
-                    tags
-                    ) VALUES (?, ?, ?, ?)
-                """,
-                (wordform, "CELEX", lemma, celex_tag),
+    source = _request_url_tar_resource(url, "celex2/english/emw/emw.cd")
+    for line in source:
+        row = _parse_celex_row(line)
+        wordform = _normalize(row[1])
+        if " " in wordform:
+            continue
+        li = int(row[3])
+        # There are a few wordforms whose lemma IDs point to nothing. This
+        # catches it.
+        try:
+            lemma = lemma_info[li]
+        except KeyError:
+            logging.debug(
+                "Ignoring wordform missing lemma ID: %s (%d)", wordform, li
             )
-            counter += 1
+            continue
+        celex_tag = row[4]
+        cursor.execute(
+            """
+            INSERT INTO features (
+                wordform,
+                source,
+                lemma,
+                tags
+                ) VALUES (?, ?, ?, ?)
+            """,
+            (wordform, "CELEX", lemma, celex_tag),
+        )
+        counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CELEX analyses")
     # Pronunciations.
     counter = 0
-    path = os.path.join(celex_path, "english/epw/epw.cd")
-    with open(path, "r") as source:
-        for line in source:
-            row = _parse_celex_row(line)
-            wordform = _normalize(row[1])
-            # Throws out multiword entries.
-            if " " in wordform:
-                continue
-            # Eliminates syllable boundaries, known to be inconsistent.
-            pron = row[6].replace("-", "")
-            cursor.execute(
-                """
-                INSERT INTO pronunciation (
-                    wordform,
-                    dialect,
-                    source,
-                    standard,
-                    pronunciation,
-                    is_observed
-                    ) VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                (wordform, "UK", "CELEX", "DISC", pron, True),
-            )
-            counter += 1
+    source = _request_url_tar_resource(url, "celex2/english/epw/epw.cd")
+    for line in source:
+        row = _parse_celex_row(line)
+        wordform = _normalize(row[1])
+        # Throws out multiword entries.
+        if " " in wordform:
+            continue
+        # Eliminates syllable boundaries, known to be inconsistent.
+        pron = row[6].replace("-", "")
+        cursor.execute(
+            """
+            INSERT INTO pronunciation (
+                wordform,
+                dialect,
+                source,
+                standard,
+                pronunciation,
+                is_observed
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (wordform, "UK", "CELEX", "DISC", pron, True),
+        )
+        counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CELEX pronunciations")
     conn.commit()
@@ -489,10 +505,6 @@ def main():
         "http://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf",
     )
     parser.add_argument(
-        "--celex-path",
-        help="path to CELEX directory (usually ends in `celex2`)",
-    )
-    parser.add_argument(
         "--elp",
         action="store_true",
         help="extract ELP data (CC BY-NC 4.0): "
@@ -589,10 +601,7 @@ def main():
     )
     conn.commit()
     if args.celex:
-        if not args.celex_path:
-            logging.error("CELEX requested but --celex_path was not specified")
-            exit(1)
-        _celex(conn, args.celex_path)
+        _celex(conn)
     if args.all_free or args.elp:
         _elp(conn)
     if args.all_free or args.subtlex_uk:
