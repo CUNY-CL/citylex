@@ -21,17 +21,17 @@ _map_tuples = [
     # Comparative adjective.
     ("c", "ADJ;CMPR", "ADJ|Degree=Cmp"),
     # Superlative adjective.
-    ("s", "ADJ;RL", "ADJ|Degree=Sup"),
+    ("s", "ADJ;SPRL", "ADJ|Degree=Sup"),
     # Infinitive.
-    ("i", "V;NFIN", "VERB|VerbForm=Inf"),
+    ("i", "V;NFIN;IMP+SBJV", "VERB|VerbForm=Inf"),
     # Present participle.
-    ("pe", "V.PTCP;PRS", "VERB|Tense=Pres|VerbForm=Part"),
+    ("pe", "V;V.PTCP;PRS", "VERB|Tense=Pres|VerbForm=Part"),
     # Past participle.
-    ("pa", "V.PTCP;PST", "VERB|Tense=Past|VerbForm=Part"),
+    ("pa", "V;V.PTCP;PST", "VERB|Tense=Past|VerbForm=Part"),
     # Simple past.
     ("a1S", "V;PST", "VERB|Tense=Past"),
     # 3sg present.
-    ("e3S", "V;SG;3;PRS", "VERB|Number=Sing|Person=3|Tense=Pres"),
+    ("e3S", ["V;PRS;3;SG"], "VERB|Number=Sing|Person=3|Tense=Pres"),
     # Noun singular.
     (
         "S",

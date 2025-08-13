@@ -1,0 +1,218 @@
+.content-body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #fdf7f7;
+
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+}
+
+li {
+  list-style-type: none;
+}
+
+form > li > ul {
+  padding-left: 0;
+  margin-left: 0;
+}
+
+form button[type="submit"] {
+  display: block;
+  margin: 1em 0;
+}
+
+#license-notice {
+  display: block;
+  align-items: center;
+  text-align: center;
+  min-height: 2em;
+  margin: 1em 0;
+  font-size: 0.7em;
+  width: 90%;
+  max-width: 1000px;
+  line-height: 1.4;
+  position: relative;
+}
+
+.footer-text {
+  width: 90%;
+  max-width: 1000px;
+  text-align: center;
+  margin-top: 40px;
+  padding: 20px 0;
+  font-size: 0.9em;
+  color: #666;
+}
+
+#celex-password-section {
+  margin-top: 30px;
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fdfdfd;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#celex-password-section h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #333;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.celex-password-input-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+#celex_password {
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 1em;
+  font-family: "Poppins", sans-serif;
+}
+
+#celex-password-section label {
+  display: block;
+  font-size: 0.9em;
+  color: #666;
+  line-height: 1.5;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.buttons {
+  margin-top: 25px;
+  margin-bottom: 25px;
+}
+
+form > input[type="radio"] {
+  margin-right: 5px;
+  margin-bottom: 15px;
+}
+
+/******************************************************************/
+/* Imported font family - Poppins */
+.poppins-thin {
+  font-family: "Poppins", sans-serif;
+  font-weight: 100;
+  font-style: normal;
+}
+
+.poppins-extralight {
+  font-family: "Poppins", sans-serif;
+  font-weight: 200;
+  font-style: normal;
+}
+
+.poppins-light {
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.poppins-regular {
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.poppins-medium {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.poppins-semibold {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.poppins-bold {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.poppins-extrabold {
+  font-family: "Poppins", sans-serif;
+  font-weight: 800;
+  font-style: normal;
+}
+
+.poppins-black {
+  font-family: "Poppins", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.poppins-thin-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 100;
+  font-style: italic;
+}
+
+.poppins-extralight-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 200;
+  font-style: italic;
+}
+
+.poppins-light-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.poppins-regular-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.poppins-medium-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.poppins-semibold-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-style: italic;
+}
+
+.poppins-bold-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-style: italic;
+}
+
+.poppins-extrabold-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 800;
+  font-style: italic;
+}
+
+.poppins-black-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 900;
+  font-style: italic;
+}

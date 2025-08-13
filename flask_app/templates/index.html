@@ -1,0 +1,380 @@
+<html>
+  <head>
+    <title>CityLex: a free English lexical database</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" type="text/css" href={{ url_for('static',
+    filename='style.css') }}/>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+    <script>
+      var PASSWORD_SET = {{ password_set | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </head>
+
+  <body class="content-body poppins-regular">
+    <h1>
+      CityLex: a free English lexical database
+      <span class="material-symbols-outlined"> location_city </span>
+    </h1>
+    <p>
+      A comprehensive tool for exploring English words and their properties.
+    </p>
+
+    <h2>Data sources</h2>
+
+    <form method="post" action="/">
+      <li>
+        <h3 class="table-type">Frequencies:</h3>
+        <ul>
+          <li>
+            <input type="checkbox" name="sources[]" value="subtlexuk" />
+            SUBTLEX-UK
+            <a href="https://creativecommons.org/licenses/by-nc/4.0/"
+              >(CC BY-NC 4.0)</a
+            >
+            <ul>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="subtlexuk_raw_frequency"
+                />
+                Raw frequency
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="subtlexuk_freq_per_million"
+                />
+                Frequency per million words
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="subtlexuk_logprob"
+                />
+                -log<sub>10</sub> probability
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="subtlexuk_zipf" />
+                <a
+                  href="https://pubmed.ncbi.nlm.nih.gov/24417251/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Zipf scale</a
+                >
+              </li>
+            </ul>
+          </li>
+          <li>
+            <input type="checkbox" name="sources[]" value="subtlexus" />
+            SUBTLEX-US
+            <a href="https://creativecommons.org/licenses/by-nc/4.0/"
+              >(CC BY-NC 4.0)</a
+            >
+            <ul>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="subtlexus_raw_frequency"
+                />
+                Raw frequency
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="subtlexus_freq_per_million"
+                />
+                Frequency per million words
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="subtlexus_logprob"
+                />
+                -log<sub>10</sub> probability
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="subtlexus_zipf" />
+                <a
+                  href="https://pubmed.ncbi.nlm.nih.gov/24417251/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Zipf scale</a
+                >
+              </li>
+            </ul>
+          </li>
+          {% if celex_present %}
+          <li>
+            <input type="checkbox" name="sources[]" value="celexfreq" /> CELEX
+            <a
+              href="https://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf"
+              >(CELEX 2 User Agreement)</a
+            >
+            <ul>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="celexfreq_raw_frequency"
+                />
+                Raw frequency
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="celexfreq_freq_per_million"
+                />
+                Frequency per million words
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="celexfreq_logprob"
+                />
+                -log<sub>10</sub> probability
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="celexfreq_zipf" />
+                <a
+                  href="https://pubmed.ncbi.nlm.nih.gov/24417251/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Zipf scale</a
+                >
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+        </ul>
+      </li>
+      <li>
+        <h3>Morphological features:</h3>
+        <ul>
+          <li>
+            <input type="checkbox" name="sources[]" value="UDLexicons" />
+            UDLexicons [Apertium]
+            <a href="https://www.gnu.org/licenses/gpl-3.0.en.html"
+              >(GNU GPL v3)</a
+            >
+            <ul>
+              <li>
+                <input type="checkbox" name="fields[]" value="udlex_UDtags" />
+                <a href="https://universaldependencies.org/u/feat/all.html"
+                  >Universal Dependency-style tags</a
+                >
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="udlex_UMtags" />
+                <a href="https://unimorph.github.io/schema/"
+                  >UniMorph-style tags</a
+                >
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="udlex_CELEXtags"
+                />
+                <a
+                  href="{{ url_for('static', filename='CELEX_features.pdf') }}"
+                  target="_blank"
+                  >CELEX tags</a
+                >
+              </li>
+            </ul>
+          </li>
+          <li>
+            <input type="checkbox" name="sources[]" value="UniMorph" /> UniMorph
+            <a href="https://creativecommons.org/licenses/by/4.0/"
+              >(CC BY 4.0)</a
+            >
+            <ul>
+              <li>
+                <input type="checkbox" name="fields[]" value="um_UDtags" />
+                <a href="https://universaldependencies.org/u/feat/all.html"
+                  >Universal Dependency-style tags</a
+                >
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="um_UMtags" />
+                <a href="https://unimorph.github.io/schema/"
+                  >UniMorph-style tags</a
+                >
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="um_CELEXtags" />
+                <a
+                  href="{{ url_for('static', filename='CELEX_features.pdf') }}"
+                  target="_blank"
+                  >CELEX tags</a
+                >
+              </li>
+            </ul>
+          </li>
+          {% if celex_present %}
+          <li>
+            <input type="checkbox" name="sources[]" value="celexfeat" /> CELEX
+            <a
+              href="https://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf"
+              >(CELEX 2 User Agreement)</a
+            >
+            <ul>
+              <li>
+                <input type="checkbox" name="fields[]" value="celex_UDtags" />
+                <a href="https://universaldependencies.org/u/feat/all.html"
+                  >Universal Dependency-style tags</a
+                >
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="celex_UMtags" />
+                <a href="https://unimorph.github.io/schema/"
+                  >UniMorph-style tags</a
+                >
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="celex_CELEXtags"
+                />
+                <a
+                  href="{{ url_for('static', filename='CELEX_features.pdf') }}"
+                  target="_blank"
+                  >CELEX tags</a
+                >
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+        </ul>
+      </li>
+      <li>
+        <h3>Morphological segmentations:</h3>
+        <ul>
+          <li>
+            <input type="checkbox" name="sources[]" value="ELP" /> ELP
+            <a href="https://creativecommons.org/licenses/by-nc/4.0/"
+              >(CC BY-NC 4.0)</a
+            >
+            <ul>
+              <li>
+                <input
+                  type="checkbox"
+                  name="fields[]"
+                  value="elp_segmentation"
+                />
+                Segmentation
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="elp_nmorph" />
+                Number of morphs
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <h3>Pronunciations:</h3>
+        <ul>
+          <li>
+            <input type="checkbox" name="sources[]" value="WikiPron US" />
+            WikiPron-US
+            <a href="https://www.apache.org/licenses/LICENSE-2.0.html"
+              >(Apache 2.0)</a
+            >
+            <ul>
+              <li>
+                <input type="checkbox" name="fields[]" value="wikipronus_IPA" />
+                IPA
+              </li>
+            </ul>
+          </li>
+          <li>
+            <input type="checkbox" name="sources[]" value="WikiPron UK" />
+            WikiPron-UK
+            <a href="https://www.apache.org/licenses/LICENSE-2.0.html"
+              >(Apache 2.0)</a
+            >
+            <ul>
+              <li>
+                <input type="checkbox" name="fields[]" value="wikipronuk_IPA" />
+                IPA
+              </li>
+            </ul>
+          </li>
+          {% if celex_present %}
+          <li>
+            <input type="checkbox" name="sources[]" value="celexpron" /> CELEX
+            <a
+              href="https://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf"
+              >(CELEX 2 User Agreement)</a
+            >
+            <ul>
+              <li>
+                <input type="checkbox" name="fields[]" value="celex_DISC" />
+                DISC
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+        </ul>
+      </li>
+
+      <div class="buttons">
+        <button type="button" id="selectAll">Select all</button>
+        <button type="button" id="selectNone">Select none</button>
+      </div>
+
+      <h2>Output format</h2>
+      <input type="radio" name="output_format" value="long" checked /> Long TSV
+      [one record per line] <br />
+      <input type="radio" name="output_format" value="wide" />
+      Wide JSON [one record per word]
+
+      <div id="celex-password-section" style="display: none">
+        <input type="password" id="celex_password" name="celex_password" />
+        <label for="celex_password"
+          >Please enter the password to access CELEX data (alternatively,
+          deselect CELEX checkboxes)</label
+        >
+      </div>
+
+      <button type="submit">Generate and download</button>
+    </form>
+  </body>
+
+  <!-- <h2>Licenses</h2> -->
+  <!-- Hidden because it's required by the script to generate the license notice -->
+  <ul style="display: none">
+    <li><input type="checkbox" name="licenses" value="BY" /> CC BY 4.0</li>
+    <li><input type="checkbox" name="licenses" value="NC" /> CC BY-NC 4.0</li>
+    <li><input type="checkbox" name="licenses" value="GNU" /> GNU GPL v3</li>
+    <li><input type="checkbox" name="licenses" value="apache" /> Apache 2.0</li>
+  </ul>
+  <div id="license-notice"></div>
+
+  <p class="footer-text">
+    CityLex was created by
+    <a href="mailto:kgorman@gc.cuny.edu">K. Gorman</a> and
+    <a href="mailto:fhallee@gradcenter.cuny.edu">F. Hallee</a>. Support for this
+    project was provided by a PSC-CUNY Award, jointly funded by The Professional
+    Staff Congress and The City University of New York.
+  </p>
+</html>

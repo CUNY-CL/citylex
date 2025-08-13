@@ -6,6 +6,7 @@ import io
 import logging
 import os
 import sqlite3
+import tarfile
 import unicodedata
 import zipfile
 
@@ -14,9 +15,9 @@ from typing import Dict, Iterator, List
 import pandas  # type: ignore
 import requests
 
+DB_PATH = "citylex.db"
 
 # Helper methods.
-
 
 def _normalize(field: str) -> str:
     """Performs basic Unicode normalization and casefolding on field."""
@@ -32,10 +33,19 @@ def _request_url_resource(url: str) -> Iterator[str]:
         yield line.decode("utf8", "ignore")
 
 
-def _request_url_mock_file(url: str) -> io.BytesIO:
+def _request_url_mock_file(url: str, use_headers: bool = False) -> io.BytesIO:
     """Requests a URL and returns a mock file."""
     logging.info("Requesting URL: %s", url)
-    response = requests.get(url)
+    headers = None
+    if use_headers:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15 Ddg/17.6',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+        }
+    response = requests.get(url, headers=headers)
     response.raise_for_status()
     return io.BytesIO(response.content)
 
@@ -47,6 +57,15 @@ def _request_url_zip_resource(url: str, path: str) -> Iterator[str]:
     with zipfile.ZipFile(mock_zip_file, "r").open(path, "r") as source:
         for line in source:
             yield line.decode("utf8", "ignore")
+
+
+def _request_url_tar_resource(url: str, path: str) -> Iterator[str]:
+    """Requests a tar.gz file by URL and the path to the desired file."""
+    mock_tar_file = _request_url_mock_file(url, use_headers=True)
+    with tarfile.open(fileobj=mock_tar_file, mode="r:") as tar:
+        with tar.extractfile(path) as source:
+            for line in source:
+                yield line.decode("utf8", "ignore")
 
 
 # CELEX.
@@ -78,35 +97,35 @@ CELEX_FEATURE_MAP = {
 # * "a2S" and "a3S": no need to distinguish between this and "a1S".
 
 
-def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
+def _celex(conn: sqlite3.Connection) -> None:
     """Collects CELEX data and inserts it into database."""
     cursor = conn.cursor()
     # Frequencies.
     counter = 0
-    path = os.path.join(celex_path, "english/efw/efw.cd")
-    with open(path, "r") as source:
-        for line in source:
-            row = _parse_celex_row(line)
-            wordform = _normalize(row[1])
-            # Skips multiword entries.
-            if " " in wordform:
-                continue
-            freq = int(row[3])
-            # Inserts data with a placeholder for freq_per_million.
-            cursor.execute(
-                """
-                INSERT INTO frequency (
-                    wordform,
-                    source,
-                    raw_frequency,
-                    freq_per_million
-                    ) VALUES (?, ?, ?, ?)
-                """,
-                (wordform, "CELEX", freq, 0),
-            )
-            counter += 1
+    url = "https://wellformedness.com/data/celex2-for-citylex.tar.gz"
+    source = _request_url_tar_resource(url, "celex2/english/efw/efw.cd")
+    for line in source:
+        row = _parse_celex_row(line)
+        wordform = _normalize(row[1])
+        # Skips multiword entries.
+        if " " in wordform:
+            continue
+        freq = int(row[3])
+        # Inserts data with a placeholder for freq_per_million.
+        cursor.execute(
+            """
+            INSERT INTO frequency (
+                wordform,
+                source,
+                raw_frequency,
+                freq_per_million
+                ) VALUES (?, ?, ?, ?)
+            """,
+            (wordform, "CELEX", freq, 0),
+        )
+        counter += 1
     assert counter, "No data read"
-    cursor.execute("SELECT SUM(raw_frequency) FROM frequency")
+    cursor.execute("SELECT SUM(raw_frequency) FROM frequency WHERE source = 'CELEX'")
     total_freq = cursor.fetchone()[0]
     assert total_freq > 0, "Total frequency must be greater than zero."
     # Updates freq_per_million for all entries.
@@ -115,96 +134,85 @@ def _celex(conn: sqlite3.Connection, celex_path: str) -> None:
         UPDATE frequency
             SET freq_per_million =
             ROUND(CAST(raw_frequency AS REAL) * 1000000 / ?, 2)
+            WHERE source = 'CELEX'
         """,
         (total_freq,),
     )
     logging.info(f"Collected {counter:,} CELEX frequencies")
     # Morphology.
     # Reads lemma information.
-    path = os.path.join(celex_path, "english/eml/eml.cd")
     lemma_info: Dict[int, str] = {}
     counter = 0
-    with open(path, "r") as source:
-        for line in source:
-            row = _parse_celex_row(line)
-            li = int(row[0])
-            lemma = _normalize(row[1])
-            if " " in lemma:
-                continue
-            # Previous attempts to insert partial rows resulted in slow
-            # performance, so lemmas are loaded into Python memory
-            # for efficiency.
-            lemma_info[li] = lemma
-            counter += 1
+    source = _request_url_tar_resource(url, "celex2/english/eml/eml.cd")
+    for line in source:
+        row = _parse_celex_row(line)
+        li = int(row[0])
+        lemma = _normalize(row[1])
+        if " " in lemma:
+            continue
+        # Previous attempts to insert partial rows resulted in slow
+        # performance, so lemmas are loaded into Python memory
+        # for efficiency.
+        lemma_info[li] = lemma
+        counter += 1
     # Reads wordform information.
     counter = 0
-    path = os.path.join(celex_path, "english/emw/emw.cd")
-    with open(path, "r") as source:
-        for line in source:
-            row = _parse_celex_row(line)
-            wordform = _normalize(row[1])
-            if " " in wordform:
-                continue
-            li = int(row[3])
-            # There are a few wordforms whose lemma IDs point to nothing. This
-            # catches it.
-            try:
-                lemma = lemma_info[li]
-            except KeyError:
-                logging.debug(
-                    "Ignoring wordform missing lemma ID: %s (%d)", wordform, li
-                )
-                continue
-            features = row[4]
-            try:
-                features = CELEX_FEATURE_MAP[row[4]]
-            except KeyError:
-                logging.debug(
-                    "Ignoring wordform feature bundle: %s (%s)",
-                    wordform,
-                    features,
-                )
-                continue
-            cursor.execute(
-                """
-                INSERT INTO morphology (
-                    wordform,
-                    source,
-                    lemma,
-                    features
-                    ) VALUES (?, ?, ?, ?)
-                    """,
-                (wordform, "CELEX", lemma, features),
+    source = _request_url_tar_resource(url, "celex2/english/emw/emw.cd")
+    for line in source:
+        row = _parse_celex_row(line)
+        wordform = _normalize(row[1])
+        if " " in wordform:
+            continue
+        li = int(row[3])
+        # There are a few wordforms whose lemma IDs point to nothing. This
+        # catches it.
+        try:
+            lemma = lemma_info[li]
+        except KeyError:
+            logging.debug(
+                "Ignoring wordform missing lemma ID: %s (%d)", wordform, li
             )
-            counter += 1
+            continue
+        celex_tag = row[4]
+        cursor.execute(
+            """
+            INSERT INTO features (
+                wordform,
+                source,
+                lemma,
+                tags
+                ) VALUES (?, ?, ?, ?)
+            """,
+            (wordform, "CELEX", lemma, celex_tag),
+        )
+        counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CELEX analyses")
     # Pronunciations.
     counter = 0
-    path = os.path.join(celex_path, "english/epw/epw.cd")
-    with open(path, "r") as source:
-        for line in source:
-            row = _parse_celex_row(line)
-            wordform = _normalize(row[1])
-            # Throws out multiword entries.
-            if " " in wordform:
-                continue
-            # Eliminates syllable boundaries, known to be inconsistent.
-            pron = row[6].replace("-", "")
-            cursor.execute(
-                """
-                INSERT INTO pronunciation (
-                    wordform,
-                    dialect,
-                    source,
-                    standard,
-                    pronunciation,
-                    is_observed
-                    ) VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                (wordform, "UK", "CELEX", "DISC", pron, True),
-            )
-            counter += 1
+    source = _request_url_tar_resource(url, "celex2/english/epw/epw.cd")
+    for line in source:
+        row = _parse_celex_row(line)
+        wordform = _normalize(row[1])
+        # Throws out multiword entries.
+        if " " in wordform:
+            continue
+        # Eliminates syllable boundaries, known to be inconsistent.
+        pron = row[6].replace("-", "")
+        cursor.execute(
+            """
+            INSERT INTO pronunciation (
+                wordform,
+                dialect,
+                source,
+                standard,
+                pronunciation,
+                is_observed
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (wordform, "UK", "CELEX", "DISC", pron, True),
+        )
+        counter += 1
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} CELEX pronunciations")
     conn.commit()
@@ -281,7 +289,7 @@ def _subtlex_uk(conn: sqlite3.Connection) -> None:
             )
             counter += 1
     assert counter, "No data read"
-    cursor.execute("SELECT SUM(raw_frequency) FROM frequency")
+    cursor.execute("SELECT SUM(raw_frequency) FROM frequency WHERE source='SUBTLEX-UK'")
     total_freq = cursor.fetchone()[0]
     assert total_freq > 0, "Total frequency must be greater than zero."
     cursor.execute(
@@ -289,6 +297,7 @@ def _subtlex_uk(conn: sqlite3.Connection) -> None:
         UPDATE frequency
             SET freq_per_million =
             ROUND(CAST(raw_frequency AS REAL) * 1000000 / ?, 2)
+            WHERE source = 'SUBTLEX-UK'
         """,
         (total_freq,),
     )
@@ -327,7 +336,7 @@ def _subtlex_us(conn: sqlite3.Connection) -> None:
         )
         counter += 1
     assert counter, "No data read"
-    cursor.execute("SELECT SUM(raw_frequency) FROM frequency")
+    cursor.execute("SELECT SUM(raw_frequency) FROM frequency WHERE source='SUBTLEX-US'")
     total_freq = cursor.fetchone()[0]
     assert total_freq > 0, "Total frequency must be greater than zero."
     cursor.execute(
@@ -335,6 +344,7 @@ def _subtlex_us(conn: sqlite3.Connection) -> None:
         UPDATE frequency
             SET freq_per_million =
             ROUND(CAST(raw_frequency AS REAL) * 1000000 / ?, 2)
+            WHERE source = 'SUBTLEX-US'
         """,
         (total_freq,),
     )
@@ -361,17 +371,17 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
         lemma = _normalize(tags[3])
         if lemma == "_":
             continue
-        features = f"{tags[4]}|{tags[6]}"
+        ud_tag = f"{tags[4]}|{tags[6]}"
         cursor.execute(
             """
-            INSERT INTO morphology (
+            INSERT INTO features (
                 wordform,
                 source,
                 lemma,
-                features
+                tags
                 ) VALUES (?, ?, ?, ?)
             """,
-            (wordform, "UDLexicons", lemma, features),
+            (wordform, "UDLexicons", lemma, ud_tag),
         )
         counter += 1
     assert counter, "No data read"
@@ -393,20 +403,17 @@ def _unimorph(conn: sqlite3.Connection) -> None:
     ):
         wordform = _normalize(drow["wordform"])
         lemma = _normalize(drow["lemma"])
-        features = drow["features"]
-        # Skips lines without features.
-        if not features or features == "NULL":
-            continue
+        um_tag = drow["features"]
         cursor.execute(
             """
-            INSERT INTO morphology (
+            INSERT INTO features (
                 wordform,
                 source,
                 lemma,
-                features
+                tags
                 ) VALUES (?, ?, ?, ?)
             """,
-            (wordform, "UniMorph", lemma, features),
+            (wordform, "UniMorph", lemma, um_tag),
         )
         counter += 1
     assert counter, "No data read"
@@ -489,11 +496,6 @@ def main():
     logging.basicConfig(format="%(levelname)s: %(message)s", level="INFO")
     parser = argparse.ArgumentParser(description="Creates a CityLex lexicon")
     parser.add_argument(
-        "--db_path",
-        default="citylex.db",
-        help="path to database file (default: %(default)s)",
-    )
-    parser.add_argument(
         "--all-free", action="store_true", help="extract all free data sources"
     )
     parser.add_argument(
@@ -501,10 +503,6 @@ def main():
         action="store_true",
         help="extract CELEX data (proprietary use agreement): "
         "http://catalog.ldc.upenn.edu/license/celex-user-agreement.pdf",
-    )
-    parser.add_argument(
-        "--celex-path",
-        help="path to CELEX directory (usually ends in `celex2`)",
     )
     parser.add_argument(
         "--elp",
@@ -549,10 +547,10 @@ def main():
         "http://creativecommons.org/licenses/by-sa/3.0/",
     )
     args = parser.parse_args()
-    conn = sqlite3.connect(args.db_path)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     logging.info("Dropping existing tables if they exist...")
-    for table in ["frequency", "pronunciation", "morphology", "segmentation"]:
+    for table in ["frequency", "pronunciation", "features", "segmentation"]:
         cursor.execute(f"DROP TABLE IF EXISTS {table}")
     logging.info("Creating tables...")
     cursor.execute(
@@ -581,12 +579,12 @@ def main():
     )
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS morphology (
+        CREATE TABLE IF NOT EXISTS features (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             wordform TEXT NOT NULL,
             source TEXT NOT NULL,
             lemma TEXT NOT NULL,
-            features TEXT NOT NULL
+            tags TEXT NOT NULL
         )
     """
     )
@@ -596,17 +594,14 @@ def main():
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             wordform TEXT NOT NULL,
             source TEXT NOT NULL,
-            nmorph TEXT NOT NULL,
+            nmorph INTEGER NOT NULL,
             segmentation TEXT NOT NULL
         )
     """
     )
     conn.commit()
     if args.celex:
-        if not args.celex_path:
-            logging.error("CELEX requested but --celex_path was not specified")
-            exit(1)
-        _celex(conn, args.celex_path)
+        _celex(conn)
     if args.all_free or args.elp:
         _elp(conn)
     if args.all_free or args.subtlex_uk:
@@ -627,3 +622,6 @@ def main():
         exit(1)
     conn.close()
     logging.info("Success!")
+
+if __name__ == "__main__":
+    main()
