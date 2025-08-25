@@ -9,7 +9,7 @@ jobs:
     docker:
       # Use the latest Python 3.x image from CircleCI.
       # See: https://circleci.com/developer/images/image/cimg/python
-      - image: cimg/python:3.12.1
+      - image: cimg/python:3.13
     steps:
       - checkout
       - run:
@@ -61,4 +61,4 @@ workflows:
             - mypy
           matrix:
             parameters:
-              python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+              python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
