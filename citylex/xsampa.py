@@ -114,6 +114,4 @@ def ipa_to_xsampa(ipa: str) -> str:
     Returns:
         The corresponding X-SAMPA string.
     """
-    return " ".join(
-        _IPA_TO_XSAMPA[symbol] for symbol in ipa.split()
-    )
+    return " ".join(_IPA_TO_XSAMPA[symbol] for symbol in ipa.split())
