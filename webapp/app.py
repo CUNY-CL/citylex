@@ -84,7 +84,9 @@ def _subtlex_data_to_csv(
             neg_logprob = _neg_logprob(raw_freq, total_words)
             row_dict["-logprob"] = round(neg_logprob, FREQUENCY_PRECISION)
         if f"{field_prefix}_zipf" in selected_fields:
-            row_dict["zipf"] = round(zipf.zipf_scale(raw_freq, total_words), FREQUENCY_PRECISION)
+            row_dict["zipf"] = round(
+                zipf.zipf_scale(raw_freq, total_words), FREQUENCY_PRECISION
+            )
         writer.writerow(row_dict)
 
 
@@ -256,12 +258,20 @@ def post():
                             "freq_per_million"
                         ] = freq_per_million
                     if "celexfreq_logprob" in selected_fields:
-                        neg_logprob = _neg_logprob(raw_frequency, celex_total_words)
-                        celex_wordforms_data[wordform]["-logprob"] = round(neg_logprob, FREQUENCY_PRECISION)
+                        neg_logprob = _neg_logprob(
+                            raw_frequency, celex_total_words
+                        )
+                        celex_wordforms_data[wordform]["-logprob"] = round(
+                            neg_logprob, FREQUENCY_PRECISION
+                        )
                     if "celexfreq_zipf" in selected_fields:
-                        zipf_value = zipf.zipf_scale(raw_frequency, celex_total_words)
+                        zipf_value = zipf.zipf_scale(
+                            raw_frequency, celex_total_words
+                        )
                         if zipf_value is not None:
-                            celex_wordforms_data[wordform]["zipf"] = round(zipf_value, FREQUENCY_PRECISION)
+                            celex_wordforms_data[wordform]["zipf"] = round(
+                                zipf_value, FREQUENCY_PRECISION
+                            )
             # Fetches CELEX features if selected.
             if "celexfeat" in selected_sources:
                 cursor.execute(
@@ -395,6 +405,7 @@ def post():
     # JSON option
     elif output_format == "wide":
         aggregated_data = {}
+
         def add_to_aggregated_data(wordform, key, value):
             if wordform not in aggregated_data:
                 aggregated_data[wordform] = {}
@@ -402,6 +413,7 @@ def post():
                 aggregated_data[wordform][key] = []
             if value is not None:
                 aggregated_data[wordform][key].append(value)
+
         # Processes frequency data.
         for source, source_fieldname in [
             ("SUBTLEX-UK", "subtlexuk"),

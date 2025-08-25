@@ -46,7 +46,7 @@ If you plan to use the web application, ensure that you populate the database wi
 Once the database (`citylex.db`) is populated, you can launch the Flask web application:
 
 ```bash
-python -m flask_app.app
+python -m webapp.app
 ```
 
 This will start the web server locally, making the CityLex application accessible. The application allows you to access the data in TSV and JSON formats.
@@ -54,7 +54,7 @@ This will start the web server locally, making the CityLex application accessibl
 Flask's built-in development server is suitable only for testing and local use. For production deployment, use a WSGI server like Gunicorn:
 
 ```bash
-gunicorn flask_app.app:app
+gunicorn webapp.app:app
 ```
 
 ## Non-redistributable data sources

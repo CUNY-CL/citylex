@@ -17,55 +17,68 @@ import requests
 
 DB_PATH = "citylex.db"
 
+HEADERS = {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate",
+    "Connection": "keep-alive",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15 Ddg/17.6",
+}
+
+
+class Error(Exception):
+    pass
+
+
 # Helper methods.
+
 
 def _normalize(field: str) -> str:
     """Performs basic Unicode normalization and casefolding on field."""
     return unicodedata.normalize("NFC", field).casefold()
 
 
-def _request_url_resource(url: str) -> Iterator[str]:
-    """Requests a URL and returns text."""
-    logging.info("Requesting URL: %s", url)
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
-    for line in response.iter_lines():
-        yield line.decode("utf8", "ignore")
-
-
-def _request_url_mock_file(url: str, use_headers: bool = False) -> io.BytesIO:
+def _request_url_file_resource(url: str) -> io.BytesIO:
     """Requests a URL and returns a mock file."""
     logging.info("Requesting URL: %s", url)
-    headers = None
-    if use_headers:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15 Ddg/17.6',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'gzip, deflate',
-            'Connection': 'keep-alive',
-        }
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return io.BytesIO(response.content)
+    with requests.get(url, headers=HEADERS, stream=True) as response:
+        response.raise_for_status()
+        return io.BytesIO(response.content)
 
 
-def _request_url_zip_resource(url: str, path: str) -> Iterator[str]:
-    """Requests a zip file by URL and the path to the desired file."""
-    mock_zip_file = _request_url_mock_file(url)
-    # Opens the zip file, and then the specific enclosed file.
-    with zipfile.ZipFile(mock_zip_file, "r").open(path, "r") as source:
+def _request_url_text_resource(url: str) -> Iterator[str]:
+    """Requests a URL and returns text."""
+    logging.info("Requesting URL: %s", url)
+    with requests.get(url, headers=HEADERS, stream=True) as response:
+        response.raise_for_status()
+        for line in response.iter_lines():
+            yield line.decode("utf8", "ignore")
+
+
+def _request_url_tar_resource(url: str) -> tarfile.TarFile:
+    """Requests a tar.gz file by URL."""
+    mock_file = _request_url_file_resource(url)
+    return tarfile.open(fileobj=mock_file, mode="r:")
+
+
+def _request_url_zip_resource(url: str) -> zipfile.ZipFile:
+    """Requests a zip file by URL."""
+    mock_file = _request_url_file_resource(url)
+    return zipfile.ZipFile(mock_file, "r")
+
+
+def _tar_lines(tar: tarfile.TarFile, path: str) -> Iterator[str]:
+    """Yields an iterator over lines of a file extracted from a TAR archive."""
+    with tar.extractfile(path) as source:
         for line in source:
             yield line.decode("utf8", "ignore")
 
 
-def _request_url_tar_resource(url: str, path: str) -> Iterator[str]:
-    """Requests a tar.gz file by URL and the path to the desired file."""
-    mock_tar_file = _request_url_mock_file(url, use_headers=True)
-    with tarfile.open(fileobj=mock_tar_file, mode="r:") as tar:
-        with tar.extractfile(path) as source:
-            for line in source:
-                yield line.decode("utf8", "ignore")
+def _zip_lines(myzip: zipfile.ZipFile, path: str) -> Iterator[str]:
+    """Yields an iterator over lines of a file extracted from a ZIP archive."""
+    with myzip.open(path, "r") as source:
+        for line in source:
+            yield line.decode("utf8", "ignore")
 
 
 # CELEX.
@@ -98,13 +111,20 @@ CELEX_FEATURE_MAP = {
 
 
 def _celex(conn: sqlite3.Connection) -> None:
-    """Collects CELEX data and inserts it into database."""
+    """Collects CELEX data and inserts it into database.
+
+    We get the path to the CELEX data from an environmental variable, namely
+    CELEX_PATH.
+    """
     cursor = conn.cursor()
+    try:
+        url = os.environ["CELEX_PATH"]
+    except KeyError:
+        raise Error("--celex requested but $CELEX_PATH not set")
+    archive = _request_url_tar_resource(url)
     # Frequencies.
     counter = 0
-    url = "https://wellformedness.com/data/celex2-for-citylex.tar.gz"
-    source = _request_url_tar_resource(url, "celex2/english/efw/efw.cd")
-    for line in source:
+    for line in _tar_lines(archive, "celex2/english/efw/efw.cd"):
         row = _parse_celex_row(line)
         wordform = _normalize(row[1])
         # Skips multiword entries.
@@ -125,7 +145,9 @@ def _celex(conn: sqlite3.Connection) -> None:
         )
         counter += 1
     assert counter, "No data read"
-    cursor.execute("SELECT SUM(raw_frequency) FROM frequency WHERE source = 'CELEX'")
+    cursor.execute(
+        "SELECT SUM(raw_frequency) FROM frequency WHERE source = 'CELEX'"
+    )
     total_freq = cursor.fetchone()[0]
     assert total_freq > 0, "Total frequency must be greater than zero."
     # Updates freq_per_million for all entries.
@@ -143,8 +165,7 @@ def _celex(conn: sqlite3.Connection) -> None:
     # Reads lemma information.
     lemma_info: Dict[int, str] = {}
     counter = 0
-    source = _request_url_tar_resource(url, "celex2/english/eml/eml.cd")
-    for line in source:
+    for line in _tar_lines(archive, "celex2/english/eml/eml.cd"):
         row = _parse_celex_row(line)
         li = int(row[0])
         lemma = _normalize(row[1])
@@ -157,8 +178,7 @@ def _celex(conn: sqlite3.Connection) -> None:
         counter += 1
     # Reads wordform information.
     counter = 0
-    source = _request_url_tar_resource(url, "celex2/english/emw/emw.cd")
-    for line in source:
+    for line in _tar_lines(archive, "celex2/english/emw/emw.cd"):
         row = _parse_celex_row(line)
         wordform = _normalize(row[1])
         if " " in wordform:
@@ -190,8 +210,7 @@ def _celex(conn: sqlite3.Connection) -> None:
     logging.info(f"Collected {counter:,} CELEX analyses")
     # Pronunciations.
     counter = 0
-    source = _request_url_tar_resource(url, "celex2/english/epw/epw.cd")
-    for line in source:
+    for line in _tar_lines(archive, "celex2/english/epw/epw.cd"):
         row = _parse_celex_row(line)
         wordform = _normalize(row[1])
         # Throws out multiword entries.
@@ -229,7 +248,7 @@ def _elp(conn: sqlite3.Connection) -> None:
         "https://raw.githubusercontent.com/kylebgorman/"
         "ELP-annotations/master/ELP.csv"
     )
-    source = _request_url_resource(url)
+    source = _request_url_text_resource(url)
     for drow in csv.DictReader(source):
         wordform = _normalize(drow["Word"])
         morph_sp = drow["MorphSp"]
@@ -261,23 +280,19 @@ def _elp(conn: sqlite3.Connection) -> None:
 
 def _subtlex_uk(conn: sqlite3.Connection) -> None:
     """Collects SUBTLEX-UK frequencies."""
-    counter = 0
-    url = (
-        "https://web.archive.org/web/20211125032415/"
-        "http://crr.ugent.be/papers/SUBTLEX-UK.xlsx"
-    )
-    mock_zip_file = _request_url_mock_file(url)
     cursor = conn.cursor()
-    with pandas.ExcelFile(mock_zip_file, engine="openpyxl") as source:
-        sheet = source.sheet_names[0]
-        # Disables parsing "nan" as, well, `nan`.
-        df = source.parse(sheet, na_values=[], keep_default_na=False)
-        gen = zip(df.Spelling, df.FreqCount, df.CD_count)
-        for wordform, freq, cd in gen:
-            wordform = _normalize(wordform)
-            # Inserts data with a placeholder for freq_per_million.
-            cursor.execute(
-                """
+    counter = 0
+    url = "https://osf.io/download/d3jbg/"
+    xlsx = _request_url_file_resource(url)
+    # Disables parsing "nan" as, well, `nan`.
+    data = pandas.read_excel(
+        xlsx, engine="openpyxl", keep_default_na=False, na_values=[]
+    )
+    for wordform, freq in zip(data.Spelling, data.FreqCount):
+        wordform = _normalize(wordform)
+        # Inserts data with a placeholder for freq_per_million.
+        cursor.execute(
+            """
                 INSERT INTO frequency (
                     wordform,
                     source,
@@ -285,11 +300,13 @@ def _subtlex_uk(conn: sqlite3.Connection) -> None:
                     freq_per_million
                     ) VALUES (?, ?, ?, ?)
                 """,
-                (wordform, "SUBTLEX-UK", freq, 0),
-            )
-            counter += 1
+            (wordform, "SUBTLEX-UK", freq, 0),
+        )
+        counter += 1
     assert counter, "No data read"
-    cursor.execute("SELECT SUM(raw_frequency) FROM frequency WHERE source='SUBTLEX-UK'")
+    cursor.execute(
+        "SELECT SUM(raw_frequency) FROM frequency WHERE source='SUBTLEX-UK'"
+    )
     total_freq = cursor.fetchone()[0]
     assert total_freq > 0, "Total frequency must be greater than zero."
     cursor.execute(
@@ -310,19 +327,16 @@ def _subtlex_uk(conn: sqlite3.Connection) -> None:
 
 def _subtlex_us(conn: sqlite3.Connection) -> None:
     """Collects SUBTLEX-US frequencies."""
-    counter = 0
-    url = (
-        "https://web.archive.org/web/20211125032415/"
-        "http://crr.ugent.be/papers/"
-        "SUBTLEX-US_frequency_list_with_PoS_information_"
-        "final_text_version.zip"
-    )
-    path = "SUBTLEX-US frequency list with PoS information text version.txt"
-    source = _request_url_zip_resource(url, path)
     cursor = conn.cursor()
-    for drow in csv.DictReader(source, delimiter="\t"):
-        wordform = _normalize(drow["Word"])
-        freq = int(drow["FREQcount"])
+    counter = 0
+    url = "https://osf.io/download/7wx25/"
+    xlsx = _request_url_file_resource(url)
+    # Disables parsing "nan" as, well, `nan`.
+    data = pandas.read_excel(
+        xlsx, engine="openpyxl", keep_default_na=False, na_values=[]
+    )
+    for wordform, freq in zip(data.Word, data.FREQcount):
+        wordform = _normalize(wordform)
         cursor.execute(
             """
             INSERT INTO frequency (
@@ -336,7 +350,9 @@ def _subtlex_us(conn: sqlite3.Connection) -> None:
         )
         counter += 1
     assert counter, "No data read"
-    cursor.execute("SELECT SUM(raw_frequency) FROM frequency WHERE source='SUBTLEX-US'")
+    cursor.execute(
+        "SELECT SUM(raw_frequency) FROM frequency WHERE source = 'SUBTLEX-US'"
+    )
     total_freq = cursor.fetchone()[0]
     assert total_freq > 0, "Total frequency must be greater than zero."
     cursor.execute(
@@ -357,13 +373,13 @@ def _subtlex_us(conn: sqlite3.Connection) -> None:
 
 def _udlexicons(conn: sqlite3.Connection) -> None:
     """Collects UDLexicons analyses."""
-    counter = 0
     cursor = conn.cursor()
+    counter = 0
     url = "http://atoll.inria.fr/~sagot/UDLexicons.0.2.zip"
     path = "UDLexicons.0.2/UDLex_English-Apertium.conllul"
-    source = _request_url_zip_resource(url, path)
-    for line in source:
-        tags = line.rstrip().split("\t")
+    archive = _request_url_zip_resource(url)
+    # This is complicated enough we'll do it by index.
+    for tags in csv.reader(_zip_lines(archive, path), delimiter="\t"):
         # Skips multiword expressions.
         if tags[0].startswith("0-"):
             continue
@@ -394,16 +410,14 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
 
 def _unimorph(conn: sqlite3.Connection) -> None:
     """Collects UniMorph analyses."""
-    counter = 0
     cursor = conn.cursor()
+    counter = 0
     url = "https://raw.githubusercontent.com/unimorph/eng/master/eng"
-    source = _request_url_resource(url)
-    for drow in csv.DictReader(
-        source, fieldnames=["lemma", "wordform", "features"], delimiter="\t"
-    ):
-        wordform = _normalize(drow["wordform"])
-        lemma = _normalize(drow["lemma"])
-        um_tag = drow["features"]
+    source = _request_url_text_resource(url)
+    for lemma, wordform, features in csv.reader(source, delimiter="\t"):
+        wordform = _normalize(wordform)
+        lemma = _normalize(lemma)
+        um_tag = _normalize(features)
         cursor.execute(
             """
             INSERT INTO features (
@@ -426,18 +440,16 @@ def _unimorph(conn: sqlite3.Connection) -> None:
 
 def _wikipron_uk(conn: sqlite3.Connection) -> None:
     """Collects WikiPron UK pronunciations."""
-    counter = 0
     cursor = conn.cursor()
+    counter = 0
     url = (
         "https://raw.githubusercontent.com/kylebgorman/"
         "wikipron/master/data/scrape/tsv/eng_latn_uk_broad_filtered.tsv"
     )
-    source = _request_url_resource(url)
-    for drow in csv.DictReader(
-        source, fieldnames=["wordform", "pronunciation"], delimiter="\t"
-    ):
-        wordform = _normalize(drow["wordform"])
-        pron = drow["pronunciation"]
+    source = _request_url_text_resource(url)
+    for wordform, pron in csv.reader(source, delimiter="\t"):
+        wordform = _normalize(wordform)
+        pron = _normalize(pron)
         cursor.execute(
             """INSERT INTO pronunciation (
                 wordform,
@@ -461,18 +473,16 @@ def _wikipron_uk(conn: sqlite3.Connection) -> None:
 
 def _wikipron_us(conn: sqlite3.Connection) -> None:
     """Collects WikiPron US pronunciations."""
-    counter = 0
     cursor = conn.cursor()
+    counter = 0
     url = (
         "https://raw.githubusercontent.com/kylebgorman/"
         "wikipron/master/data/scrape/tsv/eng_latn_us_broad_filtered.tsv"
     )
-    source = _request_url_resource(url)
-    for drow in csv.DictReader(
-        source, fieldnames=["wordform", "pronunciation"], delimiter="\t"
-    ):
-        wordform = _normalize(drow["wordform"])
-        pron = drow["pronunciation"]
+    source = _request_url_text_resource(url)
+    for wordform, pron in csv.reader(source, delimiter="\t"):
+        wordform = _normalize(wordform)
+        pron = _normalize(pron)
         cursor.execute(
             """
             INSERT INTO pronunciation (
@@ -622,6 +632,7 @@ def main():
         exit(1)
     conn.close()
     logging.info("Success!")
+
 
 if __name__ == "__main__":
     main()
