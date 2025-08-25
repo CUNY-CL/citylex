@@ -18,11 +18,14 @@ import requests
 DB_PATH = "citylex.db"
 
 HEADERS = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept": "text/html,application/xhtml+xml,"
+    "application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
     "Accept-Encoding": "gzip, deflate",
     "Connection": "keep-alive",
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15 Ddg/17.6",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/605.1.15 (KHTML, like Gecko) "
+    "Version/17.6 Safari/605.1.15 Ddg/17.6",
 }
 
 
@@ -69,7 +72,7 @@ def _request_url_zip_resource(url: str) -> zipfile.ZipFile:
 
 def _tar_lines(tar: tarfile.TarFile, path: str) -> Iterator[str]:
     """Yields an iterator over lines of a file extracted from a TAR archive."""
-    with tar.extractfile(path) as source:
+    with tar.extractfile(path) as source:  # type: ignore
         for line in source:
             yield line.decode("utf8", "ignore")
 

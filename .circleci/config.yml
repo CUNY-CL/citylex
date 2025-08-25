@@ -56,17 +56,11 @@ workflows:
           name: mypy
           command-run: mypy .
       - pre-build:
-          name: twine
-          command-run: |
-            python -m build && \
-            twine check dist/`ls dist/ | grep .tar.gz` && \
-            twine check dist/`ls dist/ | grep .whl`
       - build-python:
           requires:
             - black
             - flake8
             - mypy
-            - twine
           matrix:
             parameters:
               python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]

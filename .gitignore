@@ -3,4 +3,4 @@ __pycache__/
 *.egg-info/
 analysis/
 build/
-citylex.db
+citylex.db*
