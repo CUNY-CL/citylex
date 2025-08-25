@@ -16,44 +16,39 @@ enabling whatever sources they wish to use.
 
 ## Building your own CityLex
 
-To set up CityLex execute
+To see the available data sources and options, execute
+`python -m citylex.populate --help`.
 
-```bash
-git clone <url>
-cd citylex
-pip install -r requirements.txt
-```
-
-To see the available data sources and options, execute `python -m citylex.populate --help`.
-
-To generate the lexicon, execute `python -m citylex.populate` with at least one source enabled
-using command-line flags. As most of the data is downloaded from outline
-sources, an internet connection is normally required. The process takes roughly
-four minutes with all sources enabled; much of the time is spent downloading
-large files.
+To generate the lexicon, execute `python -m citylex.populate` with at least one
+source enabled using command-line flags. As most of the data is downloaded from
+outline sources, an internet connection is normally required. The process takes
+roughly four minutes with all sources enabled; much of the time is spent
+downloading large files.
 
 To generate a lexicon with all the sources that don't require manual downloads,
 execute
 
-```bash
-python -m citylex.populate --all-free
-```
+    python -m citylex.populate --all-free
 
-If you plan to use the web application, ensure that you populate the database with at least the `--all-free` flag and optionally with the `--celex` and `--celex-path` flags (see below for more info on including CELEX data).
+If you plan to use the web application, ensure that you populate the database
+with at least the `--all-free` flag and optionally with the `--celex` and
+`--celex-path` flags (see below for more info on including CELEX data).
 
 ## Launching the web application
 
-Once the database (`citylex.db`) is populated, you can launch the Flask web application:
+Once the database (`citylex.db`) is populated, you can launch the Flask web
+application:
 
-```bash
-python -m webapp.app
-```
+    python -m webapp.app
 
-This will start the web server locally, making the CityLex application accessible. The application allows you to access the data in TSV and JSON formats.
+This will start the web server locally, making the CityLex application
+accessible. The application allows you to access the data in TSV and JSON
+formats.
 
-Flask's built-in development server is suitable only for testing and local use. For production deployment, use a WSGI server like Gunicorn:
+Flask's built-in development server is suitable only for testing and local use.
+For production deployment, use a WSGI server like Gunicorn:
 
-```bash
+``` bash
 gunicorn webapp.app:app
 ```
 
@@ -63,22 +58,19 @@ Not all CityLex data can be obtained automatically from online sources. If you
 wish to enable CELEX features, follow the instructions below.
 
 This proprietary resource must be obtained from the [Linguistic Data
-Consortium](https://catalog.ldc.upenn.edu/LDC96L14) as `LDC96L14.tgz`. The file
-should be decompressed using
+Consortium](https://catalog.ldc.upenn.edu/LDC96L14).
 
-```bash
-tar -xzf LDC96L14.tgz
-```
+    tar -xzf LDC96L14.tgz
 
-This will produce a directory named `celex2`. To enable CELEX2 features, use
-`--celex` and pass the local path of this directory as an argument to
-`--celex-path`.
+To enable CELEX features, pass `--celex` to `citylex.populate` and set the
+`CELEX_PATH` environmental variable:
 
-Optionally, to password protect access to CELEX data within the web application, set the `CELEX_PASSWORD` environment variable:
+    export CELEX_PATH="https://path.to.celex"
 
-```bash
-export CELEX_PASSWORD="your_desired_password"
-```
+To password protect access to CELEX data within the web application, set the
+`CELEX_PASSWORD` environment variable:
+
+    export CELEX_PASSWORD="your_desired_password"
 
 ## Testing
 
@@ -92,7 +84,7 @@ To run an integration test for the web app, run:
 
 ## For more information
 
-- [`citylex.bib`](citylex.bib) for references to the data sources used
+[`citylex.bib`](citylex.bib) provides references for the data sources used.
 
 ## License
 
@@ -104,5 +96,6 @@ see `python -m citylex.populate --help` for more information.
 
 ## Author
 
-CityLex was created by [Kyle Gorman](http://wellformedness.com) with help from
+CityLex was created by [Kyle Gorman](http://wellformedness.com) and Forest
+Hallee with help from
 [contributors](https://github.com/CUNY-CL/citylex/graphs/contributors).
