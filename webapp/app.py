@@ -9,7 +9,7 @@ import sqlite3
 
 from flask import Flask, render_template, request, send_file
 
-from citylex import features, zipf
+from citylex import features, xsampa, zipf
 
 DB_PATH = "citylex.db"
 FREQUENCY_PRECISION = 6
@@ -42,21 +42,37 @@ def _data_to_csv(cursor, writer, source_table, columns, where=""):
         row_dict = dict(zip(columns, row))
         writer.writerow(row_dict)
 
+def _wikipron_data_to_csv(cursor, writer, selected_fields, uk_or_us):
+    # uk_or_us must be capitalized: "UK" or "US"
+    cursor.execute(
+        "SELECT wordform, source, pronunciation "
+        "FROM pronunciation "
+        f"WHERE source = 'WikiPron {uk_or_us}' AND standard = 'IPA'"
+    )
+    for row in cursor:
+        wordform, source, ipa_pron = row
+        row_dict = {"wordform": wordform, "source": source}
+        if f"wikipron{uk_or_us}_IPA" in selected_fields:
+            row_dict["IPA_pronunciation"] = ipa_pron
+        if f"wikipron{uk_or_us}_XSAMPA" in selected_fields:
+            row_dict["XSAMPA_pronunciation"] = xsampa.ipa_to_xsampa(ipa_pron)
+        writer.writerow(row_dict)
 
-def _subtlex_data_to_csv(
-    cursor, writer, source_name, selected_fields, field_prefix
-):
+
+def _subtlex_data_to_csv(cursor, writer, selected_fields, uk_or_us):
     """
-    Fetches and writes frequency data for a given frequency source,
+    Fetches and writes frequency data for a given SUBTLEX source,
     calculating logprob and zipf if requested.
 
     Args:
         cursor: The SQLite cursor object.
         writer: The CSV DictWriter object.
-        source_name (str): The value in the source column (e.g., SUBTLEX-UK).
         selected_fields (list): The list of fields selected by the user.
-        field_prefix (str): Prefix for field names (e.g., subtlexuk).
+        uk_or_us (str): Either 'UK' or 'US' to specify the SUBTLEX source.
     """
+    source_name = f"SUBTLEX-{uk_or_us}"
+    field_prefix = f"subtlex{uk_or_us}"
+    
     # Builds base columns.
     columns = ["wordform", "source"]
     if f"{field_prefix}_raw_frequency" in selected_fields:
@@ -77,7 +93,8 @@ def _subtlex_data_to_csv(
     cursor.execute(
         f"SELECT {', '.join(columns)}, raw_frequency "
         "FROM frequency "
-        f"WHERE source = '{source_name}'"
+        "WHERE source = ?",
+        (source_name,)
     )
     for row in cursor:
         raw_freq = row[-1]
@@ -140,35 +157,41 @@ def post():
     # Builds CSV column headers.
     columns = ["wordform", "source"]
     if (
-        "subtlexus_raw_frequency" in selected_fields
-        or "subtlexuk_raw_frequency" in selected_fields
+        "subtlexUS_raw_frequency" in selected_fields
+        or "subtlexUK_raw_frequency" in selected_fields
         or "celexfreq_raw_frequency" in selected_fields
     ):
         columns.append("raw_frequency")
     if (
-        "subtlexus_freq_per_million" in selected_fields
-        or "subtlexuk_freq_per_million" in selected_fields
+        "subtlexUS_freq_per_million" in selected_fields
+        or "subtlexUK_freq_per_million" in selected_fields
         or "celexfreq_freq_per_million" in selected_fields
     ):
         columns.append("freq_per_million")
     if (
-        "subtlexuk_logprob" in selected_fields
-        or "subtlexus_logprob" in selected_fields
+        "subtlexUK_logprob" in selected_fields
+        or "subtlexUS_logprob" in selected_fields
         or "celexfreq_logprob" in selected_fields
     ):
         columns.append("-logprob")
     if (
-        "subtlexuk_zipf" in selected_fields
-        or "subtlexus_zipf" in selected_fields
+        "subtlexUK_zipf" in selected_fields
+        or "subtlexUS_zipf" in selected_fields
         or "celexfreq_zipf" in selected_fields
     ):
         columns.append("zipf")
     if (
-        "wikipronus_IPA" in selected_fields
-        or "wikipronuk_IPA" in selected_fields
-        or "celex_DISC" in selected_fields
+        "wikipronUS_IPA" in selected_fields
+        or "wikipronUK_IPA" in selected_fields
     ):
-        columns.append("pronunciation")
+        columns.append("IPA_pronunciation")
+    if (
+        "wikipronUS_XSAMPA" in selected_fields
+        or "wikipronUK_XSAMPA" in selected_fields
+    ):
+        columns.append("XSAMPA_pronunciation")
+    if "celex_DISC" in selected_fields:
+        columns.append("DISC_pronunciation")
     if (
         "udlex_CELEXtags" in selected_fields
         or "um_CELEXtags" in selected_fields
@@ -197,35 +220,21 @@ def post():
         writer = csv.DictWriter(output, fieldnames=columns, delimiter="\t")
         writer.writeheader()
         # Fetches and writes SUBTLEX-US data.
-        if "subtlexuk" in selected_sources:
+        if "subtlexUK" in selected_sources:
             _subtlex_data_to_csv(
-                cursor, writer, "SUBTLEX-UK", selected_fields, "subtlexuk"
+                cursor, writer, selected_fields, "UK"
             )
         # Fetches and writes SUBTLEX-UK data.
-        if "subtlexus" in selected_sources:
+        if "subtlexUS" in selected_sources:
             _subtlex_data_to_csv(
-                cursor, writer, "SUBTLEX-US", selected_fields, "subtlexus"
+                cursor, writer, selected_fields, "US"
             )
         # Fetches and writes WikiPron-US data.
         if "WikiPron US" in selected_sources:
-            wp_us_columns = ["wordform", "source", "pronunciation"]
-            _data_to_csv(
-                cursor,
-                writer,
-                "pronunciation",
-                wp_us_columns,
-                "source = 'WikiPron US' AND standard = 'IPA'",
-            )
+            _wikipron_data_to_csv(cursor, writer, selected_fields, "US")
         # Fetches and writes WikiPron-UK data.
         if "WikiPron UK" in selected_sources:
-            wp_uk_columns = ["wordform", "source", "pronunciation"]
-            _data_to_csv(
-                cursor,
-                writer,
-                "pronunciation",
-                wp_uk_columns,
-                "source = 'WikiPron UK' AND standard = 'IPA'",
-            )
+            _wikipron_data_to_csv(cursor, writer, selected_fields, "UK")
         # Fetches and writes CELEX data.
         if any(
             s in selected_sources
@@ -353,7 +362,7 @@ def post():
                 if "celex_UMtags" in selected_fields and "um_tags" in data:
                     row_to_write["um_tags"] = data["um_tags"]
                 if "celex_DISC" in selected_fields and "pronunciation" in data:
-                    row_to_write["pronunciation"] = data["pronunciation"]
+                    row_to_write["DISC_pronunciation"] = data["pronunciation"]
                 writer.writerow(row_to_write)
         # Fetches and writes UDLexicons data.
         if "UDLexicons" in selected_sources:
@@ -430,8 +439,8 @@ def post():
 
         # Processes frequency data.
         for source, source_fieldname in [
-            ("SUBTLEX-UK", "subtlexuk"),
-            ("SUBTLEX-US", "subtlexus"),
+            ("SUBTLEX-UK", "subtlexUK"),
+            ("SUBTLEX-US", "subtlexUS"),
             ("CELEX", "celexfreq"),
         ]:
             if source_fieldname in selected_sources:
@@ -573,34 +582,33 @@ def post():
                     )
         # Processes pronunciation data.
         for source_key, field_prefix, display_name in [
-            ("WikiPron US", "wikipronus", "WikiPron US (IPA)"),
-            ("WikiPron UK", "wikipronuk", "WikiPron UK (IPA)"),
+            ("WikiPron US", "wikipronUS", "WikiPron US (IPA)"),
+            ("WikiPron UK", "wikipronUK", "WikiPron UK (IPA)"),
             ("celexpron", "celex_DISC", "CELEX (DISC)"),
         ]:
             if source_key in selected_sources:
                 # For CELEX, filters by standard = 'DISC'.
-                where_clause = (
-                    "standard = 'IPA'"
-                    if source_key.startswith("WikiPron")
-                    else "standard = 'DISC'"
-                )
+                if source_key == "celexpron":
+                    source_name = "CELEX"
+                else:
+                    source_name = source_key
                 cursor.execute(
                     "SELECT wordform, pronunciation "
                     "FROM pronunciation "
-                    f"WHERE source = '{source_key.split('_')[0]}' "
-                    f"AND {where_clause}"
+                    "WHERE source = ?",
+                    (source_name,)
                 )
                 for wordform, pronunciation in cursor:
                     # Checks if the specific field for this pronunciation type
                     # was selected.
                     if (
                         (
-                            field_prefix == "wikipronus"
-                            and "wikipronus_IPA" in selected_fields
+                            field_prefix == "wikipronUS"
+                            and "wikipronUS_IPA" in selected_fields
                         )
                         or (
-                            field_prefix == "wikipronuk"
-                            and "wikipronuk_IPA" in selected_fields
+                            field_prefix == "wikipronUK"
+                            and "wikipronUK_IPA" in selected_fields
                         )
                         or (
                             field_prefix == "celex_DISC"
@@ -609,6 +617,21 @@ def post():
                     ):
                         add_to_aggregated_data(
                             wordform, display_name, pronunciation
+                        )
+                    if (
+                        (
+                            field_prefix == "wikipronUS"
+                            and "wikipronUS_XSAMPA" in selected_fields
+                        )
+                        or (
+                            field_prefix == "wikipronUK"
+                            and "wikipronUK_XSAMPA" in selected_fields
+                        )
+                    ):
+                        xsampa_display_name = display_name.replace("(IPA)", "(X-SAMPA)")
+                        xsampa_pronunciation = xsampa.ipa_to_xsampa(pronunciation)
+                        add_to_aggregated_data(
+                            wordform, xsampa_display_name, xsampa_pronunciation
                         )
         # Sends the file as a response.
         contents = io.BytesIO(
@@ -622,6 +645,7 @@ def post():
             as_attachment=True,
             download_name=f"citylex-{datetime.date.today().isoformat()}.json",
         )
+    conn.close()
 
 
 if __name__ == "__main__":

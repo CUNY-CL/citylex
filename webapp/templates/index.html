@@ -35,7 +35,7 @@
         <h3 class="table-type">Frequencies:</h3>
         <ul>
           <li>
-            <input type="checkbox" name="sources[]" value="subtlexuk" />
+            <input type="checkbox" name="sources[]" value="subtlexUK" />
             SUBTLEX-UK
             <a href="https://creativecommons.org/licenses/by-nc/4.0/"
               >(CC BY-NC 4.0)</a
@@ -45,7 +45,7 @@
                 <input
                   type="checkbox"
                   name="fields[]"
-                  value="subtlexuk_raw_frequency"
+                  value="subtlexUK_raw_frequency"
                 />
                 Raw frequency
               </li>
@@ -53,7 +53,7 @@
                 <input
                   type="checkbox"
                   name="fields[]"
-                  value="subtlexuk_freq_per_million"
+                  value="subtlexUK_freq_per_million"
                 />
                 Frequency per million words
               </li>
@@ -61,12 +61,12 @@
                 <input
                   type="checkbox"
                   name="fields[]"
-                  value="subtlexuk_logprob"
+                  value="subtlexUK_logprob"
                 />
                 -log<sub>10</sub> probability
               </li>
               <li>
-                <input type="checkbox" name="fields[]" value="subtlexuk_zipf" />
+                <input type="checkbox" name="fields[]" value="subtlexUK_zipf" />
                 <a
                   href="https://www.wellformedness.com/blog/zipf-scale/"
                   target="_blank"
@@ -77,7 +77,7 @@
             </ul>
           </li>
           <li>
-            <input type="checkbox" name="sources[]" value="subtlexus" />
+            <input type="checkbox" name="sources[]" value="subtlexUS" />
             SUBTLEX-US
             <a href="https://creativecommons.org/licenses/by-nc/4.0/"
               >(CC BY-NC 4.0)</a
@@ -87,7 +87,7 @@
                 <input
                   type="checkbox"
                   name="fields[]"
-                  value="subtlexus_raw_frequency"
+                  value="subtlexUS_raw_frequency"
                 />
                 Raw frequency
               </li>
@@ -95,7 +95,7 @@
                 <input
                   type="checkbox"
                   name="fields[]"
-                  value="subtlexus_freq_per_million"
+                  value="subtlexUS_freq_per_million"
                 />
                 Frequency per million words
               </li>
@@ -103,12 +103,12 @@
                 <input
                   type="checkbox"
                   name="fields[]"
-                  value="subtlexus_logprob"
+                  value="subtlexUS_logprob"
                 />
                 -log<sub>10</sub> probability
               </li>
               <li>
-                <input type="checkbox" name="fields[]" value="subtlexus_zipf" />
+                <input type="checkbox" name="fields[]" value="subtlexUS_zipf" />
                 <a
                   href="https://www.wellformedness.com/blog/zipf-scale/"
                   target="_blank"
@@ -296,26 +296,34 @@
           <li>
             <input type="checkbox" name="sources[]" value="WikiPron US" />
             WikiPron-US
-            <a href="https://www.apache.org/licenses/LICENSE-2.0.html"
-              >(Apache 2.0)</a
+            <a href="https://creativecommons.org/licenses/by-sa/4.0/"
+              >(CC BY-SA 4.0)</a
             >
             <ul>
               <li>
-                <input type="checkbox" name="fields[]" value="wikipronus_IPA" />
+                <input type="checkbox" name="fields[]" value="wikipronUS_IPA" />
                 IPA
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="wikipronUS_XSAMPA" />
+                X-SAMPA
               </li>
             </ul>
           </li>
           <li>
             <input type="checkbox" name="sources[]" value="WikiPron UK" />
             WikiPron-UK
-            <a href="https://www.apache.org/licenses/LICENSE-2.0.html"
-              >(Apache 2.0)</a
+            <a href="https://creativecommons.org/licenses/by-sa/4.0/"
+              >(CC BY-SA 4.0)</a
             >
             <ul>
               <li>
-                <input type="checkbox" name="fields[]" value="wikipronuk_IPA" />
+                <input type="checkbox" name="fields[]" value="wikipronUK_IPA" />
                 IPA
+              </li>
+              <li>
+                <input type="checkbox" name="fields[]" value="wikipronUK_XSAMPA" />
+                X-SAMPA
               </li>
             </ul>
           </li>
@@ -365,8 +373,9 @@
   <ul style="display: none">
     <li><input type="checkbox" name="licenses" value="BY" /> CC BY 4.0</li>
     <li><input type="checkbox" name="licenses" value="NC" /> CC BY-NC 4.0</li>
+    <li><input type="checkbox" name="licenses" value="SA" /> CC BY-SA 4.0</li>
     <li><input type="checkbox" name="licenses" value="GNU" /> GNU GPL v3</li>
-    <li><input type="checkbox" name="licenses" value="apache" /> Apache 2.0</li>
+    <li><input type="checkbox" name="licenses" value="celex" /> CELEX 2 User Agreement</li>
   </ul>
   <div id="license-notice"></div>
 
