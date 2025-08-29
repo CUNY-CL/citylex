@@ -42,6 +42,7 @@ def _data_to_csv(cursor, writer, source_table, columns, where=""):
         row_dict = dict(zip(columns, row))
         writer.writerow(row_dict)
 
+
 def _wikipron_data_to_csv(cursor, writer, selected_fields, uk_or_us):
     # uk_or_us must be capitalized: "UK" or "US"
     cursor.execute(
@@ -72,7 +73,7 @@ def _subtlex_data_to_csv(cursor, writer, selected_fields, uk_or_us):
     """
     source_name = f"SUBTLEX-{uk_or_us}"
     field_prefix = f"subtlex{uk_or_us}"
-    
+
     # Builds base columns.
     columns = ["wordform", "source"]
     if f"{field_prefix}_raw_frequency" in selected_fields:
@@ -94,7 +95,7 @@ def _subtlex_data_to_csv(cursor, writer, selected_fields, uk_or_us):
         f"SELECT {', '.join(columns)}, raw_frequency "
         "FROM frequency "
         "WHERE source = ?",
-        (source_name,)
+        (source_name,),
     )
     for row in cursor:
         raw_freq = row[-1]
@@ -221,14 +222,10 @@ def post():
         writer.writeheader()
         # Fetches and writes SUBTLEX-US data.
         if "subtlexUK" in selected_sources:
-            _subtlex_data_to_csv(
-                cursor, writer, selected_fields, "UK"
-            )
+            _subtlex_data_to_csv(cursor, writer, selected_fields, "UK")
         # Fetches and writes SUBTLEX-UK data.
         if "subtlexUS" in selected_sources:
-            _subtlex_data_to_csv(
-                cursor, writer, selected_fields, "US"
-            )
+            _subtlex_data_to_csv(cursor, writer, selected_fields, "US")
         # Fetches and writes WikiPron-US data.
         if "WikiPron US" in selected_sources:
             _wikipron_data_to_csv(cursor, writer, selected_fields, "US")
@@ -596,7 +593,7 @@ def post():
                     "SELECT wordform, pronunciation "
                     "FROM pronunciation "
                     "WHERE source = ?",
-                    (source_name,)
+                    (source_name,),
                 )
                 for wordform, pronunciation in cursor:
                     # Checks if the specific field for this pronunciation type
@@ -619,17 +616,18 @@ def post():
                             wordform, display_name, pronunciation
                         )
                     if (
-                        (
-                            field_prefix == "wikipronUS"
-                            and "wikipronUS_XSAMPA" in selected_fields
-                        )
-                        or (
-                            field_prefix == "wikipronUK"
-                            and "wikipronUK_XSAMPA" in selected_fields
-                        )
+                        field_prefix == "wikipronUS"
+                        and "wikipronUS_XSAMPA" in selected_fields
+                    ) or (
+                        field_prefix == "wikipronUK"
+                        and "wikipronUK_XSAMPA" in selected_fields
                     ):
-                        xsampa_display_name = display_name.replace("(IPA)", "(X-SAMPA)")
-                        xsampa_pronunciation = xsampa.ipa_to_xsampa(pronunciation)
+                        xsampa_display_name = display_name.replace(
+                            "(IPA)", "(X-SAMPA)"
+                        )
+                        xsampa_pronunciation = xsampa.ipa_to_xsampa(
+                            pronunciation
+                        )
                         add_to_aggregated_data(
                             wordform, xsampa_display_name, xsampa_pronunciation
                         )
