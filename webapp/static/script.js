@@ -12,8 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
     celex: "CELEX 2 User Agreement",
   };
   const sourceLicenseMap = {
-    subtlexus: "NC",
-    subtlexuk: "NC",
+    subtlexUS: "NC",
+    subtlexUK: "NC",
     UDLexicons: "GNU",
     UniMorph: "BY",
     "WikiPron US": "SA",
@@ -24,12 +24,12 @@ document.addEventListener("DOMContentLoaded", function () {
     celexpron: "celex",
   };
   const defaultFieldMap = {
-    subtlexuk: "subtlexuk_raw_frequency",
-    subtlexus: "subtlexus_raw_frequency",
+    subtlexUK: "subtlexUK_raw_frequency",
+    subtlexUS: "subtlexUS_raw_frequency",
     UDLexicons: "udlex_UDtags",
     UniMorph: "um_UMtags",
-    "WikiPron US": "wikipronus_IPA",
-    "WikiPron UK": "wikipronuk_IPA",
+    "WikiPron US": "wikipronUS_IPA",
+    "WikiPron UK": "wikipronUK_IPA",
     ELP: "elp_segmentation",
     celexfreq: "celexfreq_raw_frequency",
     celexfeat: "celex_CELEXtags",

@@ -9,7 +9,7 @@ import sqlite3
 
 from flask import Flask, render_template, request, send_file
 
-from citylex import features, zipf, xsampa
+from citylex import features, xsampa, zipf
 
 DB_PATH = "citylex.db"
 FREQUENCY_PRECISION = 6
@@ -43,10 +43,11 @@ def _data_to_csv(cursor, writer, source_table, columns, where=""):
         writer.writerow(row_dict)
 
 def _wikipron_data_to_csv(cursor, writer, selected_fields, uk_or_us):
+    # uk_or_us must be capitalized: "UK" or "US"
     cursor.execute(
         "SELECT wordform, source, pronunciation "
         "FROM pronunciation "
-        f"WHERE source = 'WikiPron {uk_or_us.upper()}' AND standard = 'IPA'"
+        f"WHERE source = 'WikiPron {uk_or_us}' AND standard = 'IPA'"
     )
     for row in cursor:
         wordform, source, ipa_pron = row
@@ -67,9 +68,9 @@ def _subtlex_data_to_csv(cursor, writer, selected_fields, uk_or_us):
         cursor: The SQLite cursor object.
         writer: The CSV DictWriter object.
         selected_fields (list): The list of fields selected by the user.
-        uk_or_us (str): Either 'uk' or 'us' to specify the SUBTLEX source.
+        uk_or_us (str): Either 'UK' or 'US' to specify the SUBTLEX source.
     """
-    source_name = f"SUBTLEX-{uk_or_us.upper()}"
+    source_name = f"SUBTLEX-{uk_or_us}"
     field_prefix = f"subtlex{uk_or_us}"
     
     # Builds base columns.
@@ -156,37 +157,37 @@ def post():
     # Builds CSV column headers.
     columns = ["wordform", "source"]
     if (
-        "subtlexus_raw_frequency" in selected_fields
-        or "subtlexuk_raw_frequency" in selected_fields
+        "subtlexUS_raw_frequency" in selected_fields
+        or "subtlexUK_raw_frequency" in selected_fields
         or "celexfreq_raw_frequency" in selected_fields
     ):
         columns.append("raw_frequency")
     if (
-        "subtlexus_freq_per_million" in selected_fields
-        or "subtlexuk_freq_per_million" in selected_fields
+        "subtlexUS_freq_per_million" in selected_fields
+        or "subtlexUK_freq_per_million" in selected_fields
         or "celexfreq_freq_per_million" in selected_fields
     ):
         columns.append("freq_per_million")
     if (
-        "subtlexuk_logprob" in selected_fields
-        or "subtlexus_logprob" in selected_fields
+        "subtlexUK_logprob" in selected_fields
+        or "subtlexUS_logprob" in selected_fields
         or "celexfreq_logprob" in selected_fields
     ):
         columns.append("-logprob")
     if (
-        "subtlexuk_zipf" in selected_fields
-        or "subtlexus_zipf" in selected_fields
+        "subtlexUK_zipf" in selected_fields
+        or "subtlexUS_zipf" in selected_fields
         or "celexfreq_zipf" in selected_fields
     ):
         columns.append("zipf")
     if (
-        "wikipronus_IPA" in selected_fields
-        or "wikipronuk_IPA" in selected_fields
+        "wikipronUS_IPA" in selected_fields
+        or "wikipronUK_IPA" in selected_fields
     ):
         columns.append("IPA_pronunciation")
     if (
-        "wikipronus_XSAMPA" in selected_fields
-        or "wikipronuk_XSAMPA" in selected_fields
+        "wikipronUS_XSAMPA" in selected_fields
+        or "wikipronUK_XSAMPA" in selected_fields
     ):
         columns.append("XSAMPA_pronunciation")
     if "celex_DISC" in selected_fields:
@@ -219,21 +220,21 @@ def post():
         writer = csv.DictWriter(output, fieldnames=columns, delimiter="\t")
         writer.writeheader()
         # Fetches and writes SUBTLEX-US data.
-        if "subtlexuk" in selected_sources:
+        if "subtlexUK" in selected_sources:
             _subtlex_data_to_csv(
-                cursor, writer, selected_fields, "uk"
+                cursor, writer, selected_fields, "UK"
             )
         # Fetches and writes SUBTLEX-UK data.
-        if "subtlexus" in selected_sources:
+        if "subtlexUS" in selected_sources:
             _subtlex_data_to_csv(
-                cursor, writer, selected_fields, "us"
+                cursor, writer, selected_fields, "US"
             )
         # Fetches and writes WikiPron-US data.
         if "WikiPron US" in selected_sources:
-            _wikipron_data_to_csv(cursor, writer, selected_fields, "us")
+            _wikipron_data_to_csv(cursor, writer, selected_fields, "US")
         # Fetches and writes WikiPron-UK data.
         if "WikiPron UK" in selected_sources:
-            _wikipron_data_to_csv(cursor, writer, selected_fields, "uk")
+            _wikipron_data_to_csv(cursor, writer, selected_fields, "UK")
         # Fetches and writes CELEX data.
         if any(
             s in selected_sources
@@ -438,8 +439,8 @@ def post():
 
         # Processes frequency data.
         for source, source_fieldname in [
-            ("SUBTLEX-UK", "subtlexuk"),
-            ("SUBTLEX-US", "subtlexus"),
+            ("SUBTLEX-UK", "subtlexUK"),
+            ("SUBTLEX-US", "subtlexUS"),
             ("CELEX", "celexfreq"),
         ]:
             if source_fieldname in selected_sources:
@@ -581,8 +582,8 @@ def post():
                     )
         # Processes pronunciation data.
         for source_key, field_prefix, display_name in [
-            ("WikiPron US", "wikipronus", "WikiPron US (IPA)"),
-            ("WikiPron UK", "wikipronuk", "WikiPron UK (IPA)"),
+            ("WikiPron US", "wikipronUS", "WikiPron US (IPA)"),
+            ("WikiPron UK", "wikipronUK", "WikiPron UK (IPA)"),
             ("celexpron", "celex_DISC", "CELEX (DISC)"),
         ]:
             if source_key in selected_sources:
@@ -602,12 +603,12 @@ def post():
                     # was selected.
                     if (
                         (
-                            field_prefix == "wikipronus"
-                            and "wikipronus_IPA" in selected_fields
+                            field_prefix == "wikipronUS"
+                            and "wikipronUS_IPA" in selected_fields
                         )
                         or (
-                            field_prefix == "wikipronuk"
-                            and "wikipronuk_IPA" in selected_fields
+                            field_prefix == "wikipronUK"
+                            and "wikipronUK_IPA" in selected_fields
                         )
                         or (
                             field_prefix == "celex_DISC"
@@ -619,12 +620,12 @@ def post():
                         )
                     if (
                         (
-                            field_prefix == "wikipronus"
-                            and "wikipronus_XSAMPA" in selected_fields
+                            field_prefix == "wikipronUS"
+                            and "wikipronUS_XSAMPA" in selected_fields
                         )
                         or (
-                            field_prefix == "wikipronuk"
-                            and "wikipronuk_XSAMPA" in selected_fields
+                            field_prefix == "wikipronUK"
+                            and "wikipronUK_XSAMPA" in selected_fields
                         )
                     ):
                         xsampa_display_name = display_name.replace("(IPA)", "(X-SAMPA)")
