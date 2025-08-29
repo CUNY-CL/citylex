@@ -53,7 +53,7 @@ def _wikipron_data_to_csv(cursor, writer, selected_fields, uk_or_us):
         row_dict = {"wordform": wordform, "source": source}
         if f"wikipron{uk_or_us}_IPA" in selected_fields:
             row_dict["IPA_pronunciation"] = ipa_pron
-        if f"wikipron{uk_or_us}_IPA" in selected_fields:
+        if f"wikipron{uk_or_us}_XSAMPA" in selected_fields:
             row_dict["XSAMPA_pronunciation"] = xsampa.ipa_to_xsampa(ipa_pron)
         writer.writerow(row_dict)
 
@@ -587,16 +587,15 @@ def post():
         ]:
             if source_key in selected_sources:
                 # For CELEX, filters by standard = 'DISC'.
-                where_clause = (
-                    "standard = 'IPA'"
-                    if source_key.startswith("WikiPron")
-                    else "standard = 'DISC'"
-                )
+                if source_key == "celexpron":
+                    source_name = "CELEX"
+                else:
+                    source_name = source_key
                 cursor.execute(
                     "SELECT wordform, pronunciation "
                     "FROM pronunciation "
-                    f"WHERE source = '{source_key.split('_')[0]}' "
-                    f"AND {where_clause}"
+                    "WHERE source = ?",
+                    (source_name,)
                 )
                 for wordform, pronunciation in cursor:
                     # Checks if the specific field for this pronunciation type
@@ -618,6 +617,21 @@ def post():
                         add_to_aggregated_data(
                             wordform, display_name, pronunciation
                         )
+                    if (
+                        (
+                            field_prefix == "wikipronus"
+                            and "wikipronus_XSAMPA" in selected_fields
+                        )
+                        or (
+                            field_prefix == "wikipronuk"
+                            and "wikipronuk_XSAMPA" in selected_fields
+                        )
+                    ):
+                        xsampa_display_name = display_name.replace("(IPA)", "(X-SAMPA)")
+                        xsampa_pronunciation = xsampa.ipa_to_xsampa(pronunciation)
+                        add_to_aggregated_data(
+                            wordform, xsampa_display_name, xsampa_pronunciation
+                        )
         # Sends the file as a response.
         contents = io.BytesIO(
             json.dumps(
@@ -630,6 +644,7 @@ def post():
             as_attachment=True,
             download_name=f"citylex-{datetime.date.today().isoformat()}.json",
         )
+    conn.close()
 
 
 if __name__ == "__main__":
