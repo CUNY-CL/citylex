@@ -390,7 +390,34 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
         lemma = _normalize(tags[3])
         if lemma == "_":
             continue
-        ud_tag = f"{tags[4]}|{tags[6]}"
+        # -------------------------------
+        # Ingestion policy for English:
+        # 1) Suppress possessive/genitive tokens from dictionary entries.
+        #    (UD marks these as Case=Gen; they correspond to the English 's clitic.)
+        # 2) Strip proper-noun gender (Gender=*) for English PROPN.
+        # -------------------------------
+        upos = tags[4]                 # e.g., "NOUN", "PROPN", "VERB", ...
+        feats_raw = tags[6]            # e.g., "Number=Sing|Case=Gen|Gender=Masc"
+
+        # Normalize feature string into a list (skip "_" placeholder)
+        feats = [] if feats_raw == "_" else feats_raw.split("|")
+        feats = [f.strip() for f in feats if f.strip()]
+
+        # (1) Drop possessives/genitives for nouns & proper nouns
+        if upos in {"NOUN", "PROPN"} and any(f == "Case=Gen" for f in feats):
+            # Skip inserting this token entirely.
+            continue
+
+        # (2) Strip proper-noun gender
+        if upos == "PROPN":
+            feats = [f for f in feats if not f.startswith("Gender=")]
+
+        # Recompose UD tag (if no feats remain, just use upos)
+        if feats:
+            ud_tag = f"{upos}|{'|'.join(feats)}"
+        else:
+            ud_tag = upos
+            
         cursor.execute(
             """
             INSERT INTO features (
