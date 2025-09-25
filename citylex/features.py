@@ -15,11 +15,11 @@ from typing import Dict, Optional
 _map_cols = ("CELEX", "UniMorph", "UD")
 _map_tuples = [
     # Adverb.
-    # Important: UD no-features are now emitted as bare 'ADV' (not 'ADV|_').
+    # Note: UD no-features are now emitted as bare 'ADV' (not 'ADV|_').
     ("B", "ADV", "ADV"),
 
     # Positive adjective.
-    # Important: UD no-features are now emitted as bare 'ADJ' (not 'ADJ|_').
+    # Note: UD no-features are now emitted as bare 'ADJ' (not 'ADJ|_').
     ("b", "ADJ", "ADJ"),
 
     # Comparative adjective.
@@ -31,11 +31,17 @@ _map_tuples = [
     # Infinitive.
     ("i", "V;NFIN;IMP+SBJV", "VERB|VerbForm=Inf"),
 
-    # Present participle.
-    ("pe", "V;V.PTCP;PRS", "VERB|Tense=Pres|VerbForm=Part"),
+    # Gerund(ive).
+    # CELEX collapses Gerund and Participle to 'p'.
+    ("p", "V;GER", "VERB|VerbForm=Ger"),
 
     # Past participle.
-    ("pa", "V;V.PTCP;PST", "VERB|Tense=Past|VerbForm=Part"),
+    # CELEX collapses present/past to 'p'.
+    ("p", "V;V.PTCP;PST", "VERB|Tense=Past|VerbForm=Part"),
+
+    # Present participle.
+    # CELEX collapses present/past to 'p'.
+    ("p", "V;V.PTCP;PRS", "VERB|Tense=Pres|VerbForm=Part"),
 
     # Simple past.
     ("a1S", "V;PST", "VERB|Tense=Past"),
@@ -67,21 +73,11 @@ _map_tuples = [
         ],
     ),
 
-    # ---------------------------------------------------------------------
-    # NEW: Cover frequent UD bundles observed as unmapped in TSV exports.
-    # Where CELEX lacks a natural analog for English, leave CELEX = "" and
-    # provide a UniMorph mapping so the UM column is populated.
-    # ---------------------------------------------------------------------
-
     # Verbs (generic present without person/number in UD).
-    ("", "V;PRS", "VERB|Tense=Pres"),          # CELEX has no single “generic present” code.
+    ("", "V;PRS", "VERB|Tense=Pres"),
 
     # Imperative mood.
-    ("", "V;IMP", "VERB|Mood=Imp"),            # No distinct CELEX imperative tag for EN.
-
-    # Gerund(ive). Policy: map UD VerbForm=Ger to UniMorph GER for EN.
-    # (If project policy changes, switch to V;NFIN instead.)
-    ("", "V;GER", "VERB|VerbForm=Ger"),
+    ("", "V;IMP", "VERB|Mood=Imp"),
 
     # Bare noun (no Number specified). Provide coarse UM; CELEX unknown.
     ("", "N", "NOUN"),
@@ -90,7 +86,7 @@ _map_tuples = [
     ("", "NUM",    "NUM"),
     ("", "NUM;PL", "NUM|Number=Plur"),
 
-    # Closed-class POS (UniMorph coarse labels; CELEX left blank for EN).
+    # Closed-class POS.
     ("", "ADP",   "ADP"),
     ("", "SCONJ", "SCONJ"),
     ("", "PART",  "PART"),
@@ -98,7 +94,7 @@ _map_tuples = [
     ("", "SYM",   "SYM"),
     ("", "X",     "X"),
 
-    # Determiners & pronouns (coarse UM mappings; CELEX left blank).
+    # Determiners & pronouns.
     ("", "DET",     "DET"),
     ("", "DET;SG",  "DET|Number=Sing"),
     ("", "DET;PL",  "DET|Number=Plur"),
