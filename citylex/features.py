@@ -15,23 +15,34 @@ from typing import Dict, Optional
 _map_cols = ("CELEX", "UniMorph", "UD")
 _map_tuples = [
     # Adverb.
-    ("B", "ADV", "ADV|_"),
+    # Important: UD no-features are now emitted as bare 'ADV' (not 'ADV|_').
+    ("B", "ADV", "ADV"),
+
     # Positive adjective.
-    ("b", "ADJ", "ADJ|_"),
+    # Important: UD no-features are now emitted as bare 'ADJ' (not 'ADJ|_').
+    ("b", "ADJ", "ADJ"),
+
     # Comparative adjective.
     ("c", "ADJ;CMPR", "ADJ|Degree=Cmp"),
+
     # Superlative adjective.
     ("s", "ADJ;SPRL", "ADJ|Degree=Sup"),
+
     # Infinitive.
     ("i", "V;NFIN;IMP+SBJV", "VERB|VerbForm=Inf"),
+
     # Present participle.
     ("pe", "V;V.PTCP;PRS", "VERB|Tense=Pres|VerbForm=Part"),
+
     # Past participle.
     ("pa", "V;V.PTCP;PST", "VERB|Tense=Past|VerbForm=Part"),
+
     # Simple past.
     ("a1S", "V;PST", "VERB|Tense=Past"),
+
     # 3sg present.
     ("e3S", ["V;PRS;3;SG"], "VERB|Number=Sing|Person=3|Tense=Pres"),
+
     # Noun singular.
     (
         "S",
@@ -43,6 +54,7 @@ _map_tuples = [
             "PROPN|Gender=Masc|Number=Sing",
         ],
     ),
+
     # Noun plural.
     (
         "P",
@@ -54,6 +66,44 @@ _map_tuples = [
             "PROPN|Gender=Masc|Number=Plur",
         ],
     ),
+
+    # ---------------------------------------------------------------------
+    # NEW: Cover frequent UD bundles observed as unmapped in TSV exports.
+    # Where CELEX lacks a natural analog for English, leave CELEX = "" and
+    # provide a UniMorph mapping so the UM column is populated.
+    # ---------------------------------------------------------------------
+
+    # Verbs (generic present without person/number in UD).
+    ("", "V;PRS", "VERB|Tense=Pres"),          # CELEX has no single “generic present” code.
+
+    # Imperative mood.
+    ("", "V;IMP", "VERB|Mood=Imp"),            # No distinct CELEX imperative tag for EN.
+
+    # Gerund(ive). Policy: map UD VerbForm=Ger to UniMorph GER for EN.
+    # (If project policy changes, switch to V;NFIN instead.)
+    ("", "V;GER", "VERB|VerbForm=Ger"),
+
+    # Bare noun (no Number specified). Provide coarse UM; CELEX unknown.
+    ("", "N", "NOUN"),
+
+    # Numerals.
+    ("", "NUM",    "NUM"),
+    ("", "NUM;PL", "NUM|Number=Plur"),
+
+    # Closed-class POS (UniMorph coarse labels; CELEX left blank for EN).
+    ("", "ADP",   "ADP"),
+    ("", "SCONJ", "SCONJ"),
+    ("", "PART",  "PART"),
+    ("", "INTJ",  "INTJ"),
+    ("", "SYM",   "SYM"),
+    ("", "X",     "X"),
+
+    # Determiners & pronouns (coarse UM mappings; CELEX left blank).
+    ("", "DET",     "DET"),
+    ("", "DET;SG",  "DET|Number=Sing"),
+    ("", "DET;PL",  "DET|Number=Plur"),
+    ("", "PRON",    "PRON"),
+    ("", "PRON;SG", "PRON|Number=Sing"),
 ]
 
 
