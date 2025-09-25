@@ -15,40 +15,28 @@ from typing import Dict, Optional
 _map_cols = ("CELEX", "UniMorph", "UD")
 _map_tuples = [
     # Adverb.
-    # Note: UD no-features are now emitted as bare 'ADV' (not 'ADV|_').
     ("B", "ADV", "ADV"),
-
+    # Adverb comparison.
+    ("", "ADV;CMPR", "ADV|Degree=Cmp"),
+    ("", "ADV;SPRL", "ADV|Degree=Sup"),
     # Positive adjective.
-    # Note: UD no-features are now emitted as bare 'ADJ' (not 'ADJ|_').
     ("b", "ADJ", "ADJ"),
-
     # Comparative adjective.
     ("c", "ADJ;CMPR", "ADJ|Degree=Cmp"),
-
     # Superlative adjective.
     ("s", "ADJ;SPRL", "ADJ|Degree=Sup"),
-
     # Infinitive.
     ("i", "V;NFIN;IMP+SBJV", "VERB|VerbForm=Inf"),
-
-    # Gerund(ive).
-    # CELEX collapses Gerund and Participle to 'p'.
+    # Gerund. CELEX collapses gerund/participle to 'p'.
     ("p", "V;GER", "VERB|VerbForm=Ger"),
-
     # Past participle.
-    # CELEX collapses present/past to 'p'.
     ("p", "V;V.PTCP;PST", "VERB|Tense=Past|VerbForm=Part"),
-
     # Present participle.
-    # CELEX collapses present/past to 'p'.
     ("p", "V;V.PTCP;PRS", "VERB|Tense=Pres|VerbForm=Part"),
-
     # Simple past.
     ("a1S", "V;PST", "VERB|Tense=Past"),
-
     # 3sg present.
     ("e3S", ["V;PRS;3;SG"], "VERB|Number=Sing|Person=3|Tense=Pres"),
-
     # Noun singular.
     (
         "S",
@@ -60,7 +48,6 @@ _map_tuples = [
             "PROPN|Gender=Masc|Number=Sing",
         ],
     ),
-
     # Noun plural.
     (
         "P",
@@ -72,34 +59,34 @@ _map_tuples = [
             "PROPN|Gender=Masc|Number=Plur",
         ],
     ),
-
-    # Verbs (generic present without person/number in UD).
+    # Generic present without person/number.
     ("", "V;PRS", "VERB|Tense=Pres"),
-
     # Imperative mood.
     ("", "V;IMP", "VERB|Mood=Imp"),
-
-    # Bare noun (no Number specified). Provide coarse UM; CELEX unknown.
+    # Bare noun.
     ("", "N", "NOUN"),
-
+    # Bare proper noun.
+    ("", "N", "PROPN"),
     # Numerals.
-    ("", "NUM",    "NUM"),
+    ("", "NUM", "NUM"),
     ("", "NUM;PL", "NUM|Number=Plur"),
-
+    ("", "NUM;SG", "NUM|Number=Sing"),
     # Closed-class POS.
-    ("", "ADP",   "ADP"),
+    ("", "ADP", "ADP"),
     ("", "SCONJ", "SCONJ"),
-    ("", "PART",  "PART"),
-    ("", "INTJ",  "INTJ"),
-    ("", "SYM",   "SYM"),
-    ("", "X",     "X"),
-
+    ("", "PART", "PART"),
+    ("", "INTJ", "INTJ"),
+    ("", "SYM", "SYM"),
+    ("", "X", "X"),
+    ("", "AUX", "AUX"),
+    ("", "CCONJ", "CCONJ"),
     # Determiners & pronouns.
-    ("", "DET",     "DET"),
-    ("", "DET;SG",  "DET|Number=Sing"),
-    ("", "DET;PL",  "DET|Number=Plur"),
-    ("", "PRON",    "PRON"),
+    ("", "DET", "DET"),
+    ("", "DET;SG", "DET|Number=Sing"),
+    ("", "DET;PL", "DET|Number=Plur"),
+    ("", "PRON", "PRON"),
     ("", "PRON;SG", "PRON|Number=Sing"),
+    ("", "PRON;PL", "PRON|Number=Plur"),
 ]
 
 
