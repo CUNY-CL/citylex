@@ -377,47 +377,77 @@ def _subtlex_us(conn: sqlite3.Connection) -> None:
 def _udlexicons(conn: sqlite3.Connection) -> None:
     """Collects UDLexicons analyses."""
     cursor = conn.cursor()
-    counter = 0
+
+    # -------------------------------
+    # Ingestion policy for English UDLexicons
+    # -------------------------------
+    DROP_GENITIVE_FORMS = True       # drop NOUN/PROPN with genitive/possessive
+    STRIP_PROPN_GENDER  = True       # remove Gender=* for PROPN entries
+    STRICT_NO_OVERGENERALIZE = True  # don't collapse to bare UPOS unless safe
+
     url = "http://atoll.inria.fr/~sagot/UDLexicons.0.2.zip"
     path = "UDLexicons.0.2/UDLex_English-Apertium.conllul"
     archive = _request_url_zip_resource(url)
+
+    counter = 0
+    dropped_gen = 0
+    skipped_overgen = 0
+
     # This is complicated enough we'll do it by index.
     for tags in csv.reader(_zip_lines(archive, path), delimiter="\t"):
-        # Skips multiword expressions.
-        if tags[0].startswith("0-"):
+        # Defensive skips
+        if not tags or tags[0].startswith("#"):
             continue
-        wordform = _normalize(tags[2])
-        lemma = _normalize(tags[3])
-        if lemma == "_":
+        if len(tags) < 7:
             continue
-        # -------------------------------
-        # Ingestion policy for English:
-        # 1) Suppress possessive/genitive tokens from dictionary entries.
-        #    (UD marks these as Case=Gen; they correspond to the English 's clitic.)
-        # 2) Strip proper-noun gender (Gender=*) for English PROPN.
-        # -------------------------------
-        upos = tags[4]                 # e.g., "NOUN", "PROPN", "VERB", ...
-        feats_raw = tags[6]            # e.g., "Number=Sing|Case=Gen|Gender=Masc"
 
-        # Normalize feature string into a list (skip "_" placeholder)
-        feats = [] if feats_raw == "_" else feats_raw.split("|")
-        feats = [f.strip() for f in feats if f.strip()]
+        # Skips multiword expressions.
+        if "-" in tags[0]:
+            continue
+
+        # Important: This file uses FORM=2, LEMMA=3, UPOS=4, FEATS=6.
+        wordform = _normalize(tags[2])
+        lemma    = _normalize(tags[3])
+        upos     = tags[4]           # e.g., "NOUN", "PROPN", "VERB", ...
+        feats_raw = tags[6]          # e.g., "Number=Sing|Case=Gen|Gender=Masc"
+
+        if lemma == "_" or wordform == "_":
+            continue
+
+        # Normalize feature list
+        feats0 = [] if feats_raw == "_" else [f.strip() for f in feats_raw.split("|") if f.strip()]
+        feats = feats0[:]  # working copy
 
         # (1) Drop possessives/genitives for nouns & proper nouns
-        if upos in {"NOUN", "PROPN"} and any(f == "Case=Gen" for f in feats):
-            # Skip inserting this token entirely.
-            continue
+        if DROP_GENITIVE_FORMS and upos in {"NOUN", "PROPN"}:
+            if any(f == "Case=Gen" for f in feats) or any(f == "Poss=Yes" for f in feats):
+                dropped_gen += 1
+                continue  # skip token entirely
 
         # (2) Strip proper-noun gender
-        if upos == "PROPN":
+        if STRIP_PROPN_GENDER and upos == "PROPN":
             feats = [f for f in feats if not f.startswith("Gender=")]
 
-        # Recompose UD tag (if no feats remain, just use upos)
-        if feats:
-            ud_tag = f"{upos}|{'|'.join(feats)}"
+        # Canonicalize feature order for stable downstream mapping lookups
+        feats_sorted = sorted(feats, key=lambda s: s.split("=")[0]) if feats else []
+
+        # Compose UD tag with a guard against over-generalization
+        if feats_sorted:
+            ud_tag = f"{upos}|{'|'.join(feats_sorted)}"
         else:
-            ud_tag = upos
-            
+            if feats_raw == "_":
+                # Input had no features originally -> safe
+                ud_tag = upos
+            elif STRICT_NO_OVERGENERALIZE:
+                only_gender_removed = (upos == "PROPN") and feats0 and all(x.startswith("Gender=") for x in feats0)
+                if only_gender_removed:
+                    ud_tag = upos
+                else:
+                    skipped_overgen += 1
+                    continue  # avoid inventing a more general tag
+            else:
+                ud_tag = upos
+
         cursor.execute(
             """
             INSERT INTO features (
@@ -425,13 +455,18 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
                 source,
                 lemma,
                 tags
-                ) VALUES (?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?)
             """,
             (wordform, "UDLexicons", lemma, ud_tag),
         )
         counter += 1
+
     assert counter, "No data read"
     logging.info(f"Collected {counter:,} UDLexicon analyses")
+    if DROP_GENITIVE_FORMS:
+        logging.info(f"Dropped genitive/possessive entries: {dropped_gen:,}")
+    if STRICT_NO_OVERGENERALIZE:
+        logging.info(f"Skipped to avoid over-generalization: {skipped_overgen:,}")
     conn.commit()
 
 
