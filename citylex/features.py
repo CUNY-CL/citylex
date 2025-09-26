@@ -14,41 +14,50 @@ from typing import Dict, Optional
 # in this case, only the first tag will be mapped to.
 _map_cols = ("CELEX", "UniMorph", "UD")
 _map_tuples = [
-    # Adverb.
+    # Adverbs.
     ("B", "ADV", "ADV"),
-    # Adverb comparison.
     ("", "ADV;CMPR", "ADV|Degree=Cmp"),
     ("", "ADV;SPRL", "ADV|Degree=Sup"),
-    # Positive adjective.
+    # Adjectives.
     ("b", "ADJ", "ADJ"),
-    # Comparative adjective.
     ("c", "ADJ;CMPR", "ADJ|Degree=Cmp"),
-    # Superlative adjective.
     ("s", "ADJ;SPRL", "ADJ|Degree=Sup"),
-    # Infinitive.
+    # Verbs.
     ("i", "V;NFIN;IMP+SBJV", "VERB|VerbForm=Inf"),
-    # Gerund. CELEX collapses gerund/participle to 'p'.
-    ("p", "V;GER", "VERB|VerbForm=Ger"),
-    # Past participle.
-    ("p", "V;V.PTCP;PST", "VERB|Tense=Past|VerbForm=Part"),
-    # Present participle.
-    ("p", "V;V.PTCP;PRS", "VERB|Tense=Pres|VerbForm=Part"),
-    # Simple past.
-    ("a1S", "V;PST", "VERB|Tense=Past"),
-    # 3sg present.
-    ("e3S", ["V;PRS;3;SG"], "VERB|Number=Sing|Person=3|Tense=Pres"),
-    # Noun singular.
+    # CELEX collapses gerund + participles to 'p'.
+    ("p", "V;GER",           "VERB|VerbForm=Ger"),
+    ("p", "V;V.PTCP;PST",    "VERB|Tense=Past|VerbForm=Part"),
+    ("p", "V;V.PTCP;PRS",    "VERB|Tense=Pres|VerbForm=Part"),
+    ("a1S","V;PST",          "VERB|Tense=Past"),
+    # Finite verbs: UD->UM only.
+    ("", "V;PRS", "VERB|Tense=Pres"),
+    ("", "V;PRS", "VERB|Number=Sing|Person=1|Tense=Pres"),
+    ("", "V;PRS", "VERB|Number=Sing|Person=2|Tense=Pres"),
+    # Third-person singular.
+    ("e3S",["V;PRS;3;SG"],   "VERB|Number=Sing|Person=3|Tense=Pres"),
+    ("", "V;PRS", "VERB|Number=Plur|Person=1|Tense=Pres"),
+    ("", "V;PRS", "VERB|Number=Plur|Person=2|Tense=Pres"),
+    ("", "V;PRS", "VERB|Number=Plur|Person=3|Tense=Pres"),
+    ("", "V;PST", "VERB|Number=Sing|Person=1|Tense=Past"),
+    ("", "V;PST", "VERB|Number=Sing|Person=2|Tense=Past"),
+    ("", "V;PST", "VERB|Number=Sing|Person=3|Tense=Past"),
+    ("", "V;PST", "VERB|Number=Plur|Person=1|Tense=Past"),
+    ("", "V;PST", "VERB|Number=Plur|Person=2|Tense=Past"),
+    ("", "V;PST", "VERB|Number=Plur|Person=3|Tense=Past"),
+    ("", "V;SBJV;PRS", "VERB|Mood=Sub|Tense=Pres"),
+    ("", "V;IMP",      "VERB|Mood=Imp"),
+    # Nouns.
     (
         "S",
         "N;SG",
         [
             "NOUN|Number=Sing",
             "PROPN|Number=Sing",
+            # CELEX doesn’t track gender for EN.
             "PROPN|Gender=Fem|Number=Sing",
             "PROPN|Gender=Masc|Number=Sing",
         ],
     ),
-    # Noun plural.
     (
         "P",
         "N;PL",
@@ -59,34 +68,96 @@ _map_tuples = [
             "PROPN|Gender=Masc|Number=Plur",
         ],
     ),
-    # Generic present without person/number.
-    ("", "V;PRS", "VERB|Tense=Pres"),
-    # Imperative mood.
-    ("", "V;IMP", "VERB|Mood=Imp"),
-    # Bare noun.
+    # Bare nouns (UD without Number).
     ("", "N", "NOUN"),
-    # Bare proper noun.
     ("", "N", "PROPN"),
-    # Numerals.
-    ("", "NUM", "NUM"),
-    ("", "NUM;PL", "NUM|Number=Plur"),
-    ("", "NUM;SG", "NUM|Number=Sing"),
-    # Closed-class POS.
-    ("", "ADP", "ADP"),
-    ("", "SCONJ", "SCONJ"),
-    ("", "PART", "PART"),
-    ("", "INTJ", "INTJ"),
-    ("", "SYM", "SYM"),
-    ("", "X", "X"),
-    ("", "AUX", "AUX"),
-    ("", "CCONJ", "CCONJ"),
-    # Determiners & pronouns.
-    ("", "DET", "DET"),
+    # Determiners.
+    ("", "DET",    "DET"),
     ("", "DET;SG", "DET|Number=Sing"),
     ("", "DET;PL", "DET|Number=Plur"),
+    # Explicit Definite forms.
+    ("", "DET",    "DET|Definite=Ind"),
+    ("", "DET;SG", "DET|Definite=Ind|Number=Sing"),
+    ("", "DET;PL", "DET|Definite=Ind|Number=Plur"),
+    ("", "DET;PL", "DET|Number=Plur|Person=3"),
+    # Pronouns.
     ("", "PRON", "PRON"),
-    ("", "PRON;SG", "PRON|Number=Sing"),
-    ("", "PRON;PL", "PRON|Number=Plur"),
+    # Enumerated singular forms.
+    (
+        "",
+        "PRON;SG",
+        [
+            "PRON|Number=Sing",
+            "PRON|Number=Sing|Person=1",
+            "PRON|Number=Sing|Person=2",
+            "PRON|Number=Sing|Person=3",
+            # Gender distinctions exist in UD/UM.
+            "PRON|Gender=Masc|Number=Sing",
+            "PRON|Gender=Fem|Number=Sing",
+            "PRON|Gender=Neut|Number=Sing",
+            "PRON|Gender=Masc|Number=Sing|Person=3",
+            "PRON|Gender=Fem|Number=Sing|Person=3",
+            "PRON|Gender=Neut|Number=Sing|Person=3",
+            # Features sometimes attached in UD.
+            "PRON|Definite=Ind|Number=Sing",
+            "PRON|Reflex=Yes|Number=Sing",
+            "PRON|Poss=Yes|Number=Sing",
+            "PRON|Case=Nom|Number=Sing",
+            "PRON|Case=Acc|Number=Sing",
+        ],
+    ),
+    (
+        "",
+        "PRON;PL",
+        [
+            "PRON|Number=Plur",
+            "PRON|Number=Plur|Person=1",
+            "PRON|Number=Plur|Person=2",
+            "PRON|Number=Plur|Person=3",
+            "PRON|Gender=Masc|Number=Plur",
+            "PRON|Gender=Fem|Number=Plur",
+            "PRON|Gender=Neut|Number=Plur",
+            "PRON|Gender=Masc|Number=Plur|Person=2",
+            "PRON|Gender=Fem|Number=Plur|Person=1",
+            "PRON|Definite=Ind|Number=Plur",
+            "PRON|Reflex=Yes|Number=Plur",
+            "PRON|Poss=Yes|Number=Plur",
+        ],
+    ),
+    # UD pronouns without Number to coarse PRON.
+    ("", "PRON", "PRON|PronType=Rel"),
+    ("", "PRON", "PRON|Gender=Neut"),
+    ("", "PRON", "PRON|Person=1"),
+    ("", "PRON", "PRON|Person=2"),
+    ("", "PRON", "PRON|Person=3"),
+    ("", "PRON", "PRON|Gender=Masc|Person=2"),
+    ("", "PRON", "PRON|Gender=Fem|Person=2"),
+    ("", "PRON", "PRON|Poss=Yes"),
+    ("", "PRON", "PRON|Reflex=Yes"),
+    ("", "PRON", "PRON|Definite=Ind"),
+    ("", "PRON", "PRON|Case=Nom"),
+    ("", "PRON", "PRON|Case=Acc"),
+    # Numerals.
+    ("", "NUM",    "NUM"),
+    ("", "NUM;PL", "NUM|Number=Plur"),
+    ("", "NUM;SG", "NUM|Number=Sing"),
+    # Closed classes.
+    ("", "ADP",   "ADP"),
+    ("", "SCONJ", "SCONJ"),
+    ("", "PART",  "PART"),
+    ("", "INTJ",  "INTJ"),
+    ("", "SYM",   "SYM"),
+    ("", "X",     "X"),
+    ("", "AUX",   "AUX"),
+    ("", "CCONJ", "CCONJ"),
+    # Auxiliaries with features to coarse AUX.
+    ("", "AUX", "AUX|VerbForm=Inf"),
+    ("", "AUX", "AUX|VerbForm=Ger"),
+    ("", "AUX", "AUX|Tense=Pres"),
+    ("", "AUX", "AUX|Tense=Past"),
+    ("", "AUX", "AUX|Tense=Past|VerbForm=Part"),
+    ("", "PUNCT", "PUNCT"),
+    ("", "PART",  "PART|Polarity=Neg"),
 ]
 
 
