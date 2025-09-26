@@ -378,10 +378,10 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
     """Collects UDLexicons analyses."""
     cursor = conn.cursor()
     # UDLexicons ingestion configuration:
-    # - drop_genitive_forms: remove possessive/genitive nouns
-    # - strip_propn_gender: drop Gender=* from PROPN
-    # - strict_no_overgeneralize: discard underspecified tags;
-    #   keep bare PROPN if only Gender=* was removed
+    # - drop_genitive_forms: removes possessive/genitive nouns.
+    # - strip_propn_gender: drops Gender=* from PROPN.
+    # - strict_no_overgeneralize: discards underspecified tags; keeps bare
+    #   PROPN if only Gender=* was removed.
     drop_genitive_forms = True
     strip_propn_gender = True
     strict_no_overgeneralize = True
@@ -409,13 +409,13 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
         else:
             feats0 = [f.strip() for f in feats_raw.split("|") if f.strip()]
         feats = feats0[:]
-        # Drop possessives/genitives for NOUN/PROPN.
+        # Drops possessives/genitives for NOUN/PROPN.
         if drop_genitive_forms and upos in {"NOUN", "PROPN"}:
             has_genitive = any(f == "Case=Gen" for f in feats)
             has_possessive = any(f == "Poss=Yes" for f in feats)
             if has_genitive or has_possessive:
                 continue
-        # Strip gender on PROPN.
+        # Strips gender on PROPN.
         if strip_propn_gender and upos == "PROPN":
             feats = [f for f in feats if not f.startswith("Gender=")]
         feats_sorted = (
