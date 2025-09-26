@@ -413,7 +413,9 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
         # Strip proper-noun gender
         if strip_propn_gender and upos == "PROPN":
             feats = [f for f in feats if not f.startswith("Gender=")]
-        feats_sorted = sorted(feats, key=lambda s: s.split("=")[0]) if feats else []
+        feats_sorted = (
+            sorted(feats, key=lambda s: s.split("=")[0]) if feats else []
+        )
         if feats_sorted:
             ud_tag = f"{upos}|{'|'.join(feats_sorted)}"
         else:

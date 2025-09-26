@@ -28,13 +28,13 @@ _map_tuples = [
     ("p", "V;GER",           "VERB|VerbForm=Ger"),
     ("p", "V;V.PTCP;PST",    "VERB|Tense=Past|VerbForm=Part"),
     ("p", "V;V.PTCP;PRS",    "VERB|Tense=Pres|VerbForm=Part"),
-    ("a1S","V;PST",          "VERB|Tense=Past"),
+    ("a1S","V;PST",          "VERB|Tense=Past"), 
     # Finite verbs: UD->UM only.
     ("", "V;PRS", "VERB|Tense=Pres"),
     ("", "V;PRS", "VERB|Number=Sing|Person=1|Tense=Pres"),
     ("", "V;PRS", "VERB|Number=Sing|Person=2|Tense=Pres"),
     # Third-person singular.
-    ("e3S",["V;PRS;3;SG"],   "VERB|Number=Sing|Person=3|Tense=Pres"),
+    ("e3S",["V;PRS;3;SG"],   "VERB|Number=Sing|Person=3|Tense=Pres"), 
     ("", "V;PRS", "VERB|Number=Plur|Person=1|Tense=Pres"),
     ("", "V;PRS", "VERB|Number=Plur|Person=2|Tense=Pres"),
     ("", "V;PRS", "VERB|Number=Plur|Person=3|Tense=Pres"),
