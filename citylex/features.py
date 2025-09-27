@@ -15,11 +15,11 @@ from typing import Dict, Optional
 _map_cols = ("CELEX", "UniMorph", "UD")
 _map_tuples = [
     # Adverbs.
-    ("B", "ADV", "ADV"),
+    ("B", "ADV", "ADV|_"),
     ("", "ADV;CMPR", "ADV|Degree=Cmp"),
     ("", "ADV;SPRL", "ADV|Degree=Sup"),
     # Adjectives.
-    ("b", "ADJ", "ADJ"),
+    ("b", "ADJ", "ADJ|_"),
     ("c", "ADJ;CMPR", "ADJ|Degree=Cmp"),
     ("s", "ADJ;SPRL", "ADJ|Degree=Sup"),
     # Verbs.
