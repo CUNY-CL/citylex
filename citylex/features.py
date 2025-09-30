@@ -15,14 +15,18 @@ from typing import Dict, Optional
 _map_cols = ("CELEX", "UniMorph", "UD")
 _map_tuples = [
     # Adverbs.
+    ("B", "ADV", "ADV"),
     ("B", "ADV", "ADV|_"),
     ("", "ADV;CMPR", "ADV|Degree=Cmp"),
     ("", "ADV;SPRL", "ADV|Degree=Sup"),
     # Adjectives.
+    ("b", "ADJ", "ADJ"),
     ("b", "ADJ", "ADJ|_"),
     ("c", "ADJ;CMPR", "ADJ|Degree=Cmp"),
     ("s", "ADJ;SPRL", "ADJ|Degree=Sup"),
     # Verbs.
+    # CELEX collapses imperatives with infinitives to 'i'.
+    ("i", "V;IMP", "VERB|Mood=Imp"),
     ("i", "V;NFIN;IMP+SBJV", "VERB|VerbForm=Inf"),
     # CELEX collapses gerund + participles to 'p'.
     ("p", "V;GER", "VERB|VerbForm=Ger"),
@@ -45,7 +49,6 @@ _map_tuples = [
     ("", "V;PST", "VERB|Number=Plur|Person=2|Tense=Past"),
     ("", "V;PST", "VERB|Number=Plur|Person=3|Tense=Past"),
     ("", "V;SBJV;PRS", "VERB|Mood=Sub|Tense=Pres"),
-    ("", "V;IMP", "VERB|Mood=Imp"),
     # Nouns.
     (
         "S",
