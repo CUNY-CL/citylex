@@ -5,6 +5,12 @@
 * For Universal Dependencies, see https://universaldependencies.org/u/feat/.
 
 Use `tag_to_tag` to retrieve actual mappings.
+
+NOTE ON NULLABLE/DEFEASIBLE MAPPINGS:
+- In the mapping tuples below, an empty CELEX tag "" indicates a deliberate
+  exclusion for UD tags that have no distinct CELEX equivalent or are
+  systematically syncretic. Callers should SKIP emitting any CELEX entry
+  when `tag_to_tag("UD", "CELEX", ud_tag)` returns "".
 """
 
 from typing import Dict, Optional
@@ -25,16 +31,19 @@ _map_tuples = [
     ("c", "ADJ;CMPR", "ADJ|Degree=Cmp"),
     ("s", "ADJ;SPRL", "ADJ|Degree=Sup"),
     # Verbs.
-    # CELEX collapses imperatives with infinitives to 'i'.
-    ("i", "V;IMP", "VERB|Mood=Imp"),
-    ("i", "V;NFIN;IMP+SBJV", "VERB|VerbForm=Inf"),
-    # CELEX collapses gerund + participles to 'p'.
-    ("p", "V;GER", "VERB|VerbForm=Ger"),
-    ("p", "V;V.PTCP;PST", "VERB|Tense=Past|VerbForm=Part"),
-    ("p", "V;V.PTCP;PRS", "VERB|Tense=Pres|VerbForm=Part"),
+    # CELEX collapses imperative/infinitive/present to 'eP'.
+    ("eP", "V;IMP", "VERB|Mood=Imp"),
+    ("eP", "V;NFIN;IMP+SBJV", "VERB|VerbForm=Inf"),
+    ("eP", "V;PRS", "VERB|Tense=Pres"),
+    # CELEX 'pe' for present participle (canonical -ing).
+    ("pe", "V;V.PTCP;PRS", "VERB|Tense=Pres|VerbForm=Part"),
+    # Gerund is syncretic with the -ing participle.
+    ("", "V;GER", "VERB|VerbForm=Ger"),
+    # Past participle.
+    ("pa", "V;V.PTCP;PST", "VERB|Tense=Past|VerbForm=Part"),
+    # Simple past.
     ("a1S", "V;PST", "VERB|Tense=Past"),
-    # Finite verbs: UD->UM only.
-    ("", "V;PRS", "VERB|Tense=Pres"),
+    # Finite verbs with person/number: UD->UM only.
     ("", "V;PRS", "VERB|Number=Sing|Person=1|Tense=Pres"),
     ("", "V;PRS", "VERB|Number=Sing|Person=2|Tense=Pres"),
     # Third-person singular.
@@ -56,7 +65,7 @@ _map_tuples = [
         [
             "NOUN|Number=Sing",
             "PROPN|Number=Sing",
-            # CELEX doesn't track gender for EN.
+            # CELEX doesn't track gender for EN; UD sometimes annotates.
             "PROPN|Gender=Fem|Number=Sing",
             "PROPN|Gender=Masc|Number=Sing",
         ],
@@ -71,11 +80,14 @@ _map_tuples = [
             "PROPN|Gender=Masc|Number=Plur",
         ],
     ),
-    # Bare nouns (UD without Number).
+    # Bare nouns: syncretic -ing and CELEX lacks a bare N code.
     ("", "N", "NOUN"),
+    ("", "N", "NOUN|_"),
     ("", "N", "PROPN"),
-    # Determiners.
+    ("", "N", "PROPN|_"),
+    # Closed classes.
     ("", "DET", "DET"),
+    ("", "DET", "DET|_"),
     ("", "DET;SG", "DET|Number=Sing"),
     ("", "DET;PL", "DET|Number=Plur"),
     # Explicit Definite forms.
@@ -127,7 +139,7 @@ _map_tuples = [
             "PRON|Poss=Yes|Number=Plur",
         ],
     ),
-    # UD pronouns without Number to coarse PRON.
+    # UD pronouns without Number.
     ("", "PRON", "PRON|PronType=Rel"),
     ("", "PRON", "PRON|Gender=Neut"),
     ("", "PRON", "PRON|Person=1"),
@@ -142,17 +154,26 @@ _map_tuples = [
     ("", "PRON", "PRON|Case=Acc"),
     # Numerals.
     ("", "NUM", "NUM"),
+    ("", "NUM", "NUM|_"),
     ("", "NUM;PL", "NUM|Number=Plur"),
     ("", "NUM;SG", "NUM|Number=Sing"),
     # Closed classes.
     ("", "ADP", "ADP"),
+    ("", "ADP", "ADP|_"),
     ("", "SCONJ", "SCONJ"),
+    ("", "SCONJ", "SCONJ|_"),
     ("", "PART", "PART"),
+    ("", "PART", "PART|_"),
     ("", "INTJ", "INTJ"),
+    ("", "INTJ", "INTJ|_"),
     ("", "SYM", "SYM"),
+    ("", "SYM", "SYM|_"),
     ("", "X", "X"),
+    ("", "X", "X|_"),
     ("", "AUX", "AUX"),
+    ("", "AUX", "AUX|_"),
     ("", "CCONJ", "CCONJ"),
+    ("", "CCONJ", "CCONJ|_"),
     # Auxiliaries with features to coarse AUX.
     ("", "AUX", "AUX|VerbForm=Inf"),
     ("", "AUX", "AUX|VerbForm=Ger"),
@@ -160,6 +181,7 @@ _map_tuples = [
     ("", "AUX", "AUX|Tense=Past"),
     ("", "AUX", "AUX|Tense=Past|VerbForm=Part"),
     ("", "PUNCT", "PUNCT"),
+    ("", "PUNCT", "PUNCT|_"),
     ("", "PART", "PART|Polarity=Neg"),
 ]
 
@@ -206,6 +228,10 @@ def tag_to_tag(from_name: str, to_name: str, tag: str) -> Optional[str]:
 
     Returns:
         The tag in the target system, or None if not found.
+
+        NOTE: A returned empty string "" means the mapping is intentionally
+        excluded (nullable/defeasible). Callers should skip emitting CELEX
+        entries in that case.
     """
     assert from_name != to_name, "no-op mapping"
     return _map_dict[from_name][to_name].get(tag)
