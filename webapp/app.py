@@ -101,6 +101,7 @@ def _subtlex_data_to_csv(cursor, writer, selected_fields, uk_or_us):
     if f"{field_prefix}_freq_per_million" in selected_fields:
         columns.append("freq_per_million")
     # Gets total words for logprob/zipf if needed.
+    total_words = 0
     if (
         f"{field_prefix}_logprob" in selected_fields
         or f"{field_prefix}_zipf" in selected_fields
@@ -109,7 +110,7 @@ def _subtlex_data_to_csv(cursor, writer, selected_fields, uk_or_us):
             "SELECT SUM(raw_frequency) FROM frequency WHERE source = ?",
             (source_name,),
         )
-    total_words = cursor.fetchone()[0] or 0
+        total_words = cursor.fetchone()[0] or 0
     # Fetches frequency data and writes rows.
     cursor.execute(
         f"SELECT {', '.join(columns)}, raw_frequency "
