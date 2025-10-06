@@ -22,6 +22,26 @@ def _neg_logprob(raw_freq, total_words):
         return math.inf
 
 
+def _map_tag(from_sys, to_sys, tag):
+    """Wraps features.tag_to_tag and normalizes "" to None."""
+    out = features.tag_to_tag(from_sys, to_sys, tag)
+    return None if (out is None or out == "") else out
+
+
+def _should_skip_row(required_keys_to_values, selected_fields):
+    """
+    required_keys_to_values: dict like {"udlex_CELEXtags": celex_out,
+    "udlex_UMtags": um_out}
+    selected_fields: the request's selected fields list
+
+    Returns True if any requested key maps to a missing value ⇒ skip row.
+    """
+    for key, value in required_keys_to_values.items():
+        if key in selected_fields and value is None:
+            return True
+    return False
+
+
 def _data_to_csv(cursor, writer, source_table, columns, where=""):
     """
     Fetches and writes data from the specified SQL table for
@@ -89,7 +109,7 @@ def _subtlex_data_to_csv(cursor, writer, selected_fields, uk_or_us):
             "SELECT SUM(raw_frequency) FROM frequency WHERE source = ?",
             (source_name,),
         )
-        total_words = cursor.fetchone()[0] or 0
+    total_words = cursor.fetchone()[0] or 0
     # Fetches frequency data and writes rows.
     cursor.execute(
         f"SELECT {', '.join(columns)}, raw_frequency "
@@ -301,15 +321,15 @@ def post():
                             "celex_tags"
                         ] = celex_tags
                     if "celex_UDtags" in selected_fields:
-                        celex_wordforms_data[wordform]["ud_tags"] = (
-                            features.tag_to_tag("CELEX", "UD", celex_tags)
-                        )
+                        _ud = _map_tag("CELEX", "UD", celex_tags)
+                        if _ud is not None:
+                            celex_wordforms_data[wordform]["ud_tags"
+                        ] = _ud
                     if "celex_UMtags" in selected_fields:
-                        celex_wordforms_data[wordform]["um_tags"] = (
-                            features.tag_to_tag(
-                                "CELEX", "UniMorph", celex_tags
-                            )
-                        )
+                        _um = _map_tag("CELEX", "UniMorph", celex_tags)
+                        if _um is not None:
+                            celex_wordforms_data[wordform]["um_tags"
+                        ] = _um
             # Fetches CELEX pronunciations if selected.
             if "celexpron" in selected_sources:
                 cursor.execute(
@@ -360,6 +380,15 @@ def post():
                     row_to_write["um_tags"] = data["um_tags"]
                 if "celex_DISC" in selected_fields and "pronunciation" in data:
                     row_to_write["DISC_pronunciation"] = data["pronunciation"]
+                # Enforce "no blanks" for requested mapped tags from CELEX
+                if _should_skip_row(
+                    {
+                        "celex_UDtags": row_to_write.get("ud_tags"),
+                        "celex_UMtags": row_to_write.get("um_tags"),
+                    },
+                    selected_fields,
+                ):
+                    continue
                 writer.writerow(row_to_write)
         # Fetches and writes UDLexicons data.
         if "UDLexicons" in selected_sources:
@@ -370,17 +399,36 @@ def post():
             )
             for row in cursor:
                 wordform, source, ud_tags = row
+                # Compute mappings only if requested
+                ud_out = ud_tags if "udlex_UDtags" in selected_fields else None
+                um_out = (
+                    _map_tag("UD", "UniMorph", ud_tags)
+                    if "udlex_UMtags" in selected_fields
+                    else None
+                )
+                celex_out = (
+                    _map_tag("UD", "CELEX", ud_tags)
+                    if "udlex_CELEXtags" in selected_fields
+                    else None
+                )
+                # Skip the row if any requested mapping is missing
+                if _should_skip_row(
+                    {
+                        "udlex_UMtags": um_out,
+                        "udlex_CELEXtags": celex_out,
+                    },
+                    selected_fields,
+                ):
+                    continue
+
                 row_dict = {"wordform": wordform, "source": source}
                 if "udlex_UDtags" in selected_fields:
-                    row_dict["ud_tags"] = ud_tags
+                    row_dict["ud_tags"] = ud_out
                 if "udlex_UMtags" in selected_fields:
-                    row_dict["um_tags"] = features.tag_to_tag(
-                        "UD", "UniMorph", ud_tags
-                    )
+                    row_dict["um_tags"] = um_out
                 if "udlex_CELEXtags" in selected_fields:
-                    row_dict["celex_tags"] = features.tag_to_tag(
-                        "UD", "CELEX", ud_tags
-                    )
+                    row_dict["celex_tags"] = celex_out
+
                 writer.writerow(row_dict)
         # Fetches and writes UniMorph data.
         if "UniMorph" in selected_sources:
@@ -391,18 +439,38 @@ def post():
             )
             for row in cursor:
                 wordform, source, um_tags = row
-                row_dict = {"wordform": wordform, "source": source}
 
+                # Compute mappings only if requested
+                ud_out = (
+                    _map_tag("UniMorph", "UD", um_tags)
+                    if "um_UDtags" in selected_fields
+                    else None
+                )
+                um_out = um_tags if "um_UMtags" in selected_fields else None
+                celex_out = (
+                    _map_tag("UniMorph", "CELEX", um_tags)
+                    if "um_CELEXtags" in selected_fields
+                    else None
+                )
+
+                # Skip the row if any requested mapping is missing
+                if _should_skip_row(
+                    {
+                        "um_UDtags": ud_out,
+                        "um_CELEXtags": celex_out,
+                    },
+                    selected_fields,
+                ):
+                    continue
+
+                row_dict = {"wordform": wordform, "source": source}
                 if "um_UDtags" in selected_fields:
-                    row_dict["ud_tags"] = features.tag_to_tag(
-                        "UniMorph", "UD", um_tags
-                    )
+                    row_dict["ud_tags"] = ud_out
                 if "um_UMtags" in selected_fields:
-                    row_dict["um_tags"] = um_tags
+                    row_dict["um_tags"] = um_out
                 if "um_CELEXtags" in selected_fields:
-                    row_dict["celex_tags"] = features.tag_to_tag(
-                        "UniMorph", "CELEX", um_tags
-                    )
+                    row_dict["celex_tags"] = celex_out
+
                 writer.writerow(row_dict)
         # Fetches and writes ELP segmentations.
         if "ELP" in selected_sources:
@@ -504,12 +572,12 @@ def post():
                         ud_tags,
                     )
                 if "udlex_UMtags" in selected_fields:
-                    um_tags = features.tag_to_tag("UD", "UniMorph", ud_tags)
+                    um_tags = _map_tag("UD", "UniMorph", ud_tags)
                     add_to_aggregated_data(
                         wordform, "UDLexicons (UniMorph-style tags)", um_tags
                     )
                 if "udlex_CELEXtags" in selected_fields:
-                    celex_tags = features.tag_to_tag("UD", "CELEX", ud_tags)
+                    celex_tags = _map_tag("UD", "CELEX", ud_tags)
                     add_to_aggregated_data(
                         wordform, "UDLexicons (CELEX tags)", celex_tags
                     )
@@ -520,22 +588,20 @@ def post():
             )
             for wordform, um_tags in cursor:
                 if "um_UDtags" in selected_fields:
-                    ud_tags = features.tag_to_tag("UniMorph", "UD", um_tags)
+                    ud_tags = _map_tag("UniMorph", "UD", um_tags)
                     add_to_aggregated_data(
                         wordform,
                         "UniMorph (Universal Dependency-style tags)",
                         ud_tags,
                     )
+                if "um_CELEXtags" in selected_fields:
+                    celex_tags = _map_tag("UniMorph", "CELEX", um_tags)
+                    add_to_aggregated_data(
+                        wordform, "UniMorph (CELEX tags)", celex_tags
+                    )
                 if "um_UMtags" in selected_fields:
                     add_to_aggregated_data(
                         wordform, "UniMorph (UniMorph-style tags)", um_tags
-                    )
-                if "um_CELEXtags" in selected_fields:
-                    celex_tags = features.tag_to_tag(
-                        "UniMorph", "CELEX", um_tags
-                    )
-                    add_to_aggregated_data(
-                        wordform, "UniMorph (CELEX tags)", celex_tags
                     )
         # Processes CELEX features data.
         if "celexfeat" in selected_sources:
@@ -544,16 +610,14 @@ def post():
             )
             for wordform, celex_tags in cursor:
                 if "celex_UDtags" in selected_fields:
-                    ud_tags = features.tag_to_tag("CELEX", "UD", celex_tags)
+                    ud_tags = _map_tag("CELEX", "UD", celex_tags)
                     add_to_aggregated_data(
                         wordform,
                         "CELEX (Universal Dependency-style tags)",
                         ud_tags,
                     )
                 if "celex_UMtags" in selected_fields:
-                    um_tags = features.tag_to_tag(
-                        "CELEX", "UniMorph", celex_tags
-                    )
+                    um_tags = _map_tag("CELEX", "UniMorph", celex_tags)
                     add_to_aggregated_data(
                         wordform, "CELEX (UniMorph-style tags)", um_tags
                     )
