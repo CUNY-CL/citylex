@@ -65,7 +65,8 @@ _map_tuples = [
         [
             "NOUN|Number=Sing",
             "PROPN|Number=Sing",
-            # CELEX doesn't track gender for EN; UD sometimes annotates.
+            # CELEX doesn't track gender for English;
+            # UD marks gender on proper nouns referring to people.
             "PROPN|Gender=Fem|Number=Sing",
             "PROPN|Gender=Masc|Number=Sing",
         ],
@@ -227,11 +228,9 @@ def tag_to_tag(from_name: str, to_name: str, tag: str) -> Optional[str]:
         tag: the source system tag to look up.
 
     Returns:
-        The tag in the target system, or None if not found.
-
-        NOTE: A returned empty string "" means the mapping is intentionally
-        excluded (nullable/defeasible). Callers should skip emitting CELEX
-        entries in that case.
+        The tag in the target system. If it is empty,
+        the mapping was intentionally excluded for compatibility.
+        If it is None, the requested tag was not found.
     """
     assert from_name != to_name, "no-op mapping"
     return _map_dict[from_name][to_name].get(tag)

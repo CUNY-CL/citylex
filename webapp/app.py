@@ -324,13 +324,11 @@ def post():
                     if "celex_UDtags" in selected_fields:
                         _ud = _map_tag("CELEX", "UD", celex_tags)
                         if _ud is not None:
-                            celex_wordforms_data[wordform]["ud_tags"
-                        ] = _ud
+                            celex_wordforms_data[wordform]["ud_tags"] = _ud
                     if "celex_UMtags" in selected_fields:
                         _um = _map_tag("CELEX", "UniMorph", celex_tags)
                         if _um is not None:
-                            celex_wordforms_data[wordform]["um_tags"
-                        ] = _um
+                            celex_wordforms_data[wordform]["um_tags"] = _um
             # Fetches CELEX pronunciations if selected.
             if "celexpron" in selected_sources:
                 cursor.execute(
