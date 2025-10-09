@@ -220,10 +220,10 @@ def post():
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=columns, delimiter="\t")
         writer.writeheader()
-        # Fetches and writes SUBTLEX-US data.
+        # Fetches and writes SUBTLEX-UK data.
         if "subtlexUK" in selected_sources:
             _subtlex_data_to_csv(cursor, writer, selected_fields, "UK")
-        # Fetches and writes SUBTLEX-UK data.
+        # Fetches and writes SUBTLEX-US data.
         if "subtlexUS" in selected_sources:
             _subtlex_data_to_csv(cursor, writer, selected_fields, "US")
         # Fetches and writes WikiPron-US data.
@@ -325,7 +325,7 @@ def post():
                         ] = pronunciation
             # Writes consolidated CELEX data to CSV.
             for wordform, data in celex_wordforms_data.items():
-                row_to_write = {
+                row = {
                     "wordform": wordform,
                     "source": data["source"],
                 }
@@ -334,33 +334,34 @@ def post():
                     "celexfreq_raw_frequency" in selected_fields
                     and "raw_frequency" in data
                 ):
-                    row_to_write["raw_frequency"] = data["raw_frequency"]
+                    row["raw_frequency"] = data["raw_frequency"]
                 if (
                     "celexfreq_freq_per_million" in selected_fields
                     and "freq_per_million" in data
                 ):
-                    row_to_write["freq_per_million"] = data["freq_per_million"]
+                    row["freq_per_million"] = data["freq_per_million"]
                 if (
                     "celexfreq_logprob" in selected_fields
                     and "-logprob" in data
                 ):
-                    row_to_write["-logprob"] = data["-logprob"]
+                    row["-logprob"] = data["-logprob"]
                 if "celexfreq_zipf" in selected_fields and "zipf" in data:
-                    row_to_write["zipf"] = data["zipf"]
+                    row["zipf"] = data["zipf"]
                 if (
                     "celex_CELEXtags" in selected_fields
                     and "celex_tags" in data
                 ):
-                    row_to_write["celex_tags"] = data["celex_tags"]
+                    row["celex_tags"] = data["celex_tags"]
                 if "celex_UDtags" in selected_fields and "ud_tags" in data:
-                    row_to_write["ud_tags"] = data["ud_tags"]
+                    row["ud_tags"] = data["ud_tags"]
                 if "celex_UMtags" in selected_fields and "um_tags" in data:
-                    row_to_write["um_tags"] = data["um_tags"]
+                    row["um_tags"] = data["um_tags"]
                 if "celex_DISC" in selected_fields and "pronunciation" in data:
-                    row_to_write["DISC_pronunciation"] = data["pronunciation"]
-                if len(row_to_write) == 2:
+                    row["DISC_pronunciation"] = data["pronunciation"]
+                # Skip rows with only wordform and source.
+                if len(row) < 3:
                     continue
-                writer.writerow(row_to_write)
+                writer.writerow(row)
         # Fetches and writes UDLexicons data.
         if "UDLexicons" in selected_sources:
             cursor.execute(
@@ -391,7 +392,8 @@ def post():
                     row["um_tags"] = um
                 if "udlex_CELEXtags" in selected_fields:
                     row["celex_tags"] = cx
-                if len(row) == 2:
+                # Skip rows with only wordform and source.
+                if len(row) < 3:
                     continue
                 writer.writerow(row)
         # Fetches and writes UniMorph data.
@@ -424,7 +426,8 @@ def post():
                     row["um_tags"] = um_tags
                 if "um_CELEXtags" in selected_fields:
                     row["celex_tags"] = cx
-                if len(row) == 2:
+                # Skip rows with only wordform and source.
+                if len(row) < 3:
                     continue
                 writer.writerow(row)
         # Fetches and writes ELP segmentations.
@@ -621,8 +624,7 @@ def post():
                     (source_name,),
                 )
                 for wordform, pronunciation in cursor:
-                    # Checks if the specific field for this pronunciation type
-                    # was selected.
+                    # Check if this specific pronunciation field was selected.
                     if (
                         (
                             field_prefix == "wikipronUS"
