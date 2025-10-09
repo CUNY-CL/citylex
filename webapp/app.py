@@ -456,9 +456,9 @@ def post():
             if wordform not in aggregated_data:
                 aggregated_data[wordform] = {}
             if key not in aggregated_data[wordform]:
-                aggregated_data[wordform][key] = []
+                aggregated_data[wordform][key] = set()
             if value is not None:
-                aggregated_data[wordform][key].append(value)
+                aggregated_data[wordform][key].add(value)
 
         # Processes frequency data.
         for source, source_fieldname in [
@@ -662,6 +662,13 @@ def post():
                         add_to_aggregated_data(
                             wordform, xsampa_display_name, xsampa_pronunciation
                         )
+        # Convert sets to lists for JSON serialization
+        for wordform in aggregated_data:
+            for key in aggregated_data[wordform]:
+                if isinstance(aggregated_data[wordform][key], set):
+                    aggregated_data[wordform][key] = list(
+                        aggregated_data[wordform][key]
+                    )
         # Sends the file as a response.
         contents = io.BytesIO(
             json.dumps(

@@ -32,7 +32,8 @@ _map_tuples = [
     ("s", "ADJ;SPRL", "ADJ|Degree=Sup"),
     # Verbs.
     # CELEX collapses imperative/infinitive/present to 'eP'.
-    ("eP", "V;IMP", "VERB|Mood=Imp"),
+    # UniMorph has no entry due to imperative-subjunctive syncretism.
+    ("eP", "", "VERB|Mood=Imp"),
     ("eP", "V;NFIN;IMP+SBJV", "VERB|VerbForm=Inf"),
     ("eP", "V;PRS", "VERB|Tense=Pres"),
     # CELEX 'pe' for present participle (canonical -ing).
