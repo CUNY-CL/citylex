@@ -612,17 +612,21 @@ def post():
             ("celexpron", "celex_DISC", "CELEX (DISC)"),
         ]:
             if source_key in selected_sources:
-                # For CELEX, filters by standard = 'DISC'.
                 if source_key == "celexpron":
-                    source_name = "CELEX"
+                    # CELEX: filter to DISC
+                    cursor.execute(
+                        "SELECT wordform, pronunciation "
+                        "FROM pronunciation "
+                        "WHERE source = 'CELEX' AND standard = 'DISC'"
+                    )
                 else:
-                    source_name = source_key
-                cursor.execute(
-                    "SELECT wordform, pronunciation "
-                    "FROM pronunciation "
-                    "WHERE source = ?",
-                    (source_name,),
-                )
+                    # WikiPron: filter to IPA
+                    cursor.execute(
+                        "SELECT wordform, pronunciation "
+                        "FROM pronunciation "
+                        "WHERE source = ? AND standard = 'IPA'",
+                        (source_key,),
+                    )
                 for wordform, pronunciation in cursor:
                     # Check if this specific pronunciation field was selected.
                     if (
