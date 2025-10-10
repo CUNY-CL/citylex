@@ -16,7 +16,7 @@ FREQUENCY_PRECISION = 6
 
 
 class SetEncoder(json.JSONEncoder):
-    """JSON encoder that converts Python sets to sorted lists."""
+    """JSON encoder converting sets to sorted lists."""
 
     def default(self, o):
         if isinstance(o, set):
