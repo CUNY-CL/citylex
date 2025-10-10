@@ -7,10 +7,10 @@
 Use `tag_to_tag` to retrieve actual mappings.
 
 NOTE ON NULLABLE/DEFEASIBLE MAPPINGS:
-- In the mapping tuples below, an empty CELEX tag "" indicates a deliberate
-  exclusion for UD tags that have no distinct CELEX equivalent or are
-  systematically syncretic. Callers should SKIP emitting any CELEX entry
-  when `tag_to_tag("UD", "CELEX", ud_tag)` returns "".
+- In the mapping tuples below, an empty string "" indicates a deliberate
+  exclusion for UD tags that have no distinct equivalent in that system or are
+  systematically syncretic. Callers should SKIP emitting entries when
+  `tag_to_tag()` returns "".
 """
 
 from typing import Dict, Optional
@@ -44,20 +44,21 @@ _map_tuples = [
     ("pa", "V;V.PTCP;PST", "VERB|Tense=Past|VerbForm=Part"),
     # Simple past.
     ("a1S", "V;PST", "VERB|Tense=Past"),
-    # Finite verbs with person/number: UD->UM only.
-    ("", "V;PRS", "VERB|Number=Sing|Person=1|Tense=Pres"),
-    ("", "V;PRS", "VERB|Number=Sing|Person=2|Tense=Pres"),
-    # Third-person singular.
-    ("e3S", ["V;PRS;3;SG"], "VERB|Number=Sing|Person=3|Tense=Pres"),
-    ("", "V;PRS", "VERB|Number=Plur|Person=1|Tense=Pres"),
-    ("", "V;PRS", "VERB|Number=Plur|Person=2|Tense=Pres"),
-    ("", "V;PRS", "VERB|Number=Plur|Person=3|Tense=Pres"),
-    ("", "V;PST", "VERB|Number=Sing|Person=1|Tense=Past"),
-    ("", "V;PST", "VERB|Number=Sing|Person=2|Tense=Past"),
-    ("", "V;PST", "VERB|Number=Sing|Person=3|Tense=Past"),
-    ("", "V;PST", "VERB|Number=Plur|Person=1|Tense=Past"),
-    ("", "V;PST", "VERB|Number=Plur|Person=2|Tense=Past"),
-    ("", "V;PST", "VERB|Number=Plur|Person=3|Tense=Past"),
+    # UD finite verbs with person/number have no morphological correspondent in English
+    # (except 3rd singular present). These features are purely syntactic.
+    ("", "", "VERB|Number=Sing|Person=1|Tense=Pres"),
+    ("", "", "VERB|Number=Sing|Person=2|Tense=Pres"),
+    # Third-person singular present - the only person/number distinction in English.
+    ("e3S", "V;PRS;3;SG", "VERB|Number=Sing|Person=3|Tense=Pres"),
+    ("", "", "VERB|Number=Plur|Person=1|Tense=Pres"),
+    ("", "", "VERB|Number=Plur|Person=2|Tense=Pres"),
+    ("", "", "VERB|Number=Plur|Person=3|Tense=Pres"),
+    ("", "", "VERB|Number=Sing|Person=1|Tense=Past"),
+    ("", "", "VERB|Number=Sing|Person=2|Tense=Past"),
+    ("", "", "VERB|Number=Sing|Person=3|Tense=Past"),
+    ("", "", "VERB|Number=Plur|Person=1|Tense=Past"),
+    ("", "", "VERB|Number=Plur|Person=2|Tense=Past"),
+    ("", "", "VERB|Number=Plur|Person=3|Tense=Past"),
     ("", "V;SBJV;PRS", "VERB|Mood=Sub|Tense=Pres"),
     # Nouns.
     (
