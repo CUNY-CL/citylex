@@ -31,14 +31,20 @@ def _neg_logprob(raw_freq, total_words):
         return math.inf
 
 
-def _data_to_csv(cursor, writer, source_table, columns, where=""):
+def _flatten(maybe_list):
+    if isinstance(maybe_list, list):
+        return ",".join(maybe_list)
+    return maybe_list
+
+
+def _data_to_tsv(cursor, writer, source_table, columns, where=""):
     """
     Fetches and writes data from the specified SQL table for
     given columns and WHERE criteria.
 
     Args:
         cursor: The SQLite cursor object.
-        writer: The CSV DictWriter object.
+        writer: The TSV DictWriter object.
         source_table (str): The name of the database table to query.
         columns (list): A list of database column names to fetch.
         where (str, optional): An SQL WHERE clause. Defaults to "".
@@ -52,15 +58,14 @@ def _data_to_csv(cursor, writer, source_table, columns, where=""):
         writer.writerow(row_dict)
 
 
-def _wikipron_data_to_csv(cursor, writer, selected_fields, uk_or_us):
+def _wikipron_data_to_tsv(cursor, writer, selected_fields, uk_or_us):
     # uk_or_us must be capitalized: "UK" or "US"
     cursor.execute(
         "SELECT wordform, source, pronunciation "
         "FROM pronunciation "
         f"WHERE source = 'WikiPron {uk_or_us}' AND standard = 'IPA'"
     )
-    for row in cursor:
-        wordform, source, ipa_pron = row
+    for wordform, source, ipa_pron in cursor:
         row_dict = {"wordform": wordform, "source": source}
         if f"wikipron{uk_or_us}_IPA" in selected_fields:
             row_dict["IPA_pronunciation"] = ipa_pron
@@ -69,14 +74,14 @@ def _wikipron_data_to_csv(cursor, writer, selected_fields, uk_or_us):
         writer.writerow(row_dict)
 
 
-def _subtlex_data_to_csv(cursor, writer, selected_fields, uk_or_us):
+def _subtlex_data_to_tsv(cursor, writer, selected_fields, uk_or_us):
     """
     Fetches and writes frequency data for a given SUBTLEX source,
     calculating logprob and zipf if requested.
 
     Args:
         cursor: The SQLite cursor object.
-        writer: The CSV DictWriter object.
+        writer: The TSV DictWriter object.
         selected_fields (list): The list of fields selected by the user.
         uk_or_us (str): Either 'UK' or 'US' to specify the SUBTLEX source.
     """
@@ -164,7 +169,7 @@ def post():
                 or celex_password_form != celex_password_env
             ):
                 return render_template("401.html"), 401
-    # Builds CSV column headers.
+    # Builds TSV column headers.
     columns = ["wordform", "source"]
     if (
         "subtlexUS_raw_frequency" in selected_fields
@@ -224,24 +229,12 @@ def post():
         columns.append("segmentation")
     if "elp_nmorph" in selected_fields:
         columns.append("nmorph")
-    # TSV option
+    # TSV option.
     if output_format == "long":
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=columns, delimiter="\t")
         writer.writeheader()
-        # Fetches and writes SUBTLEX-UK data.
-        if "subtlexUK" in selected_sources:
-            _subtlex_data_to_csv(cursor, writer, selected_fields, "UK")
-        # Fetches and writes SUBTLEX-US data.
-        if "subtlexUS" in selected_sources:
-            _subtlex_data_to_csv(cursor, writer, selected_fields, "US")
-        # Fetches and writes WikiPron-US data.
-        if "WikiPron US" in selected_sources:
-            _wikipron_data_to_csv(cursor, writer, selected_fields, "US")
-        # Fetches and writes WikiPron-UK data.
-        if "WikiPron UK" in selected_sources:
-            _wikipron_data_to_csv(cursor, writer, selected_fields, "UK")
-        # Fetches and writes CELEX data.
+        # Fetches and writes CELEX data; we do this all at once.
         if any(
             s in selected_sources
             for s in ["celexfreq", "celexfeat", "celexpron"]
@@ -310,13 +303,17 @@ def post():
                     if "celex_UDtags" in selected_fields and (
                         ud := features.tag_to_tag("CELEX", "UD", celex_tags)
                     ):
-                        celex_wordforms_data[wordform]["ud_tags"] = ud
+                        celex_wordforms_data[wordform]["ud_tags"] = _flatten(
+                            ud
+                        )
                     if "celex_UMtags" in selected_fields and (
                         um := features.tag_to_tag(
                             "CELEX", "UniMorph", celex_tags
                         )
                     ):
-                        celex_wordforms_data[wordform]["um_tags"] = um
+                        celex_wordforms_data[wordform]["um_tags"] = _flatten(
+                            um
+                        )
             # Fetches CELEX pronunciations if selected.
             if "celexpron" in selected_sources:
                 cursor.execute(
@@ -332,7 +329,7 @@ def post():
                         celex_wordforms_data[wordform][
                             "pronunciation"
                         ] = pronunciation
-            # Writes consolidated CELEX data to CSV.
+            # Writes consolidated CELEX data to TSV.
             for wordform, data in celex_wordforms_data.items():
                 row = {
                     "wordform": wordform,
@@ -371,6 +368,12 @@ def post():
                 if len(row) < 3:
                     continue
                 writer.writerow(row)
+        # Fetches and writes SUBTLEX-UK data.
+        if "subtlexUK" in selected_sources:
+            _subtlex_data_to_tsv(cursor, writer, selected_fields, "UK")
+        # Fetches and writes SUBTLEX-US data.
+        if "subtlexUS" in selected_sources:
+            _subtlex_data_to_tsv(cursor, writer, selected_fields, "US")
         # Fetches and writes UDLexicons data.
         if "UDLexicons" in selected_sources:
             cursor.execute(
@@ -395,12 +398,12 @@ def post():
                 ):
                     continue
                 row = {"wordform": wordform, "source": source}
+                if "udlex_CELEXtags" in selected_fields:
+                    row["celex_tags"] = _flatten(cx)
+                if "udlex_UMtags" in selected_fields:
+                    row["um_tags"] = _flatten(um)
                 if "udlex_UDtags" in selected_fields:
                     row["ud_tags"] = ud_tags
-                if "udlex_UMtags" in selected_fields:
-                    row["um_tags"] = um
-                if "udlex_CELEXtags" in selected_fields:
-                    row["celex_tags"] = cx
                 # Skip rows with only wordform and source.
                 if len(row) < 3:
                     continue
@@ -430,11 +433,11 @@ def post():
                     continue
                 row = {"wordform": wordform, "source": source}
                 if "um_UDtags" in selected_fields:
-                    row["ud_tags"] = ud
+                    row["ud_tags"] = _flatten(ud)
                 if "um_UMtags" in selected_fields:
                     row["um_tags"] = um_tags
                 if "um_CELEXtags" in selected_fields:
-                    row["celex_tags"] = cx
+                    row["celex_tags"] = _flatten(cx)
                 # Skip rows with only wordform and source.
                 if len(row) < 3:
                     continue
@@ -446,9 +449,15 @@ def post():
                 elp_columns.append("segmentation")
             if "elp_nmorph" in selected_fields:
                 elp_columns.append("nmorph")
-            _data_to_csv(
+            _data_to_tsv(
                 cursor, writer, "segmentation", elp_columns, "source = 'ELP'"
             )
+        # Fetches and writes WikiPron-US data.
+        if "WikiPron US" in selected_sources:
+            _wikipron_data_to_tsv(cursor, writer, selected_fields, "US")
+        # Fetches and writes WikiPron-UK data.
+        if "WikiPron UK" in selected_sources:
+            _wikipron_data_to_tsv(cursor, writer, selected_fields, "UK")
         # Sends the file as a response.
         contents = io.BytesIO(output.getvalue().encode("utf-8"))
         return send_file(
@@ -457,18 +466,23 @@ def post():
             as_attachment=True,
             download_name=f"citylex-{datetime.date.today().isoformat()}.tsv",
         )
-    # JSON option
+    # JSON option.
     elif output_format == "wide":
         aggregated_data = {}
 
         def add_to_aggregated_data(wordform, key, value):
-            if wordform not in aggregated_data:
-                aggregated_data[wordform] = {}
-            if key not in aggregated_data[wordform]:
-                # Sets prevent duplicate feature data.
-                aggregated_data[wordform][key] = set()
-            if value is not None:
-                aggregated_data[wordform][key].add(value)
+            try:
+                ptr1 = aggregated_data[wordform]
+            except KeyError:
+                ptr1 = aggregated_data[wordform] = {}
+            try:
+                ptr2 = ptr1[key]
+            except KeyError:
+                ptr2 = ptr1[key] = set()
+            if isinstance(value, list):
+                ptr2.update(value)
+            else:
+                ptr2.add(value)
 
         # Processes frequency data.
         for source, source_fieldname in [
@@ -536,18 +550,23 @@ def post():
                 if "udlex_UDtags" in selected_fields:
                     add_to_aggregated_data(
                         wordform,
-                        "UDLexicons (Universal Dependency-style tags)",
+                        "UDLexicons features "
+                        "(Universal Dependency-style tags)",
                         ud_tags,
                     )
                 if "udlex_UMtags" in selected_fields:
                     if um := features.tag_to_tag("UD", "UniMorph", ud_tags):
                         add_to_aggregated_data(
-                            wordform, "UDLexicons (UniMorph-style tags)", um
+                            wordform,
+                            "UDLexicons features (UniMorph-style tags)",
+                            um,
                         )
                 if "udlex_CELEXtags" in selected_fields:
                     if cx := features.tag_to_tag("UD", "CELEX", ud_tags):
                         add_to_aggregated_data(
-                            wordform, "UDLexicons (CELEX tags)", cx
+                            wordform,
+                            "UDLexicons features (CELEX-style tags)",
+                            cx,
                         )
         # Processes UniMorph data.
         if "UniMorph" in selected_sources:
@@ -561,17 +580,20 @@ def post():
                     if ud := features.tag_to_tag("UniMorph", "UD", um_tags):
                         add_to_aggregated_data(
                             wordform,
-                            "UniMorph (Universal Dependency-style tags)",
+                            "UniMorph features "
+                            "(Universal Dependency-style tags)",
                             ud,
                         )
                 if "um_CELEXtags" in selected_fields:
                     if cx := features.tag_to_tag("UniMorph", "CELEX", um_tags):
                         add_to_aggregated_data(
-                            wordform, "UniMorph (CELEX tags)", cx
+                            wordform,
+                            "UniMorph features (CELEX-style tags)",
+                            cx,
                         )
                 if "um_UMtags" in selected_fields:
                     add_to_aggregated_data(
-                        wordform, "UniMorph (UniMorph-style tags)", um_tags
+                        wordform, "UniMorph features", um_tags
                     )
         # Processes CELEX features data.
         if "celexfeat" in selected_sources:
@@ -585,7 +607,7 @@ def post():
                     if ud := features.tag_to_tag("CELEX", "UD", celex_tags):
                         add_to_aggregated_data(
                             wordform,
-                            "CELEX (Universal Dependency-style tags)",
+                            "CELEX features (Universal Dependency-style tags)",
                             ud,
                         )
                 if "celex_UMtags" in selected_fields:
@@ -593,11 +615,13 @@ def post():
                         "CELEX", "UniMorph", celex_tags
                     ):
                         add_to_aggregated_data(
-                            wordform, "CELEX (UniMorph-style tags)", um
+                            wordform,
+                            "CELEX features (UniMorph-style tags)",
+                            um,
                         )
                 if "celex_CELEXtags" in selected_fields:
                     add_to_aggregated_data(
-                        wordform, "CELEX (CELEX tags)", celex_tags
+                        wordform, "CELEX features", celex_tags
                     )
         # Processes ELP segmentations.
         if "ELP" in selected_sources:
