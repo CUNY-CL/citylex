@@ -377,20 +377,66 @@ def _subtlex_us(conn: sqlite3.Connection) -> None:
 def _udlexicons(conn: sqlite3.Connection) -> None:
     """Collects UDLexicons analyses."""
     cursor = conn.cursor()
-    counter = 0
+    # UDLexicons ingestion configuration:
+    # - drop_genitive_forms: removes possessive/genitive nouns.
+    # - strip_propn_gender: drops Gender=* from PROPN.
+    # - strict_no_overgeneralize: discards underspecified tags; keeps bare
+    #   PROPN if only Gender=* was removed.
+    drop_genitive_forms = True
+    strip_propn_gender = True
+    strict_no_overgeneralize = True
     url = "http://atoll.inria.fr/~sagot/UDLexicons.0.2.zip"
     path = "UDLexicons.0.2/UDLex_English-Apertium.conllul"
     archive = _request_url_zip_resource(url)
+    counter = 0
     # This is complicated enough we'll do it by index.
     for tags in csv.reader(_zip_lines(archive, path), delimiter="\t"):
+        if not tags or tags[0].startswith("#"):
+            continue
+        if len(tags) < 7:
+            continue
         # Skips multiword expressions.
-        if tags[0].startswith("0-"):
+        if "-" in tags[0]:
             continue
         wordform = _normalize(tags[2])
         lemma = _normalize(tags[3])
-        if lemma == "_":
+        upos = tags[4]
+        feats_raw = tags[6]
+        if lemma == "_" or wordform == "_":
             continue
-        ud_tag = f"{tags[4]}|{tags[6]}"
+        if feats_raw == "_":
+            feats0 = []
+        else:
+            feats0 = [f.strip() for f in feats_raw.split("|") if f.strip()]
+        feats = feats0[:]
+        # Drops possessives/genitives for NOUN/PROPN.
+        if drop_genitive_forms and upos in {"NOUN", "PROPN"}:
+            has_genitive = any(f == "Case=Gen" for f in feats)
+            has_possessive = any(f == "Poss=Yes" for f in feats)
+            if has_genitive or has_possessive:
+                continue
+        # Strips gender on PROPN.
+        if strip_propn_gender and upos == "PROPN":
+            feats = [f for f in feats if not f.startswith("Gender=")]
+        feats_sorted = (
+            sorted(feats, key=lambda s: s.split("=")[0]) if feats else []
+        )
+        if feats_sorted:
+            ud_tag = f"{upos}|{'|'.join(feats_sorted)}"
+        else:
+            if feats_raw == "_":
+                ud_tag = upos
+            elif strict_no_overgeneralize:
+                is_propn = upos == "PROPN"
+                has_features = bool(feats0)
+                all_gender = all(x.startswith("Gender=") for x in feats0)
+                only_gender_removed = is_propn and has_features and all_gender
+                if only_gender_removed:
+                    ud_tag = upos
+                else:
+                    continue
+            else:
+                ud_tag = upos
         cursor.execute(
             """
             INSERT INTO features (
@@ -398,7 +444,7 @@ def _udlexicons(conn: sqlite3.Connection) -> None:
                 source,
                 lemma,
                 tags
-                ) VALUES (?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?)
             """,
             (wordform, "UDLexicons", lemma, ud_tag),
         )
@@ -420,7 +466,6 @@ def _unimorph(conn: sqlite3.Connection) -> None:
     for lemma, wordform, features in csv.reader(source, delimiter="\t"):
         wordform = _normalize(wordform)
         lemma = _normalize(lemma)
-        um_tag = _normalize(features)
         cursor.execute(
             """
             INSERT INTO features (
@@ -430,7 +475,7 @@ def _unimorph(conn: sqlite3.Connection) -> None:
                 tags
                 ) VALUES (?, ?, ?, ?)
             """,
-            (wordform, "UniMorph", lemma, um_tag),
+            (wordform, "UniMorph", lemma, features),
         )
         counter += 1
     assert counter, "No data read"
