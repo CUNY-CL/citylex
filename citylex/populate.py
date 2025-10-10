@@ -466,7 +466,6 @@ def _unimorph(conn: sqlite3.Connection) -> None:
     for lemma, wordform, features in csv.reader(source, delimiter="\t"):
         wordform = _normalize(wordform)
         lemma = _normalize(lemma)
-        um_tag = features
         cursor.execute(
             """
             INSERT INTO features (
@@ -476,7 +475,7 @@ def _unimorph(conn: sqlite3.Connection) -> None:
                 tags
                 ) VALUES (?, ?, ?, ?)
             """,
-            (wordform, "UniMorph", lemma, um_tag),
+            (wordform, "UniMorph", lemma, features),
         )
         counter += 1
     assert counter, "No data read"

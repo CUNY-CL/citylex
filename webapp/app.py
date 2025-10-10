@@ -15,6 +15,15 @@ DB_PATH = "citylex.db"
 FREQUENCY_PRECISION = 6
 
 
+class SetEncoder(json.JSONEncoder):
+    """JSON encoder that converts Python sets to lists."""
+
+    def default(self, o):
+        if isinstance(o, set):
+            return sorted(o)
+        return super().default(o)
+
+
 def _neg_logprob(raw_freq, total_words):
     if raw_freq > 0:
         return -math.log10(raw_freq / total_words)
@@ -456,6 +465,7 @@ def post():
             if wordform not in aggregated_data:
                 aggregated_data[wordform] = {}
             if key not in aggregated_data[wordform]:
+                # Sets prevent duplicate feature data.
                 aggregated_data[wordform][key] = set()
             if value is not None:
                 aggregated_data[wordform][key].add(value)
@@ -662,17 +672,13 @@ def post():
                         add_to_aggregated_data(
                             wordform, xsampa_display_name, xsampa_pronunciation
                         )
-        # Convert sets to lists for JSON serialization
-        for wordform in aggregated_data:
-            for key in aggregated_data[wordform]:
-                if isinstance(aggregated_data[wordform][key], set):
-                    aggregated_data[wordform][key] = list(
-                        aggregated_data[wordform][key]
-                    )
         # Sends the file as a response.
         contents = io.BytesIO(
             json.dumps(
-                aggregated_data, ensure_ascii=False, separators=(",", ":")
+                aggregated_data,
+                ensure_ascii=False,
+                separators=(",", ":"),
+                cls=SetEncoder,
             ).encode("utf-8")
         )
         return send_file(
