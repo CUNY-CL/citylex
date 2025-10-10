@@ -44,11 +44,10 @@ _map_tuples = [
     ("pa", "V;V.PTCP;PST", "VERB|Tense=Past|VerbForm=Part"),
     # Simple past.
     ("a1S", "V;PST", "VERB|Tense=Past"),
-    # UD finite verbs with person/number have no morphological correspondent in English
-    # (except 3rd singular present). These features are purely syntactic.
+    # UD verb person/number are syntactic only (except 3rd sg present).
     ("", "", "VERB|Number=Sing|Person=1|Tense=Pres"),
     ("", "", "VERB|Number=Sing|Person=2|Tense=Pres"),
-    # Third-person singular present - the only person/number distinction in English.
+    # Only morphologically-realized person/number form in English.
     ("e3S", "V;PRS;3;SG", "VERB|Number=Sing|Person=3|Tense=Pres"),
     ("", "", "VERB|Number=Plur|Person=1|Tense=Pres"),
     ("", "", "VERB|Number=Plur|Person=2|Tense=Pres"),
