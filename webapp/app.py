@@ -6,8 +6,9 @@ import logging
 import math
 import os
 import sqlite3
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from flask import Flask, render_template, request, send_file
+import flask
 
 from citylex import features, xsampa, zipf
 
@@ -18,36 +19,40 @@ FREQUENCY_PRECISION = 6
 class SetEncoder(json.JSONEncoder):
     """JSON encoder converting sets to sorted lists."""
 
-    def default(self, o):
+    def default(self, o: Any) -> Any:
         if isinstance(o, set):
             return sorted(o)
         return super().default(o)
 
 
-def _neg_logprob(raw_freq, total_words):
+def _neg_logprob(raw_freq: int, total_words: int) -> float:
     if raw_freq > 0:
         return -math.log10(raw_freq / total_words)
     else:
         return math.inf
 
 
-def _flatten(maybe_list):
+def _flatten(maybe_list: Union[str, List[str], None]) -> Optional[str]:
     if isinstance(maybe_list, list):
         return ",".join(maybe_list)
     return maybe_list
 
 
-def _data_to_tsv(cursor, writer, source_table, columns, where=""):
-    """
-    Fetches and writes data from the specified SQL table for
-    given columns and WHERE criteria.
+def _data_to_tsv(
+    cursor: sqlite3.Cursor,
+    writer: csv.DictWriter,
+    source_table: str,
+    columns: List[str],
+    where: str = "",
+) -> None:
+    """Fetches and writes data from the specified SQL table.
 
     Args:
         cursor: The SQLite cursor object.
         writer: The TSV DictWriter object.
-        source_table (str): The name of the database table to query.
-        columns (list): A list of database column names to fetch.
-        where (str, optional): An SQL WHERE clause. Defaults to "".
+        source_table: The name of the database table to query.
+        columns: A list of database column names to fetch.
+        where: An optional SQL WHERE clause.
     """
     query = f"SELECT {', '.join(columns)} FROM {source_table}"
     if where:
@@ -58,7 +63,12 @@ def _data_to_tsv(cursor, writer, source_table, columns, where=""):
         writer.writerow(row_dict)
 
 
-def _wikipron_data_to_tsv(cursor, writer, selected_fields, uk_or_us):
+def _wikipron_data_to_tsv(
+    cursor: sqlite3.Cursor,
+    writer: csv.DictWriter,
+    selected_fields: List[str],
+    uk_or_us: str,
+) -> None:
     # uk_or_us must be capitalized: "UK" or "US"
     cursor.execute(
         "SELECT wordform, source, pronunciation "
@@ -74,16 +84,19 @@ def _wikipron_data_to_tsv(cursor, writer, selected_fields, uk_or_us):
         writer.writerow(row_dict)
 
 
-def _subtlex_data_to_tsv(cursor, writer, selected_fields, uk_or_us):
-    """
-    Fetches and writes frequency data for a given SUBTLEX source,
-    calculating logprob and zipf if requested.
+def _subtlex_data_to_tsv(
+    cursor: sqlite3.Cursor,
+    writer: csv.DictWriter,
+    selected_fields: List[str],
+    uk_or_us: str,
+) -> None:
+    """Fetches and writes frequency data for a given SUBTLEX source.
 
     Args:
         cursor: The SQLite cursor object.
         writer: The TSV DictWriter object.
-        selected_fields (list): The list of fields selected by the user.
-        uk_or_us (str): Either 'UK' or 'US' to specify the SUBTLEX source.
+        selected_fields: The list of fields selected by the user.
+        uk_or_us: Either 'UK' or 'US' to specify the SUBTLEX source.
     """
     source_name = f"SUBTLEX-{uk_or_us}"
     field_prefix = f"subtlex{uk_or_us}"
@@ -124,15 +137,15 @@ def _subtlex_data_to_tsv(cursor, writer, selected_fields, uk_or_us):
         writer.writerow(row_dict)
 
 
-app = Flask(__name__)
+app = flask.Flask(__name__)
 
 
 @app.route("/", methods=["GET"])
-def get():
+def get() -> str:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM frequency WHERE source = 'CELEX' LIMIT 1")
-    return render_template(
+    return flask.render_template(
         "index.html",
         celex_present=cursor.fetchone() is not None,
         password_set="CELEX_PASSWORD" in os.environ,
@@ -140,16 +153,16 @@ def get():
 
 
 @app.route("/", methods=["POST"])
-def post():
+def post() -> Union[flask.Response, Tuple[str, int]]:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     # Extracts form data.
-    selected_sources = request.form.getlist("sources[]")
-    selected_fields = request.form.getlist("fields[]")
-    output_format = request.form["output_format"]
-    licenses = request.form.getlist("licenses")
+    selected_sources = flask.request.form.getlist("sources[]")
+    selected_fields = flask.request.form.getlist("fields[]")
+    output_format = flask.request.form["output_format"]
+    licenses = flask.request.form.getlist("licenses")
     if not selected_sources or not selected_fields:
-        return render_template("400.html"), 400
+        return flask.render_template("400.html"), 400
     # Logs user selections.
     logging.info(f"Selected sources: {selected_sources}")
     logging.info(f"Selected fields: {selected_fields}")
@@ -163,12 +176,12 @@ def post():
             for s in ["celexfreq", "celexfeat", "celexpron"]
         )
         if celex_sources_selected:
-            celex_password_form = request.form.get("celex_password")
+            celex_password_form = flask.request.form.get("celex_password")
             if (
                 not celex_password_form
                 or celex_password_form != celex_password_env
             ):
-                return render_template("401.html"), 401
+                return flask.render_template("401.html"), 401
     # Builds TSV column headers.
     columns = ["wordform", "source"]
     if (
@@ -239,7 +252,9 @@ def post():
             s in selected_sources
             for s in ["celexfreq", "celexfeat", "celexpron"]
         ):
-            celex_wordforms_data = {}
+            celex_wordforms_data: dict[
+                str, dict[str, Optional[Union[int, float, str]]]
+            ] = {}
             # Fetches CELEX frequencies if selected.
             if "celexfreq" in selected_sources:
                 cursor.execute(
@@ -460,7 +475,7 @@ def post():
             _wikipron_data_to_tsv(cursor, writer, selected_fields, "UK")
         # Sends the file as a response.
         contents = io.BytesIO(output.getvalue().encode("utf-8"))
-        return send_file(
+        return flask.send_file(
             contents,
             mimetype="text/tab-separated-values",
             as_attachment=True,
@@ -468,7 +483,7 @@ def post():
         )
     # JSON option.
     elif output_format == "wide":
-        aggregated_data = {}
+        aggregated_data: Dict[str, Any] = {}
 
         def add_to_aggregated_data(wordform, key, value):
             try:
@@ -705,13 +720,14 @@ def post():
                 cls=SetEncoder,
             ).encode("utf-8")
         )
-        return send_file(
+        return flask.send_file(
             contents,
             mimetype="application/json",
             as_attachment=True,
             download_name=f"citylex-{datetime.date.today().isoformat()}.json",
         )
-    conn.close()
+    # Unreachable.
+    return "", 500
 
 
 if __name__ == "__main__":
