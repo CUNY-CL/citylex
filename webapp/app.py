@@ -385,82 +385,75 @@ def _generate_json(
     selected_sources: list[str],
     selected_fields: list[str],
 ) -> Generator[str, None, None]:
-    """Streams a wide JSON layout."""
-    # Maps input parameters safely to canonical database tokens.
+    """Streams a wide JSON layout dynamically mapped by requested fields."""
     active_queries: list[str] = []
+    totals = {}
     freq_maps = [
         ("subtlexUK", "SUBTLEX-UK"),
         ("subtlexUS", "SUBTLEX-US"),
         ("celexfreq", "CELEX"),
     ]
-    totals = {}
     for html_src, db_src in freq_maps:
-        if html_src in selected_sources:
-            totals[db_src] = _fetch_total_words(cursor, db_src)
-            # Selects placeholder markers to keep schemas unified.
+        has_src = html_src in selected_sources
+        has_field = any(f.startswith(html_src) for f in selected_fields)
+        if has_src or has_field:
+            if db_src not in totals:
+                totals[db_src] = _fetch_total_words(cursor, db_src)
             active_queries.append(
-                "SELECT wordform, "
-                f"'freq:{db_src}' AS dtype, "
-                "raw_frequency AS v1, "
-                "freq_per_million AS v2 "
-                "FROM frequency "
-                f"WHERE source = '{db_src}'"
+                f"SELECT wordform, 'freq:{db_src}' AS dtype, "
+                f"raw_frequency AS v1, freq_per_million AS v2 "
+                f"FROM frequency WHERE source = '{db_src}'"
             )
-    feat_sources = [
-        s
-        for s in ["UDLexicons", "UniMorph", "celexfeat"]
-        if s in selected_sources
-    ]
-    for src in feat_sources:
-        db_src = "CELEX" if src == "celexfeat" else src
+    has_elp_field = any(f.startswith("elp_") for f in selected_fields)
+    if "ELP" in selected_sources or has_elp_field:
         active_queries.append(
-            "SELECT wordform, "
-            f"'feat:{src}' AS dtype, "
-            "tags AS v1, "
-            "NULL AS v2 "
-            "FROM features "
-            f"WHERE source = '{db_src}'"
+            "SELECT wordform, 'seg:ELP' AS dtype, segmentation AS v1, "
+            "nmorph AS v2 FROM segmentation WHERE source = 'ELP'"
         )
-    if "ELP" in selected_sources:
+    has_um_field = any(f.startswith("um_") for f in selected_fields)
+    if "UniMorph" in selected_sources or has_um_field:
         active_queries.append(
-            "SELECT wordform, "
-            "'seg:ELP' AS dtype, "
-            "segmentation AS v1, "
-            "nmorph AS v2 "
-            "FROM segmentation "
-            "WHERE source = 'ELP'"
+            "SELECT wordform, 'feat:UniMorph' AS dtype, tags AS v1, "
+            "NULL AS v2 FROM features WHERE source = 'UniMorph'"
+        )
+    has_ud_field = any(f.startswith("udlex_") for f in selected_fields)
+    if "UDLexicons" in selected_sources or has_ud_field:
+        active_queries.append(
+            "SELECT wordform, 'feat:UDLexicons' AS dtype, tags AS v1, "
+            "NULL AS v2 FROM features WHERE source = 'UDLexicons'"
+        )
+    has_cx_field = any(f.startswith("celex_") for f in selected_fields)
+    if "celexfeat" in selected_sources or has_cx_field:
+        active_queries.append(
+            "SELECT wordform, 'feat:celexfeat' AS dtype, tags AS v1, "
+            "NULL AS v2 FROM features WHERE source = 'CELEX'"
         )
     pron_maps = [("wikipronUS", "WikiPron US"), ("wikipronUK", "WikiPron UK")]
     for html_src, db_src in pron_maps:
-        if html_src in selected_sources:
+        has_src = html_src in selected_sources
+        has_field = any(f.startswith(html_src) for f in selected_fields)
+        if has_src or has_field:
             active_queries.append(
-                "SELECT wordform, "
-                f"'pron:{html_src}' AS dtype, "
-                "pronunciation AS v1, "
-                "standard AS v2 "
-                "FROM pronunciation "
-                f"WHERE source = '{db_src}' AND standard = 'IPA'",
+                f"SELECT wordform, 'pron:{html_src}' AS dtype, "
+                f"pronunciation AS v1, standard AS v2 "
+                f"FROM pronunciation WHERE source = '{db_src}' "
+                f"AND standard = 'IPA'"
             )
-    if "celexpron" in selected_sources:
+    if "celexpron" in selected_sources or "celex_DISC" in selected_fields:
         active_queries.append(
-            "SELECT wordform, "
-            "'pron:celex' AS dtype, "
-            "pronunciation AS v1, "
-            "standard AS v2 "
-            "FROM pronunciation "
-            "WHERE source = 'CELEX' AND standard = 'DISC'"
+            "SELECT wordform, 'pron:celex' AS dtype, pronunciation AS v1, "
+            "standard AS v2 FROM pronunciation WHERE source = 'CELEX' "
+            "AND standard = 'DISC'"
         )
     if not active_queries:
         yield "{}"
         return
-    # Compiles an aggregated UNION query ordered strictly by wordform.
-    # This delegates sorting overhead straight to SQLite's compiled C layer!
     master_query = " UNION ALL ".join(active_queries) + " ORDER BY wordform"
     cursor.execute(master_query)
-    encoder = _SetEncoder(ensure_ascii=False, separators=(",", ":"))
+    encoder = json.JSONEncoder(ensure_ascii=False, separators=(",", ":"))
     yield "{"
     current_word: str | None = None
-    current_entry: dict[str, set[Any]] = {}
+    current_entry: dict[str, list[Any]] = {}
     is_first_emit = True
 
     def flush_current() -> str:
@@ -471,31 +464,35 @@ def _generate_json(
         val_str = encoder.encode(current_entry)
         return f"{prefix}{key_str}:{val_str}"
 
-    # Iterates over the stream cursor.
+    def add_val(key: str, val: Any) -> None:
+        bucket = current_entry.setdefault(key, [])
+        if isinstance(val, list):
+            for v in val:
+                if v not in bucket:
+                    bucket.append(v)
+        else:
+            if val not in bucket:
+                bucket.append(val)
+
     for wordform, dtype, v1, v2 in cursor:
         if wordform != current_word:
             if current_word is not None and current_entry:
                 yield flush_current()
             current_word = wordform
             current_entry = {}
-        # Parses data streams on-the-fly and collect properties locally.
         if dtype.startswith("freq:"):
             db_src = dtype.split(":")[1]
             html_src = next(k for k, v in freq_maps if v == db_src)
-            raw_freq, freq_per_mil = int(v1), float(v2)
+            raw_freq = int(v1) if v1 is not None else 0
+            freq_per_mil = float(v2) if v2 is not None else 0.0
             if f"{html_src}_raw_frequency" in selected_fields:
-                _add_to_word_entry(
-                    current_entry, f"{db_src} (Raw frequency)", raw_freq
-                )
+                add_val(f"{db_src} (Raw frequency)", raw_freq)
             if f"{html_src}_freq_per_million" in selected_fields:
-                _add_to_word_entry(
-                    current_entry,
-                    f"{db_src} (Frequency per million words)",
-                    freq_per_mil,
+                add_val(
+                    f"{db_src} (Frequency per million words)", freq_per_mil
                 )
             if f"{html_src}_logprob" in selected_fields:
-                _add_to_word_entry(
-                    current_entry,
+                add_val(
                     f"{db_src} (-log10 probability)",
                     round(
                         _neg_logprob(raw_freq, totals[db_src]),
@@ -503,8 +500,7 @@ def _generate_json(
                     ),
                 )
             if f"{html_src}_zipf" in selected_fields:
-                _add_to_word_entry(
-                    current_entry,
+                add_val(
                     f"{db_src} (Zipf scale)",
                     round(
                         zipf.zipf_scale(raw_freq, totals[db_src]),
@@ -516,8 +512,7 @@ def _generate_json(
             tags = v1
             if src == "UDLexicons":
                 if "udlex_UDtags" in selected_fields:
-                    _add_to_word_entry(
-                        current_entry,
+                    add_val(
                         "UDLexicons features "
                         "(Universal Dependency-style tags)",
                         tags,
@@ -525,66 +520,43 @@ def _generate_json(
                 if "udlex_UMtags" in selected_fields and (
                     um := features.tag_to_tag("UD", "UniMorph", tags)
                 ):
-                    _add_to_word_entry(
-                        current_entry,
-                        "UDLexicons features (UniMorph-style tags)",
-                        um,
-                    )
+                    add_val("UDLexicons features (UniMorph-style tags)", um)
                 if "udlex_CELEXtags" in selected_fields and (
                     cx := features.tag_to_tag("UD", "CELEX", tags)
                 ):
-                    _add_to_word_entry(
-                        current_entry,
-                        "UDLexicons features (CELEX-style tags)",
-                        cx,
-                    )
+                    add_val("UDLexicons features (CELEX-style tags)", cx)
             elif src == "UniMorph":
                 if "um_UMtags" in selected_fields:
-                    _add_to_word_entry(
-                        current_entry, "UniMorph features", tags
-                    )
+                    add_val("UniMorph features", tags)
                 if "um_UDtags" in selected_fields and (
                     ud := features.tag_to_tag("UniMorph", "UD", tags)
                 ):
-                    _add_to_word_entry(
-                        current_entry,
+                    add_val(
                         "UniMorph features (Universal Dependency-style tags)",
                         ud,
                     )
                 if "um_CELEXtags" in selected_fields and (
                     cx := features.tag_to_tag("UniMorph", "CELEX", tags)
                 ):
-                    _add_to_word_entry(
-                        current_entry,
-                        "UniMorph features (CELEX-style tags)",
-                        cx,
-                    )
+                    add_val("UniMorph features (CELEX-style tags)", cx)
             elif src == "celexfeat":
                 if "celex_CELEXtags" in selected_fields:
-                    _add_to_word_entry(current_entry, "CELEX features", tags)
+                    add_val("CELEX features", tags)
                 if "celex_UDtags" in selected_fields and (
                     ud := features.tag_to_tag("CELEX", "UD", tags)
                 ):
-                    _add_to_word_entry(
-                        current_entry,
-                        "CELEX features (Universal Dependency-style tags)",
-                        ud,
+                    add_val(
+                        "CELEX features (Universal Dependency-style tags)", ud
                     )
                 if "celex_UMtags" in selected_fields and (
                     um := features.tag_to_tag("CELEX", "UniMorph", tags)
                 ):
-                    _add_to_word_entry(
-                        current_entry,
-                        "CELEX features (UniMorph-style tags)",
-                        um,
-                    )
+                    add_val("CELEX features (UniMorph-style tags)", um)
         elif dtype == "seg:ELP":
-            if "elp_segmentation" in selected_fields:
-                _add_to_word_entry(current_entry, "ELP (Segmentation)", v1)
-            if "elp_nmorph" in selected_fields:
-                _add_to_word_entry(
-                    current_entry, "ELP (Number of morphs)", int(v2)
-                )
+            if "elp_segmentation" in selected_fields and v1 is not None:
+                add_val("ELP (Segmentation)", v1)
+            if "elp_nmorph" in selected_fields and v2 is not None:
+                add_val("ELP (Number of morphs)", int(v2))
         elif dtype.startswith("pron:"):
             sub_type = dtype.split(":")[1]
             if sub_type in ("wikipronUS", "wikipronUK"):
@@ -594,16 +566,14 @@ def _generate_json(
                     else "WikiPron UK (IPA)"
                 )
                 if f"{sub_type}_IPA" in selected_fields:
-                    _add_to_word_entry(current_entry, label, v1)
+                    add_val(label, v1)
                 if f"{sub_type}_XSAMPA" in selected_fields:
-                    _add_to_word_entry(
-                        current_entry,
+                    add_val(
                         label.replace("(IPA)", "(X-SAMPA)"),
                         xsampa.ipa_to_xsampa(v1),
                     )
             elif sub_type == "celex" and "celex_DISC" in selected_fields:
-                _add_to_word_entry(current_entry, "CELEX (DISC)", v1)
-    # Flushes out the very last remaining active token block.
+                add_val("CELEX (DISC)", v1)
     if current_word is not None and current_entry:
         yield flush_current()
     yield "}"
