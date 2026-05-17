@@ -587,44 +587,48 @@ def get() -> str:
 
 @app.route("/", methods=["POST"])
 def post() -> flask.Response | tuple[str, int]:
-    conn = sqlite3.connect(DB_PATH)
-    try:
-        cursor = conn.cursor()
-        # Extracts form data.
-        selected_sources: list[str] = flask.request.form.getlist("sources[]")
-        selected_fields: list[str] = flask.request.form.getlist("fields[]")
-        output_format: str = flask.request.form["output_format"]
-        licenses: list[str] = flask.request.form.getlist("licenses")
-        if not selected_sources or not selected_fields:
-            return flask.render_template("400.html"), 400
-        # Logs user selections.
-        logging.info("Selected sources: %s", selected_sources)
-        logging.info("Selected fields: %s", selected_fields)
-        logging.info("Output format: %s", output_format)
-        logging.info("Licenses: %s", licenses)
-        # Password protects CELEX data if present.
-        celex_password_env = os.environ.get("CELEX_PASSWORD")
-        if celex_password_env:
-            celex_selected = any(
-                s in selected_sources
-                for s in ["celexfreq", "celexfeat", "celexpron"]
-            )
-            if celex_selected:
-                celex_password_form = flask.request.form.get("celex_password")
-                if (
-                    not celex_password_form
-                    or celex_password_form != celex_password_env
-                ):
-                    return flask.render_template("401.html"), 401
+    # Extracts form data.
+    selected_sources: list[str] = flask.request.form.getlist("sources[]")
+    selected_fields: list[str] = flask.request.form.getlist("fields[]")
+    output_format: str = flask.request.form["output_format"]
+    licenses: list[str] = flask.request.form.getlist("licenses")
+    if not selected_sources or not selected_fields:
+        return flask.render_template("400.html"), 400
+    # Logs user selections.
+    logging.info("Selected sources: %s", selected_sources)
+    logging.info("Selected fields: %s", selected_fields)
+    logging.info("Output format: %s", output_format)
+    logging.info("Licenses: %s", licenses)
+    # Password protects CELEX data if present.
+    celex_password_env = os.environ.get("CELEX_PASSWORD")
+    if celex_password_env:
+        celex_selected = any(
+            s in selected_sources
+            for s in ["celexfreq", "celexfeat", "celexpron"]
+        )
+        if celex_selected:
+            celex_password_form = flask.request.form.get("celex_password")
+            if (
+                not celex_password_form
+                or celex_password_form != celex_password_env
+            ):
+                return flask.render_template("401.html"), 401
         # Responds.
         today = datetime.date.today().isoformat()
         if output_format == "long":
             columns = _build_tsv_columns(selected_fields)
 
             def tsv_stream() -> Generator[str, None, None]:
-                yield from _generate_tsv(
-                    cursor, selected_sources, selected_fields, columns
-                )
+                conn = sqlite3.connect(DB_PATH)
+                try:
+                    yield from _generate_tsv(
+                        conn.cursor(),
+                        selected_sources,
+                        selected_fields,
+                        columns,
+                    )
+                finally:
+                    conn.close()
 
             return flask.Response(
                 flask.stream_with_context(tsv_stream()),
@@ -638,9 +642,13 @@ def post() -> flask.Response | tuple[str, int]:
         elif output_format == "wide":
 
             def json_stream() -> Generator[str, None, None]:
-                yield from _generate_json(
-                    cursor, selected_sources, selected_fields
-                )
+                conn = sqlite3.connect(DB_PATH)
+                try:
+                    yield from _generate_json(
+                        conn.cursor(), selected_sources, selected_fields
+                    )
+                finally:
+                    conn.close()
 
             return flask.Response(
                 flask.stream_with_context(json_stream()),
@@ -651,8 +659,8 @@ def post() -> flask.Response | tuple[str, int]:
                     ),
                 },
             )
-    finally:
-        conn.close()
+    # Should be unreachable.
+    return flask.render_template("400.html"), 400
 
 
 if __name__ == "__main__":
