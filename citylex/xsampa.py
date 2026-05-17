@@ -1,15 +1,38 @@
 """X-SAMPA conversion functions for English.
 
 Table based on: https://en.wikipedia.org/wiki/X-SAMPA
+
+Unknown IPA symbols are passed through unchanged and a warning is logged,
+rather than raising a KeyError. This is intentional: IPA strings from
+WikiPron can be noisy, and a partial conversion is more useful than a crash.
 """
 
-_IPA_TO_XSAMPA = {
+import logging
+from typing import Optional
+
+# Keys are IPA symbols (or short sequences for affricates and long vowels).
+# Values are the corresponding X-SAMPA strings.
+#
+# Notes on deliberate lossy mappings:
+#
+#   ɖ → d  (retroflex stop collapsed to alveolar; English lacks this contrast)
+#   ʈ → t  (same rationale)
+#   ɭ → l  (retroflex lateral collapsed to alveolar)
+#   ɳ → n  (retroflex nasal collapsed to alveolar)
+#   ɻ → r\ (retroflex approximant treated as rhotic approximant)
+#   ʂ → s  (retroflex sibilant collapsed to alveolar sibilant)
+#
+# These are defensible for broad English transcription but would lose
+# information in a cross-linguistic context.
+
+_IPA_TO_XSAMPA: dict[str, str] = {
+    # Plain consonants
     "a": "a",
     "b": "b",
     "ɓ": "b<",
     "c": "c",
     "d": "d",
-    "ɖ": "d",
+    "ɖ": "d",  # Retroflex — see note above.
     "e": "e",
     "f": "f",
     "ɡ": "g",
@@ -18,22 +41,22 @@ _IPA_TO_XSAMPA = {
     "j": "j",
     "k": "k",
     "l": "l",
-    "ɭ": "l",
+    "ɭ": "l",  # Retroflex — see note above.
     "m": "m",
     "n": "n",
-    "ɳ": "n",
+    "ɳ": "n",  # Retroflex — see note above.
     "o": "o",
     "p": "p",
     "ɸ": "p\\",
     "q": "q",
     "r": "r",
     "ɹ": "r\\",
-    "ɻ": "r\\",
+    "ɻ": "r\\",  # Retroflex — see note above.
     "s": "s",
-    "ʂ": "s",
+    "ʂ": "s",  # Retroflex — see note above.
     "ɕ": "s\\",
     "t": "t",
-    "ʈ": "t",
+    "ʈ": "t",  # Retroflex — see note above.
     "u": "u",
     "v": "v",
     "ʋ": "v\\",
@@ -41,6 +64,7 @@ _IPA_TO_XSAMPA = {
     "x": "x",
     "y": "y",
     "z": "z",
+    # Vowels and special symbols.
     "ə": "@",
     "ɘ": "@\\",
     "ɚ": "@`",
@@ -75,12 +99,17 @@ _IPA_TO_XSAMPA = {
     "χ": "X",
     "ʏ": "Y",
     "ʒ": "Z",
+    # Affricates (must be matched before their component parts).
     "t͡s": "ts",
     "t͡ʃ": "tS",
     "t͡ɕ": "ts\\",
     "d͡ʒ": "dZ",
+    # Rhotacised and other complex symbols.
     "ɝ": "<?",
     "ɪ̯": "I^",
+    "ʊ̯": "U^",
+    "ɝː": "<? ɝ ?>:",  # TODO: verify correct X-SAMPA for long rhotacised mid
+    # Long vowels.
     "aː": "a:",
     "eː": "e:",
     "iː": "i:",
@@ -95,9 +124,8 @@ _IPA_TO_XSAMPA = {
     "ɪː": "I:",
     "œː": "9:",
     "ɜː": "3:",
-    "ʊ̯": "U^",
-    "ɝː": "<? ɝ ?>:",
     "əː": "@:",
+    # Syllabic consonants.
     "ɫ̩": "5_=",
     "l̩": "l_=",
     "m̩": "m_=",
@@ -106,12 +134,26 @@ _IPA_TO_XSAMPA = {
 
 
 def ipa_to_xsampa(ipa: str) -> str:
-    """Maps from IPA to X-SAMPA strings.
+    """Maps a space-separated IPA string to an X-SAMPA string.
+
+    Each whitespace-delimited token is looked up in the conversion table.
+    Tokens that are not found are passed through unchanged, with a warning
+    emitted.
 
     Args:
-        ipa: IPA string input.
+        ipa: a space-separated IPA string.
 
     Returns:
-        The corresponding X-SAMPA string.
+        The corresponding X-SAMPA string, with the same whitespace structure.
     """
-    return " ".join(_IPA_TO_XSAMPA[symbol] for symbol in ipa.split())
+    result: list[str] = []
+    for symbol in ipa.split():
+        mapped: Optional[str] = _IPA_TO_XSAMPA.get(symbol)
+        if mapped is None:
+            logging.warning(
+                "Unknown IPA symbol in X-SAMPA conversion: %r", symbol
+            )
+            result.append(symbol)
+        else:
+            result.append(mapped)
+    return " ".join(result)

@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cdo]
 *.egg-info/
+*.min.js
 analysis/
 build/
 citylex.db*

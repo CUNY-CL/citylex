@@ -2,5 +2,5 @@
 
 set -eou pipefail
 
-pip install -r requirements.txt
+make install
 python -m citylex.populate --all-free --celex
