@@ -1,0 +1,13 @@
+{
+  "name": "citylex-frontend",
+  "private": true,
+  "description": "Build tooling for CityLex frontend assets",
+  "scripts": {
+    "build": "terser static/script.js --compress --mangle --output static/script.min.js",
+    "watch": "chokidar 'static/script.js' -c 'npm run build'"
+  },
+  "devDependencies": {
+    "chokidar-cli": "^3.0.0",
+    "terser": "^5.0.0"
+  }
+}
