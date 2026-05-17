@@ -587,68 +587,72 @@ def get() -> str:
 
 @app.route("/", methods=["POST"])
 def post() -> flask.Response | tuple[str, int]:
-    selected_sources: list[str] = flask.request.form.getlist("sources[]")
-    selected_fields: list[str] = flask.request.form.getlist("fields[]")
-    output_format: str = flask.request.form["output_format"]
-    licenses: list[str] = flask.request.form.getlist("licenses")
-    if not selected_sources or not selected_fields:
-        return flask.render_template("400.html"), 400
-    logging.info("Selected sources: %s", selected_sources)
-    logging.info("Selected fields: %s", selected_fields)
-    logging.info("Output format: %s", output_format)
-    logging.info("Licenses: %s", licenses)
-    # CELEX password gate.
-    celex_password_env = os.environ.get("CELEX_PASSWORD")
-    if celex_password_env:
-        celex_selected = any(
-            s in selected_sources
-            for s in ("celexfreq", "celexfeat", "celexpron")
-        )
-        if celex_selected:
-            celex_password_form = flask.request.form.get("celex_password")
-            if (
-                not celex_password_form
-                or celex_password_form != celex_password_env
-            ):
-                return flask.render_template("401.html"), 401
-    today = datetime.date.today().isoformat()
     conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    if output_format == "long":
-        columns = _build_tsv_columns(selected_fields)
-
-        def tsv_stream() -> Generator[str, None, None]:
-            yield from _generate_tsv(
-                cursor, selected_sources, selected_fields, columns
+    try:
+        cursor = conn.cursor()
+        # Extracts form data.
+        selected_sources: list[str] = flask.request.form.getlist("sources[]")
+        selected_fields: list[str] = flask.request.form.getlist("fields[]")
+        output_format: str = flask.request.form["output_format"]
+        licenses: list[str] = flask.request.form.getlist("licenses")
+        if not selected_sources or not selected_fields:
+            return flask.render_template("400.html"), 400
+        # Logs user selections.
+        logging.info("Selected sources: %s", selected_sources)
+        logging.info("Selected fields: %s", selected_fields)
+        logging.info("Output format: %s", output_format)
+        logging.info("Licenses: %s", licenses)
+        # Password protects CELEX data if present.
+        celex_password_env = os.environ.get("CELEX_PASSWORD")
+        if celex_password_env:
+            celex_selected = any(
+                s in selected_sources
+                for s in ["celexfreq", "celexfeat", "celexpron"]
             )
-            conn.close()
+            if celex_selected:
+                celex_password_form = flask.request.form.get("celex_password")
+                if (
+                    not celex_password_form
+                    or celex_password_form != celex_password_env
+                ):
+                    return flask.render_template("401.html"), 401
+        # Responds.
+        today = datetime.date.today().isoformat()
+        if output_format == "long":
+            columns = _build_tsv_columns(selected_fields)
 
-        return flask.Response(
-            flask.stream_with_context(tsv_stream()),
-            mimetype="text/tab-separated-values",
-            headers={
-                "Content-Disposition":
-                f'attachment; filename="citylex-{today}.tsv"'
-            },
-        )
-    elif output_format == "wide":
+            def tsv_stream() -> Generator[str, None, None]:
+                yield from _generate_tsv(
+                    cursor, selected_sources, selected_fields, columns
+                )
 
-        def json_stream() -> Generator[str, None, None]:
-            yield from _generate_json(
-                cursor, selected_sources, selected_fields
+            return flask.Response(
+                flask.stream_with_context(tsv_stream()),
+                mimetype="text/tab-separated-values",
+                headers={
+                    "Content-Disposition": (
+                        f'attachment; filename="citylex-{today}.tsv"'
+                    ),
+                },
             )
-            conn.close()
+        elif output_format == "wide":
 
-        return flask.Response(
-            flask.stream_with_context(json_stream()),
-            mimetype="application/json",
-            headers={
-                "Content-Disposition":
-                f'attachment; filename="citylex-{today}.json"'
-            },
-        )
-    conn.close()
-    return flask.render_template("400.html"), 400
+            def json_stream() -> Generator[str, None, None]:
+                yield from _generate_json(
+                    cursor, selected_sources, selected_fields
+                )
+
+            return flask.Response(
+                flask.stream_with_context(json_stream()),
+                mimetype="application/json",
+                headers={
+                    "Content-Disposition": (
+                        f'attachment; filename="citylex-{today}.json"'
+                    ),
+                },
+            )
+    finally:
+        conn.close()
 
 
 if __name__ == "__main__":
