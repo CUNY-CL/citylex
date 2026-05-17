@@ -54,7 +54,9 @@ def _fetch_total_words(cursor: sqlite3.Cursor, source: str) -> int:
 
 
 def _csv_row(
-    writer: "csv.DictWriter[str]", buf: io.StringIO, row: dict[str, Any]
+    writer: "csv.DictWriter[str]",
+    buf: io.StringIO,
+    row: dict[str, Any],
 ) -> str:
     """Writes one DictWriter row."""
     writer.writerow(row)
@@ -83,7 +85,9 @@ def _generate_celex_tsv(
             "FROM frequency WHERE source = 'CELEX'"
         )
         for wordform, raw_freq, freq_per_mil in cursor:
-            entry = celex_data.setdefault(wordform, {"source": "CELEX"})
+            entry = celex_data.setdefault(
+                wordform, {"source": "CELEX"}
+            )
             if "celexfreq_raw_frequency" in selected_fields:
                 entry["raw_frequency"] = raw_freq
             if "celexfreq_freq_per_million" in selected_fields:
@@ -94,21 +98,28 @@ def _generate_celex_tsv(
                 )
             if "celexfreq_zipf" in selected_fields:
                 entry["zipf"] = round(
-                    zipf.zipf_scale(raw_freq, total), FREQUENCY_PRECISION
+                    zipf.zipf_scale(raw_freq, total),
+                    FREQUENCY_PRECISION,
                 )
     if "celexfeat" in selected_sources:
         cursor.execute(
             "SELECT wordform, tags FROM features WHERE source = 'CELEX'"
         )
         for wordform, celex_tags in cursor:
-            entry = celex_data.setdefault(wordform, {"source": "CELEX"})
+            entry = celex_data.setdefault(
+                wordform, {"source": "CELEX"}
+            )
             if "celex_CELEXtags" in selected_fields:
                 entry["celex_tags"] = celex_tags
             if "celex_UDtags" in selected_fields:
-                if ud := features.tag_to_tag("CELEX", "UD", celex_tags):
+                if ud := features.tag_to_tag(
+                    "CELEX", "UD", celex_tags
+                ):
                     entry["ud_tags"] = _flatten(ud)
             if "celex_UMtags" in selected_fields:
-                if um := features.tag_to_tag("CELEX", "UniMorph", celex_tags):
+                if um := features.tag_to_tag(
+                    "CELEX", "UniMorph", celex_tags
+                ):
                     entry["um_tags"] = _flatten(um)
 
     if "celexpron" in selected_sources:
@@ -117,11 +128,16 @@ def _generate_celex_tsv(
             "WHERE source = 'CELEX' AND standard = 'DISC'"
         )
         for wordform, pronunciation in cursor:
-            entry = celex_data.setdefault(wordform, {"source": "CELEX"})
+            entry = celex_data.setdefault(
+                wordform, {"source": "CELEX"}
+            )
             if "celex_DISC" in selected_fields:
                 entry["DISC_pronunciation"] = pronunciation
     for wordform, data in celex_data.items():
-        row: dict[str, Any] = {"wordform": wordform, "source": data["source"]}
+        row: dict[str, Any] = {
+            "wordform": wordform,
+            "source": data["source"],
+        }
         for key in (
             "raw_frequency",
             "freq_per_million",
@@ -162,7 +178,10 @@ def _generate_subtlex_tsv(
         (source_name,),
     )
     for wordform, raw_freq, freq_per_mil in cursor:
-        row: dict[str, Any] = {"wordform": wordform, "source": source_name}
+        row: dict[str, Any] = {
+            "wordform": wordform,
+            "source": source_name,
+        }
         if f"{field_prefix}_raw_frequency" in selected_fields:
             row["raw_frequency"] = raw_freq
         if f"{field_prefix}_freq_per_million" in selected_fields:
@@ -262,11 +281,16 @@ def _generate_wikipron_tsv(
         (source_name,),
     )
     for wordform, ipa_pron in cursor:
-        row: dict[str, Any] = {"wordform": wordform, "source": source_name}
+        row: dict[str, Any] = {
+            "wordform": wordform,
+            "source": source_name,
+        }
         if want_ipa:
             row["IPA_pronunciation"] = ipa_pron
         if want_xsampa:
-            row["XSAMPA_pronunciation"] = xsampa.ipa_to_xsampa(ipa_pron)
+            row["XSAMPA_pronunciation"] = xsampa.ipa_to_xsampa(
+                ipa_pron
+            )
         if len(row) < 3:
             continue
         yield _csv_row(writer, buf, row)
@@ -293,7 +317,8 @@ def _generate_tsv(
     buf.seek(0)
     buf.truncate(0)
     if any(
-        s in selected_sources for s in ("celexfreq", "celexfeat", "celexpron")
+        s in selected_sources
+        for s in ("celexfreq", "celexfeat", "celexpron")
     ):
         yield from _generate_celex_tsv(
             cursor, writer, buf, selected_sources, selected_fields
@@ -308,14 +333,28 @@ def _generate_tsv(
         )
     if "UDLexicons" in selected_sources:
         yield from _generate_features_tsv(
-            cursor, writer, buf, selected_fields, "UDLexicons", "udlex", "UD"
+            cursor,
+            writer,
+            buf,
+            selected_fields,
+            "UDLexicons",
+            "udlex",
+            "UD",
         )
     if "UniMorph" in selected_sources:
         yield from _generate_features_tsv(
-            cursor, writer, buf, selected_fields, "UniMorph", "um", "UniMorph"
+            cursor,
+            writer,
+            buf,
+            selected_fields,
+            "UniMorph",
+            "um",
+            "UniMorph",
         )
     if "ELP" in selected_sources:
-        yield from _generate_elp_tsv(cursor, writer, buf, selected_fields)
+        yield from _generate_elp_tsv(
+            cursor, writer, buf, selected_fields
+        )
     if "WikiPron US" in selected_sources:
         yield from _generate_wikipron_tsv(
             cursor, writer, buf, selected_fields, "US"
@@ -368,7 +407,9 @@ def _generate_json(
     aggregated: dict[str, dict[str, set[Any]]] = {}
 
     def add(wordform: str, key: str, value: Any) -> None:
-        _add_to_word_entry(aggregated.setdefault(wordform, {}), key, value)
+        _add_to_word_entry(
+            aggregated.setdefault(wordform, {}), key, value
+        )
 
     # Frequency sources.
     for db_source, field_prefix in (
@@ -386,7 +427,9 @@ def _generate_json(
         )
         for wordform, raw_freq, freq_per_mil in cursor:
             if f"{field_prefix}_raw_frequency" in selected_fields:
-                add(wordform, f"{db_source} (Raw frequency)", raw_freq)
+                add(
+                    wordform, f"{db_source} (Raw frequency)", raw_freq
+                )
             if f"{field_prefix}_freq_per_million" in selected_fields:
                 add(
                     wordform,
@@ -397,14 +440,18 @@ def _generate_json(
                 add(
                     wordform,
                     f"{db_source} (-log10 probability)",
-                    round(_neg_logprob(raw_freq, total), FREQUENCY_PRECISION),
+                    round(
+                        _neg_logprob(raw_freq, total),
+                        FREQUENCY_PRECISION,
+                    ),
                 )
             if f"{field_prefix}_zipf" in selected_fields:
                 add(
                     wordform,
                     f"{db_source} (Zipf scale)",
                     round(
-                        zipf.zipf_scale(raw_freq, total), FREQUENCY_PRECISION
+                        zipf.zipf_scale(raw_freq, total),
+                        FREQUENCY_PRECISION,
                     ),
                 )
 
@@ -421,7 +468,9 @@ def _generate_json(
                     ud_tags,
                 )
             if "udlex_UMtags" in selected_fields:
-                if um := features.tag_to_tag("UD", "UniMorph", ud_tags):
+                if um := features.tag_to_tag(
+                    "UD", "UniMorph", ud_tags
+                ):
                     add(
                         wordform,
                         "UDLexicons features (UniMorph-style tags)",
@@ -429,7 +478,11 @@ def _generate_json(
                     )
             if "udlex_CELEXtags" in selected_fields:
                 if cx := features.tag_to_tag("UD", "CELEX", ud_tags):
-                    add(wordform, "UDLexicons features (CELEX-style tags)", cx)
+                    add(
+                        wordform,
+                        "UDLexicons features (CELEX-style tags)",
+                        cx,
+                    )
     if "UniMorph" in selected_sources:
         cursor.execute(
             "SELECT wordform, tags FROM features WHERE source = 'UniMorph'"
@@ -438,15 +491,23 @@ def _generate_json(
             if "um_UMtags" in selected_fields:
                 add(wordform, "UniMorph features", um_tags)
             if "um_UDtags" in selected_fields:
-                if ud := features.tag_to_tag("UniMorph", "UD", um_tags):
+                if ud := features.tag_to_tag(
+                    "UniMorph", "UD", um_tags
+                ):
                     add(
                         wordform,
                         "UniMorph features (Universal Dependency-style tags)",
                         ud,
                     )
             if "um_CELEXtags" in selected_fields:
-                if cx := features.tag_to_tag("UniMorph", "CELEX", um_tags):
-                    add(wordform, "UniMorph features (CELEX-style tags)", cx)
+                if cx := features.tag_to_tag(
+                    "UniMorph", "CELEX", um_tags
+                ):
+                    add(
+                        wordform,
+                        "UniMorph features (CELEX-style tags)",
+                        cx,
+                    )
     if "celexfeat" in selected_sources:
         cursor.execute(
             "SELECT wordform, tags FROM features WHERE source = 'CELEX'"
@@ -455,15 +516,23 @@ def _generate_json(
             if "celex_CELEXtags" in selected_fields:
                 add(wordform, "CELEX features", celex_tags)
             if "celex_UDtags" in selected_fields:
-                if ud := features.tag_to_tag("CELEX", "UD", celex_tags):
+                if ud := features.tag_to_tag(
+                    "CELEX", "UD", celex_tags
+                ):
                     add(
                         wordform,
                         "CELEX features (Universal Dependency-style tags)",
                         ud,
                     )
             if "celex_UMtags" in selected_fields:
-                if um := features.tag_to_tag("CELEX", "UniMorph", celex_tags):
-                    add(wordform, "CELEX features (UniMorph-style tags)", um)
+                if um := features.tag_to_tag(
+                    "CELEX", "UniMorph", celex_tags
+                ):
+                    add(
+                        wordform,
+                        "CELEX features (UniMorph-style tags)",
+                        um,
+                    )
     # Segmentation.
     if "ELP" in selected_sources:
         cursor.execute(
@@ -495,7 +564,9 @@ def _generate_json(
             if f"{field_prefix}_XSAMPA" in selected_fields:
                 xsampa_label = ipa_label.replace("(IPA)", "(X-SAMPA)")
                 add(
-                    wordform, xsampa_label, xsampa.ipa_to_xsampa(pronunciation)
+                    wordform,
+                    xsampa_label,
+                    xsampa.ipa_to_xsampa(pronunciation),
                 )
 
     if "celexpron" in selected_sources:
@@ -545,14 +616,20 @@ def _build_tsv_columns(selected_fields: list[str]) -> list[str]:
             "subtlexUS_logprob",
             "celexfreq_logprob",
         },
-        "zipf": {"subtlexUK_zipf", "subtlexUS_zipf", "celexfreq_zipf"},
+        "zipf": {
+            "subtlexUK_zipf",
+            "subtlexUS_zipf",
+            "celexfreq_zipf",
+        },
     }
     for col, triggers in freq_fields.items():
         if triggers & set(selected_fields):
             columns.append(col)
     if {"wikipronUS_IPA", "wikipronUK_IPA"} & set(selected_fields):
         columns.append("IPA_pronunciation")
-    if {"wikipronUS_XSAMPA", "wikipronUK_XSAMPA"} & set(selected_fields):
+    if {"wikipronUS_XSAMPA", "wikipronUK_XSAMPA"} & set(
+        selected_fields
+    ):
         columns.append("XSAMPA_pronunciation")
     if "celex_DISC" in selected_fields:
         columns.append("DISC_pronunciation")
@@ -560,9 +637,13 @@ def _build_tsv_columns(selected_fields: list[str]) -> list[str]:
         selected_fields
     ):
         columns.append("celex_tags")
-    if {"udlex_UDtags", "um_UDtags", "celex_UDtags"} & set(selected_fields):
+    if {"udlex_UDtags", "um_UDtags", "celex_UDtags"} & set(
+        selected_fields
+    ):
         columns.append("ud_tags")
-    if {"udlex_UMtags", "um_UMtags", "celex_UMtags"} & set(selected_fields):
+    if {"udlex_UMtags", "um_UMtags", "celex_UMtags"} & set(
+        selected_fields
+    ):
         columns.append("um_tags")
     if "elp_segmentation" in selected_fields:
         columns.append("segmentation")
@@ -575,7 +656,9 @@ def _build_tsv_columns(selected_fields: list[str]) -> list[str]:
 def get() -> str:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT 1 FROM frequency WHERE source = 'CELEX' LIMIT 1")
+    cursor.execute(
+        "SELECT 1 FROM frequency WHERE source = 'CELEX' LIMIT 1"
+    )
     celex_present = cursor.fetchone() is not None
     conn.close()
     return flask.render_template(
@@ -588,8 +671,12 @@ def get() -> str:
 @app.route("/", methods=["POST"])
 def post() -> flask.Response | tuple[str, int]:
     # Extracts form data.
-    selected_sources: list[str] = flask.request.form.getlist("sources[]")
-    selected_fields: list[str] = flask.request.form.getlist("fields[]")
+    selected_sources: list[str] = flask.request.form.getlist(
+        "sources[]"
+    )
+    selected_fields: list[str] = flask.request.form.getlist(
+        "fields[]"
+    )
     output_format: str = flask.request.form["output_format"]
     licenses: list[str] = flask.request.form.getlist("licenses")
     if not selected_sources or not selected_fields:
@@ -607,58 +694,60 @@ def post() -> flask.Response | tuple[str, int]:
             for s in ["celexfreq", "celexfeat", "celexpron"]
         )
         if celex_selected:
-            celex_password_form = flask.request.form.get("celex_password")
+            celex_password_form = flask.request.form.get(
+                "celex_password"
+            )
             if (
                 not celex_password_form
                 or celex_password_form != celex_password_env
             ):
                 return flask.render_template("401.html"), 401
-        # Responds.
-        today = datetime.date.today().isoformat()
-        if output_format == "long":
-            columns = _build_tsv_columns(selected_fields)
+    # Responds.
+    today = datetime.date.today().isoformat()
+    if output_format == "long":
+        columns = _build_tsv_columns(selected_fields)
 
-            def tsv_stream() -> Generator[str, None, None]:
-                conn = sqlite3.connect(DB_PATH)
-                try:
-                    yield from _generate_tsv(
-                        conn.cursor(),
-                        selected_sources,
-                        selected_fields,
-                        columns,
-                    )
-                finally:
-                    conn.close()
+        def tsv_stream() -> Generator[str, None, None]:
+            conn = sqlite3.connect(DB_PATH)
+            try:
+                yield from _generate_tsv(
+                    conn.cursor(),
+                    selected_sources,
+                    selected_fields,
+                    columns,
+                )
+            finally:
+                conn.close()
 
-            return flask.Response(
-                flask.stream_with_context(tsv_stream()),
-                mimetype="text/tab-separated-values",
-                headers={
-                    "Content-Disposition": (
-                        f'attachment; filename="citylex-{today}.tsv"'
-                    ),
-                },
-            )
-        elif output_format == "wide":
+        return flask.Response(
+            flask.stream_with_context(tsv_stream()),
+            mimetype="text/tab-separated-values",
+            headers={
+                "Content-Disposition": (
+                    f'attachment; filename="citylex-{today}.tsv"'
+                ),
+            },
+        )
+    elif output_format == "wide":
 
-            def json_stream() -> Generator[str, None, None]:
-                conn = sqlite3.connect(DB_PATH)
-                try:
-                    yield from _generate_json(
-                        conn.cursor(), selected_sources, selected_fields
-                    )
-                finally:
-                    conn.close()
+        def json_stream() -> Generator[str, None, None]:
+            conn = sqlite3.connect(DB_PATH)
+            try:
+                yield from _generate_json(
+                    conn.cursor(), selected_sources, selected_fields
+                )
+            finally:
+                conn.close()
 
-            return flask.Response(
-                flask.stream_with_context(json_stream()),
-                mimetype="application/json",
-                headers={
-                    "Content-Disposition": (
-                        f'attachment; filename="citylex-{today}.json"'
-                    ),
-                },
-            )
+        return flask.Response(
+            flask.stream_with_context(json_stream()),
+            mimetype="application/json",
+            headers={
+                "Content-Disposition": (
+                    f'attachment; filename="citylex-{today}.json"'
+                ),
+            },
+        )
     # Should be unreachable.
     return flask.render_template("400.html"), 400
 
