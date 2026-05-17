@@ -611,8 +611,7 @@ def main():
     for table in ["frequency", "pronunciation", "features", "segmentation"]:
         cursor.execute(f"DROP TABLE IF EXISTS {table}")
     logging.info("Creating tables...")
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS frequency (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             wordform TEXT NOT NULL,
@@ -620,10 +619,8 @@ def main():
             raw_frequency INTEGER NOT NULL,
             freq_per_million DECIMAL(5, 2) NOT NULL
         )
-    """
-    )
-    cursor.execute(
-        """
+    """)
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS pronunciation (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             wordform TEXT NOT NULL,
@@ -633,10 +630,8 @@ def main():
             pronunciation TEXT NOT NULL,
             is_observed BOOLEAN NOT NULL
         )
-    """
-    )
-    cursor.execute(
-        """
+    """)
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS features (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             wordform TEXT NOT NULL,
@@ -644,10 +639,8 @@ def main():
             lemma TEXT NOT NULL,
             tags TEXT NOT NULL
         )
-    """
-    )
-    cursor.execute(
-        """
+    """)
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS segmentation (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             wordform TEXT NOT NULL,
@@ -655,8 +648,7 @@ def main():
             nmorph INTEGER NOT NULL,
             segmentation TEXT NOT NULL
         )
-    """
-    )
+    """)
     conn.commit()
     if args.celex:
         _celex(conn)

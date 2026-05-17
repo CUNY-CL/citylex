@@ -201,7 +201,8 @@ for _src_fmt, _src_tag, _dst_fmt, _dst_tag in _CANONICAL:
     if _dst_tag not in current:
         current.append(_dst_tag)
 
-# Flattens sets: single-item sets become plain strings; multi-item become lists.
+# Flattens sets: single-item sets become plain strings and multi-item become
+# lists.
 _MapValue = Union[str, list[str]]
 _map_dict: dict[str, dict[str, dict[str, _MapValue]]] = {}
 for _src_fmt, _src_tags in _accum.items():
