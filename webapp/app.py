@@ -358,28 +358,6 @@ def _generate_tsv(
 # Each value is serialised with json.dumps so all escaping is handled for us.
 
 
-class _SetEncoder(json.JSONEncoder):
-    """JSON encoder that converts sets to sorted lists."""
-
-    def default(self, o: Any) -> Any:
-        if isinstance(o, set):
-            return sorted(o)
-        return super().default(o)
-
-
-def _add_to_word_entry(
-    entry: dict[str, set[Any]],
-    key: str,
-    value: Any,
-) -> None:
-    """Adds a value (or list of values) to a set under *key* in *entry*."""
-    bucket = entry.setdefault(key, set())
-    if isinstance(value, list):
-        bucket.update(value)
-    else:
-        bucket.add(value)
-
-
 def _generate_json(
     cursor: sqlite3.Cursor,
     selected_sources: list[str],
