@@ -127,7 +127,8 @@ def _celex(conn: sqlite3.Connection) -> None:
         freq = int(row[3])
         cursor.execute(
             """
-            INSERT INTO frequency (wordform, source, raw_frequency, freq_per_million)
+            INSERT INTO frequency
+            (wordform, source, raw_frequency, freq_per_million)
             VALUES (?, ?, ?, ?)
             """,
             (wordform, "CELEX", freq, 0),
@@ -142,7 +143,8 @@ def _celex(conn: sqlite3.Connection) -> None:
     cursor.execute(
         """
         UPDATE frequency
-        SET freq_per_million = ROUND(CAST(raw_frequency AS REAL) * 1000000 / ?, 2)
+        SET freq_per_million =
+        ROUND(CAST(raw_frequency AS REAL) * 1000000 / ?, 2)
         WHERE source = 'CELEX'
         """,
         (total_freq,),
@@ -192,7 +194,8 @@ def _celex(conn: sqlite3.Connection) -> None:
         pron = row[6].replace("-", "")
         cursor.execute(
             """
-            INSERT INTO pronunciation (wordform, dialect, source, standard, pronunciation, is_observed)
+            INSERT INTO pronunciation
+            (wordform, dialect, source, standard, pronunciation, is_observed)
             VALUES (?, ?, ?, ?, ?, ?)
             """,
             (wordform, "UK", "CELEX", "DISC", pron, True),
@@ -260,7 +263,8 @@ def _subtlex_uk(conn: sqlite3.Connection) -> None:
         freq_per_million = round(freq * 1_000_000 / total_freq, 2)
         cursor.execute(
             """
-            INSERT INTO frequency (wordform, source, raw_frequency, freq_per_million)
+            INSERT INTO frequency
+            (wordform, source, raw_frequency, freq_per_million)
             VALUES (?, ?, ?, ?)
             """,
             (wordform, "SUBTLEX-UK", freq, freq_per_million),
@@ -290,7 +294,8 @@ def _subtlex_us(conn: sqlite3.Connection) -> None:
         freq_per_million = round(freq * 1_000_000 / total_freq, 2)
         cursor.execute(
             """
-            INSERT INTO frequency (wordform, source, raw_frequency, freq_per_million)
+            INSERT INTO frequency
+            (wordform, source, raw_frequency, freq_per_million)
             VALUES (?, ?, ?, ?)
             """,
             (wordform, "SUBTLEX-US", freq, freq_per_million),
@@ -402,7 +407,8 @@ def _wikipron_uk(conn: sqlite3.Connection) -> None:
         pron = _normalize(pron)
         cursor.execute(
             """
-            INSERT INTO pronunciation (wordform, dialect, source, standard, pronunciation, is_observed)
+            INSERT INTO pronunciation
+            (wordform, dialect, source, standard, pronunciation, is_observed)
             VALUES (?, ?, ?, ?, ?, ?)
             """,
             (wordform, "UK", "WikiPron UK", "IPA", pron, True),
@@ -427,7 +433,8 @@ def _wikipron_us(conn: sqlite3.Connection) -> None:
         pron = _normalize(pron)
         cursor.execute(
             """
-            INSERT INTO pronunciation (wordform, dialect, source, standard, pronunciation, is_observed)
+            INSERT INTO pronunciation
+            (wordform, dialect, source, standard, pronunciation, is_observed)
             VALUES (?, ?, ?, ?, ?, ?)
             """,
             (wordform, "US", "WikiPron US", "IPA", pron, True),
@@ -453,7 +460,8 @@ def _prepare(db_path: str) -> None:
     """Adds indexes, sets journal mode, VACUUMs, writes config JSON.
 
     This must be called after all data has been committed and the connection
-    closed, because VACUUM requires no other connections and rewrites the file.  """
+    closed, because VACUUM requires no other connections and rewrites the file.
+    """
     logging.info("Creating indexes...")
     conn = sqlite3.connect(db_path)
     indexes = [
@@ -600,7 +608,9 @@ def main() -> None:
     conn.close()
     logging.info("Data collection complete.")
     _prepare(db_path)
-    logging.info("Deploy %s and %s.json to your static host.", db_path, db_path)
+    logging.info(
+        "Deploy %s and %s.json to your static host.", db_path, db_path
+    )
 
 
 if __name__ == "__main__":

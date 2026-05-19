@@ -26,8 +26,8 @@ server:
 
 deploy:
 	rsync -avkP \
-		--exclude='*.js' \
 		--include='*.min.js' \
+		--exclude='*.js' \
 		app/ wellformedness:~/public_html/citylex/
 
 install:
