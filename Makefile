@@ -28,7 +28,7 @@ deploy:
 	rsync -avkP \
 		--exclude='*.js' \
 		--include='*.min.js' \
-		app/ wellformedness:~/public_html/apps/citylex/
+		app/ wellformedness:~/public_html/citylex/
 
 install:
 	pip install -r requirements.txt
