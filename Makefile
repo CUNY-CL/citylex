@@ -1,25 +1,35 @@
-# make js: minify static/script.js -> static/script.min.js
 # make db: populates the SQLite database
-# make dev: run Flask dev server
-# make install: installs dependencies. 
+# make db-celex: adds the SQLite database with CELEX data too
+# make deploy: uploads assets to server
+# make install: installs dependencies
+# make js: minifies Javascript
+# make server: local dev server at http://localhost:8000
 
-.PHONY: js db dev install
+.PHONY: db db-celex deploy install js server
 
-# Minifies.
-js: webapp/static/script.min.js
-
-%.min.js: %.js
-	npx terser $< --compress --mangle --output $@
-
-# Populates database with free sources.
 db:
-	python -m citylex.populate --all-free
+	python -m populate --all-free
 
-# Flask dev server.
-dev:
-	flask --app webapp.app run --debug
+db-celex:
+	python -m populate --all-free --celex
 
-# Install all dependencies.
+JS_SRCS := $(filter-out app/%.min.js,$(wildcard app/*.js))
+JS_MINS := $(JS_SRCS:.js=.min.js)
+ 
+app/%.min.js: app/%.js
+	npx terser $< --compress --mangle --output $@
+ 
+js: $(JS_MINS)
+
+server:
+	npx serve -l 8000 app
+
+deploy:
+	rsync -avkP \
+		--include='*.min.js' \
+		--exclude='*.js' \
+		app/ wellformedness:~/public_html/citylex/
+
 install:
 	pip install -r requirements.txt
 	npm install

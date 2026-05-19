@@ -9,5 +9,8 @@
   "devDependencies": {
     "chokidar-cli": "^3.0.0",
     "terser": "^5.0.0"
+  },
+  "dependencies": {
+    "sql.js-httpvfs": "^0.8.12"
   }
 }
