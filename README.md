@@ -13,40 +13,35 @@ enabling whatever sources they wish to use.
 ## Building your own CityLex
 
 To see the available data sources and options, execute
-`python -m citylex.populate --help`.
+`python -m populate --help`.
 
-To generate the lexicon, execute `python -m citylex.populate` with at least one
-source enabled using command-line flags. As most of the data is downloaded from
-outline sources, an internet connection is normally required. The process takes
-roughly four minutes with all sources enabled; much of the time is spent
-downloading large files.
+To generate a lexicon database with all the free sources, execute:
 
-To generate a lexicon with all the sources that don't require manual downloads,
-execute
-
-    python -m citylex.populate --all-free
+    python -m populate --all-free
 
 If you plan to use the web application, ensure that you populate the database
 with at least the `--all-free` flag and optionally with the `--celex` and
 `--celex-path` flags (see below for more info on including CELEX data).
 
-## Launching the web application
+## Deploying
 
-Once the database (`citylex.db`) is populated, you can launch the Flask web
-application:
+Copy the following files to your static host:
 
-    python -m webapp.app
+    app/app.min.js
+    app/citylex.db
+    app/citylex.db.json
+    app/favicon.ico
+    app/index.html
+    app/features.min.js
+    app/script.min.js
+    app/xsampa.min.js
+    app/CELEX_features.pdf
 
-This will start the web server locally, making the CityLex application
-accessible. The application allows you to access the data in TSV and JSON
-formats.
+Your host must support HTTP range requests.
 
-Flask's built-in development server is suitable only for testing and local use.
-For production deployment, use a WSGI server like Gunicorn:
+## Testing locally
 
-``` bash
-gunicorn webapp.app:app
-```
+Run `make server` and then visit http://localhost:8000.
 
 ## Non-redistributable data sources
 
@@ -58,25 +53,10 @@ Consortium](https://catalog.ldc.upenn.edu/LDC96L14).
 
     tar -xzf LDC96L14.tgz
 
-To enable CELEX features, pass `--celex` to `citylex.populate` and set the
-`CELEX_PATH` environmental variable:
+To enable CELEX features, pass `--celex` to `python -m populate` and set the
+`CELEX_PATH` environmental variable like so:
 
-    export CELEX_PATH="https://path.to.celex"
-
-To password protect access to CELEX data within the web application, set the
-`CELEX_PASSWORD` environment variable:
-
-    export CELEX_PASSWORD="your_desired_password"
-
-## Testing
-
-To execute the unit tests, run:
-
-     pytest -vvv tests
-
-To run an integration test for the web app, run:
-
-    tests/startup_test.sh
+    CELEX_PATH="https://path.to.celex" python -m populate --all-free --celex
 
 ## For more information
 
@@ -88,7 +68,7 @@ The CityLex codebase are distributed under the Apache 2.0 license. Please see
 [`LICENSE.txt`](LICENSE.txt) for details.
 
 All other data sources bear their original licenses chosen by their creators;
-see `python -m citylex.populate --help` for more information.
+see `python -m populate --help` for more information.
 
 ## Author
 
