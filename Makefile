@@ -1,10 +1,11 @@
 # make db: populates the SQLite database
 # make db-celex: adds the SQLite database with CELEX data too
+# make deploy: uploads assets to server
 # make install: installs dependencies
 # make js: minifies Javascript
-# make serve: local dev server
+# make server: local dev server at http://localhost:8000
 
-.PHONY: db db-celex install js serve
+.PHONY: db db-celex deploy install js server
 
 db:
 	python -m populate --all-free
@@ -20,9 +21,14 @@ app/%.min.js: app/%.js
  
 js: $(JS_MINS)
 
-# Tests server locally at http://localhost:8000.
 server:
 	npx serve -l 8000 app
+
+deploy:
+	rsync -avkP \
+		--exclude='*.js' \
+		--include='*.min.js' \
+		app/ wellformedness:~/public_html/apps/citylex/
 
 install:
 	pip install -r requirements.txt
