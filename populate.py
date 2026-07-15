@@ -398,8 +398,9 @@ def _wikipron_uk(conn: sqlite3.Connection) -> None:
     cursor = conn.cursor()
     counter = 0
     url = (
-        "https://raw.githubusercontent.com/kylebgorman/"
-        "wikipron/master/data/scrape/tsv/eng_latn_uk_broad_filtered.tsv"
+        "https://raw.githubusercontent.com/CUNY-CL/"
+        "wikipron/refs/heads/master/data/scrape/tsv/"
+        "eng_latn_uk_broad_filtered.tsv"
     )
     source = _request_url_text_resource(url)
     for wordform, pron in csv.reader(source, delimiter="\t"):
@@ -424,8 +425,9 @@ def _wikipron_us(conn: sqlite3.Connection) -> None:
     cursor = conn.cursor()
     counter = 0
     url = (
-        "https://raw.githubusercontent.com/kylebgorman/"
-        "wikipron/master/data/scrape/tsv/eng_latn_us_broad_filtered.tsv"
+        "https://raw.githubusercontent.com/CUNY-CL/"
+        "wikipron/refs/heads/master/data/scrape/tsv/"
+        "eng_latn_us_broad_filtered.tsv"
     )
     source = _request_url_text_resource(url)
     for wordform, pron in csv.reader(source, delimiter="\t"):

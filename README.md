@@ -51,8 +51,6 @@ wish to enable CELEX features, follow the instructions below.
 This proprietary resource must be obtained from the [Linguistic Data
 Consortium](https://catalog.ldc.upenn.edu/LDC96L14).
 
-    tar -xzf LDC96L14.tgz
-
 To enable CELEX features, pass `--celex` to `python -m populate` and set the
 `CELEX_PATH` environmental variable like so:
 
