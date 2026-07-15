@@ -587,11 +587,12 @@ function hideError() {
   if (el) el.style.display = "none";
 }
 
-// Update your initialization block at the bottom of the file
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.querySelector("form");
+// Update your initialization block at the bottom of the file.
+  document.addEventListener("DOMContentLoaded", () => {
+const form = document.querySelector("form");
   form?.addEventListener("submit", handleSubmit);
-  form?.addEventListener("change", updateCelexValidation); // Catch user selections reactively
+  // Catch user selections reactively.
+  form?.addEventListener("change", updateCelexValidation); 
   detectCelex();
 });
 
@@ -609,15 +610,10 @@ async function detectCelex() {
       });
       const ackSection = document.getElementById("celex-license-section");
       if (ackSection) ackSection.style.display = "";
-      
-      updateCelexValidation(); // Run initial check after revealing the UI elements
+      // Run initial check after revealing the UI elements.
+      updateCelexValidation(); 
     }
   } catch (err) {
     console.error("CityLex: failed to initialise DB worker:", err);
   }
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelector("form")?.addEventListener("submit", handleSubmit);
-  detectCelex();
-});
